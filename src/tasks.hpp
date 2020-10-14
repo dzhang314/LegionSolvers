@@ -1,5 +1,6 @@
 #include <vector>
 
+#include <Kokkos_Core.hpp>
 #include <legion.h>
 
 template <typename TFloat>
@@ -189,6 +190,35 @@ void axpy_task(const Legion::Task *task,
         y_writer[*iter] = alpha * x_reader[*iter] + y_writer[*iter];
     }
 }
+
+// template <typename KokkosExecutionSpace, typename TFloat> struct AxpyTask {
+//     static void task_body(const Legion::Task *task,
+//                           const std::vector<Legion::PhysicalRegion> &regions,
+//                           Legion::Context ctx, Legion::Runtime *runtime) {
+//         assert(regions.size() == 2);
+//         const auto &y = regions[0];
+//         const auto &x = regions[1];
+
+//         assert(task->regions.size() == 2);
+//         const auto &y_req = task->regions[0];
+//         const auto &x_req = task->regions[1];
+//         assert(y_req.privilege_fields.size() == 1);
+//         const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
+
+//         assert(x_req.privilege_fields.size() == 1);
+//         const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+
+//         assert(task->arglen == 0);
+//         assert(task->futures.size() == 1);
+//         const TFloat alpha = task->futures[0].get_result<TFloat>();
+
+//         auto x = get_const_view<KokkosExecutionSpace>(regions[0], FID_X);
+//         auto y = get_view<KokkosExecutionSpace>(regions[1], FID_Y);
+//         Kokkos::parallel_for(
+//             get_range<KokkosExecutionSpace>(task, ctx, runtime),
+//             KOKKOS_LAMBDA(int i) { y(i) += alpha * x(i); });
+//     }
+// }; // struct AxpyTask
 
 template <typename TFloat>
 void aypx_task(const Legion::Task *task,
