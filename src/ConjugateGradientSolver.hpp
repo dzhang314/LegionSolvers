@@ -1,6 +1,7 @@
 #ifndef LEGION_SOLVERS_CONJUGATE_GRADIENT_SOLVER_HPP
 #define LEGION_SOLVERS_CONJUGATE_GRADIENT_SOLVER_HPP
 
+#include <cmath>
 #include <vector>
 
 #include <legion.h>
@@ -18,14 +19,20 @@ enum ConjugateGradientSolverFieldIDs : Legion::FieldID {
 
 class ConjugateGradientSolver {
 
-  public:
+
     const Planner &planner;
-    std::vector<Legion::LogicalRegion> workspace;
     Legion::Future residual_norm_squared;
+    int max_iterations = 1'000;
+    double residual_threshold = 1.0e-16;
+
+
+  public:
+    std::vector<Legion::LogicalRegion> workspace;
+
 
     explicit ConjugateGradientSolver(const Planner &planner,
                                      Legion::Context ctx, Legion::Runtime *rt)
-        : planner{planner}, workspace{}, residual_norm_squared{} {
+        : planner{planner} {
         for (const auto &[index_space, index_partition] : planner.dimensions) {
             const Legion::FieldSpace field_space = rt->create_field_space(ctx);
             Legion::FieldAllocator allocator =
@@ -39,6 +46,13 @@ class ConjugateGradientSolver {
         }
     }
 
+
+    void set_max_iterations(int n) { max_iterations = n; }
+
+
+    void set_residual_threshold(double x) { residual_threshold = x; }
+
+
     void setup(Legion::Context ctx, Legion::Runtime *rt) {
         planner.zero_fill(FID_CG_X, workspace, ctx, rt);
         planner.copy_rhs(FID_CG_P, workspace, ctx, rt);
@@ -46,6 +60,7 @@ class ConjugateGradientSolver {
         residual_norm_squared =
             planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
     }
+
 
     void step(Legion::Context ctx, Legion::Runtime *rt) {
         planner.matvec(FID_CG_Q, FID_CG_P, workspace, ctx, rt);
@@ -64,28 +79,21 @@ class ConjugateGradientSolver {
         planner.xpay(FID_CG_P, beta, FID_CG_R, workspace, ctx, rt);
     }
 
-    void solve() {
-        // Legion::Future r_norm2 =
-        //     planner.dot_product(FID_CG_R, FID_CG_R, workspace);
-        // for (int i = 0; i < 16; ++i) {
-        //     planner.matmul(FID_CG_Q, FID_CG_P, workspace);
-        //     Legion::Future p_norm =
-        //         planner.dot_product(FID_CG_P, FID_CG_Q, workspace);
-        //     Legion::Future alpha = planner.divide(r_norm2, p_norm);
-        //     planner.axpy(sol_fid, FID_CG_P, alpha, stencil_lr, workspace,
-        //                  color_space, disjoint_partition,
-        //                  workspace_disjoint_partition);
-        //     planner.axpy(FID_CG_R, FID_CG_Q, planner.negate(alpha),
-        //     workspace,
-        //                  color_space, workspace_disjoint_partition);
-        //     Legion::Future r_norm2_new =
-        //         planner.dot_product(FID_CG_R, FID_CG_R, workspace);
-        //     Legion::Future beta = planner.divide(r_norm2_new, r_norm2);
-        //     r_norm2 = r_norm2_new;
-        //     planner.aypx(FID_CG_P, FID_CG_R, beta, workspace, color_space,
-        //                  workspace_disjoint_partition);
-        // }
+
+    void solve(Legion::Context ctx, Legion::Runtime *rt) {
+        setup(ctx, rt);
+        for (int i = 0; i < max_iterations; ++i) {
+            std::cout << "residual: "
+                      << std::sqrt(residual_norm_squared.get_result<double>())
+                      << std::endl;
+            if (residual_norm_squared.get_result<double>() <=
+                residual_threshold * residual_threshold) {
+                break;
+            }
+            step(ctx, rt);
+        }
     }
+
 
 }; // class ConjugateGradientSolver
 

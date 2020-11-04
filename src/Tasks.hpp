@@ -14,6 +14,7 @@ enum SolverTaskIDs : Legion::TaskID {
     XPAY_TASK_ID = 4007,
     DOT_PRODUCT_TASK_ID = 4008,
     COPY_TASK_ID = 4009,
+    ADDITION_TASK_ID = 4010,
 };
 
 
@@ -253,6 +254,19 @@ void copy_task(const Legion::Task *task,
 }
 
 
+template <typename T>
+T addition_task(const Legion::Task *task,
+                const std::vector<Legion::PhysicalRegion> &regions,
+                Legion::Context, Legion::Runtime *) {
+
+    assert(task->futures.size() == 2);
+    Legion::Future a = task->futures[0];
+    Legion::Future b = task->futures[1];
+
+    return a.get_result<T>() + b.get_result<T>();
+}
+
+
 template <void (*TaskPtr)(const Legion::Task *,
                           const std::vector<Legion::PhysicalRegion> &,
                           Legion::Context, Legion::Runtime *)>
@@ -292,6 +306,7 @@ void preregister_solver_tasks() {
     preregister_cpu_task<T, dot_product_task<T, DIM>>(DOT_PRODUCT_TASK_ID,
                                                       "dot_product");
     preregister_cpu_task<copy_task<T, DIM>>(COPY_TASK_ID, "copy");
+    preregister_cpu_task<T, addition_task<T>>(ADDITION_TASK_ID, "addition");
 }
 
 

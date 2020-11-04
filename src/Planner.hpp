@@ -110,16 +110,23 @@ class Planner {
                 const std::vector<Legion::LogicalRegion> &workspace,
                 Legion::Context ctx, Legion::Runtime *rt) const {
 
-        // TODO: Implement reduction over multiple vectors.
-        Legion::TaskLauncher launcher{DOT_PRODUCT_TASK_ID,
-                                      Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            workspace[0], READ_ONLY, EXCLUSIVE, workspace[0]});
-        launcher.add_field(0, fid_v);
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            workspace[0], READ_ONLY, EXCLUSIVE, workspace[0]});
-        launcher.add_field(1, fid_w);
-        return rt->execute_task(ctx, launcher);
+        assert(workspace.size() == dimensions.size());
+        assert(workspace.size() == right_hand_sides.size());
+
+        Legion::Future result = Legion::Future::from_value<double>(rt, 0.0);
+        for (std::size_t i = 0; i < workspace.size(); ++i) {
+            // TODO: Implement inner reduction.
+            Legion::TaskLauncher launcher{DOT_PRODUCT_TASK_ID,
+                                          Legion::TaskArgument{nullptr, 0}};
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                workspace[i], READ_ONLY, EXCLUSIVE, workspace[i]});
+            launcher.add_field(0, fid_v);
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                workspace[i], READ_ONLY, EXCLUSIVE, workspace[i]});
+            launcher.add_field(1, fid_w);
+            result = add(result, rt->execute_task(ctx, launcher), ctx, rt);
+        }
+        return result;
     }
 
 
@@ -178,6 +185,16 @@ class Planner {
             launcher.add_future(alpha);
             rt->execute_index_space(ctx, launcher);
         }
+    }
+
+
+    Legion::Future add(Legion::Future a, Legion::Future b, Legion::Context ctx,
+                       Legion::Runtime *rt) const {
+        Legion::TaskLauncher launcher{ADDITION_TASK_ID,
+                                      Legion::TaskArgument{nullptr, 0}};
+        launcher.add_future(a);
+        launcher.add_future(b);
+        return rt->execute_task(ctx, launcher);
     }
 
 
