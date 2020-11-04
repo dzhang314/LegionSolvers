@@ -11,6 +11,7 @@
 
 class COOMatrix {
 
+
   private:
     Legion::LogicalRegion matrix_region;
     Legion::FieldID fid_i;
@@ -23,6 +24,7 @@ class COOMatrix {
     Legion::Color tile_partition;
     std::vector<std::pair<Legion::DomainPoint, Legion::DomainPoint>>
         nonempty_tiles;
+
 
   public:
     explicit COOMatrix(Legion::LogicalRegion matrix_region,
@@ -90,11 +92,12 @@ class COOMatrix {
         }
     }
 
-    void launch_matmul(Legion::LogicalRegion output_vector,
+
+    void launch_matvec(Legion::LogicalRegion output_vector,
                        Legion::FieldID output_fid,
                        Legion::LogicalRegion input_vector,
                        Legion::FieldID input_fid, Legion::Context ctx,
-                       Legion::Runtime *rt) {
+                       Legion::Runtime *rt) const {
         {
             Legion::IndexLauncher launcher{
                 ZERO_FILL_TASK_ID,
@@ -139,6 +142,7 @@ class COOMatrix {
             }
         }
     }
+
 
 }; // class COOMatrix
 

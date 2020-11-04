@@ -5,6 +5,7 @@
 
 #include "COOMatrix.hpp"
 #include "ConjugateGradientSolver.hpp"
+#include "Planner.hpp"
 #include "Tasks.hpp"
 
 enum TaskIDs : Legion::TaskID {
@@ -110,7 +111,7 @@ void top_level_task(const Legion::Task *,
         coo_matrix,      FID_COO_I,        FID_COO_J, FID_COO_ENTRY,
         input_partition, output_partition, ctx,       rt};
 
-    matrix_obj.launch_matmul(output_vector, FID_VEC_ENTRY, input_vector,
+    matrix_obj.launch_matvec(output_vector, FID_VEC_ENTRY, input_vector,
                              FID_VEC_ENTRY, ctx, rt);
 
     {
@@ -122,81 +123,27 @@ void top_level_task(const Legion::Task *,
         rt->execute_task(ctx, launcher);
     }
 
-    // {
-    //     Legion::TaskLauncher launcher{BOUNDARY_FILL_VECTOR_TASK_ID,
-    //                                   Legion::TaskArgument{nullptr, 0}};
-    //     launcher.add_region_requirement(Legion::RegionRequirement{
-    //         output_vector, READ_ONLY, EXCLUSIVE, output_vector});
-    //     launcher.add_field(0, FID_VEC_ENTRY);
-    //     rt->execute_task(ctx, launcher);
-    // }
+    Planner planner{};
 
-    // {
-    //     Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
-    //                                   Legion::TaskArgument{nullptr, 0}};
-    //     launcher.add_region_requirement(Legion::RegionRequirement{
-    //         output_vector, READ_ONLY, EXCLUSIVE, output_vector});
-    //     launcher.add_field(0, FID_VEC_ENTRY);
-    //     rt->execute_task(ctx, launcher);
-    // }
+    planner.add_rhs(output_vector, FID_VEC_ENTRY, output_partition);
+    planner.add_coo_matrix(0, 0, coo_matrix, FID_COO_I, FID_COO_J,
+                           FID_COO_ENTRY, ctx, rt);
 
-    ConjugateGradientSolver solver{output_vector, FID_VEC_ENTRY, ctx, rt};
+    ConjugateGradientSolver solver{planner, ctx, rt};
 
-    { // x = 0
-        Legion::TaskLauncher launcher{ZERO_FILL_TASK_ID,
-                                      Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            solver.workspace, WRITE_DISCARD, EXCLUSIVE, solver.workspace});
-        launcher.add_field(0, FID_CG_X);
-        rt->execute_task(ctx, launcher);
-    }
-
-    { // p = b
-        Legion::TaskLauncher launcher{COPY_TASK_ID,
-                                      Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            solver.workspace, WRITE_DISCARD, EXCLUSIVE, solver.workspace});
-        launcher.add_field(0, FID_CG_P);
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            output_vector, READ_ONLY, EXCLUSIVE, output_vector});
-        launcher.add_field(1, FID_VEC_ENTRY);
-        rt->execute_task(ctx, launcher);
-    }
-
-    { // r = b
-        Legion::TaskLauncher launcher{COPY_TASK_ID,
-                                      Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            solver.workspace, WRITE_DISCARD, EXCLUSIVE, solver.workspace});
-        launcher.add_field(0, FID_CG_R);
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            output_vector, READ_ONLY, EXCLUSIVE, output_vector});
-        launcher.add_field(1, FID_VEC_ENTRY);
-        rt->execute_task(ctx, launcher);
-    }
-
-    Legion::Future r_norm2 = solver.dot_product(FID_CG_R, FID_CG_R, ctx, rt);
+    solver.setup(ctx, rt);
 
     for (int i = 0; i < MATRIX_SIZE; ++i) {
-        matrix_obj.launch_matmul(solver.workspace, FID_CG_Q, solver.workspace,
-                                 FID_CG_P, ctx, rt);
-        Legion::Future p_norm = solver.dot_product(FID_CG_P, FID_CG_Q, ctx, rt);
-        Legion::Future alpha = solver.divide(r_norm2, p_norm, ctx, rt);
-        solver.axpy(FID_CG_X, alpha, FID_CG_P, ctx, rt);
-        solver.axpy(FID_CG_R, solver.negate(alpha, ctx, rt), FID_CG_Q, ctx, rt);
-        Legion::Future r_norm2_new =
-            solver.dot_product(FID_CG_R, FID_CG_R, ctx, rt);
-        std::cout << r_norm2_new.get_result<double>() << std::endl;
-        Legion::Future beta = solver.divide(r_norm2_new, r_norm2, ctx, rt);
-        r_norm2 = r_norm2_new;
-        solver.xpay(FID_CG_P, beta, FID_CG_R, ctx, rt);
+        solver.step(ctx, rt);
+        std::cout << solver.residual_norm_squared.get_result<double>()
+                  << std::endl;
     }
 
     {
         Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
                                       Legion::TaskArgument{nullptr, 0}};
         launcher.add_region_requirement(Legion::RegionRequirement{
-            solver.workspace, READ_ONLY, EXCLUSIVE, solver.workspace});
+            solver.workspace[0], READ_ONLY, EXCLUSIVE, solver.workspace[0]});
         launcher.add_field(0, FID_CG_X);
         rt->execute_task(ctx, launcher);
     }
