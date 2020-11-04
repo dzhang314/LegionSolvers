@@ -8,5 +8,8 @@ AllowShortLoopsOnASingleLine: 'true'
 AlwaysBreakTemplateDeclarations: 'Yes'
 FixNamespaceComments: 'true'
 NamespaceIndentation: All
+IndentWidth: 4
+ColumnLimit: 80
+MaxEmptyLinesToKeep: 2
 
 ...
