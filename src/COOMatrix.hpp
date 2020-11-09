@@ -7,13 +7,14 @@
 
 #include <legion.h>
 
+#include "SparseMatrix.hpp"
 #include "Tasks.hpp"
 
 
 namespace LegionSolvers {
 
 
-    class COOMatrix {
+    class COOMatrix : public SparseMatrix {
 
 
       private:
