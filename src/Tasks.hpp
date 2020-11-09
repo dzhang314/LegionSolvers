@@ -71,16 +71,16 @@ void coo_matvec_task(const Legion::Task *task,
     const Legion::FieldID fid_j = argptr[1];
     const Legion::FieldID fid_entry = argptr[2];
 
-    const Legion::FieldAccessor<READ_ONLY, Legion::coord_t, MATRIX_DIM>
+    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::coord_t, MATRIX_DIM>
         i_reader{coo_matrix, fid_i};
-    const Legion::FieldAccessor<READ_ONLY, Legion::coord_t, MATRIX_DIM>
+    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::coord_t, MATRIX_DIM>
         j_reader{coo_matrix, fid_j};
-    const Legion::FieldAccessor<READ_ONLY, T, MATRIX_DIM> entry_reader{
+    const Legion::FieldAccessor<LEGION_READ_ONLY, T, MATRIX_DIM> entry_reader{
         coo_matrix, fid_entry};
 
-    const Legion::FieldAccessor<READ_ONLY, T, INPUT_DIM> input_reader{
+    const Legion::FieldAccessor<LEGION_READ_ONLY, T, INPUT_DIM> input_reader{
         input_vec, input_fid};
-    const Legion::FieldAccessor<READ_WRITE, T, OUTPUT_DIM> output_writer{
+    const Legion::FieldAccessor<LEGION_READ_WRITE, T, OUTPUT_DIM> output_writer{
         output_vec, output_fid};
 
     for (Legion::PointInDomainIterator<MATRIX_DIM> iter{coo_matrix}; iter();
@@ -157,8 +157,8 @@ void axpy_task(const Legion::Task *task,
     assert(task->futures.size() == 1);
     const T alpha = task->futures[0].get_result<T>();
 
-    const Legion::FieldAccessor<READ_WRITE, T, DIM> y_writer{y, y_fid};
-    const Legion::FieldAccessor<READ_ONLY, T, DIM> x_reader{x, x_fid};
+    const Legion::FieldAccessor<LEGION_READ_WRITE, T, DIM> y_writer{y, y_fid};
+    const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> x_reader{x, x_fid};
 
     for (Legion::PointInDomainIterator<DIM> iter{y}; iter(); ++iter) {
         y_writer[*iter] = alpha * x_reader[*iter] + y_writer[*iter];
@@ -188,8 +188,8 @@ void xpay_task(const Legion::Task *task,
     assert(task->futures.size() == 1);
     const T alpha = task->futures[0].get_result<T>();
 
-    const Legion::FieldAccessor<READ_WRITE, T, DIM> y_writer{y, y_fid};
-    const Legion::FieldAccessor<READ_ONLY, T, DIM> x_reader{x, x_fid};
+    const Legion::FieldAccessor<LEGION_READ_WRITE, T, DIM> y_writer{y, y_fid};
+    const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> x_reader{x, x_fid};
     for (Legion::PointInDomainIterator<DIM> iter{y}; iter(); ++iter) {
         y_writer[*iter] = x_reader[*iter] + alpha * y_writer[*iter];
     }
@@ -215,8 +215,8 @@ T dot_product_task(const Legion::Task *task,
     assert(w_req.privilege_fields.size() == 1);
     const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
 
-    const Legion::FieldAccessor<READ_ONLY, T, DIM> v_reader{v, v_fid};
-    const Legion::FieldAccessor<READ_ONLY, T, DIM> w_reader{w, w_fid};
+    const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> v_reader{v, v_fid};
+    const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> w_reader{w, w_fid};
 
     T result = static_cast<T>(0);
     for (Legion::PointInDomainIterator<DIM> iter{v}; iter(); ++iter) {
@@ -245,8 +245,10 @@ void copy_task(const Legion::Task *task,
     assert(src_req.privilege_fields.size() == 1);
     const Legion::FieldID src_fid = *src_req.privilege_fields.begin();
 
-    const Legion::FieldAccessor<WRITE_DISCARD, T, DIM> dst_writer{dst, dst_fid};
-    const Legion::FieldAccessor<READ_ONLY, T, DIM> src_reader{src, src_fid};
+    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, DIM> dst_writer{
+        dst, dst_fid};
+    const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> src_reader{src,
+                                                                     src_fid};
 
     for (Legion::PointInDomainIterator<DIM> iter{dst}; iter(); ++iter) {
         dst_writer[*iter] = +src_reader[*iter]; // TODO: Why is + needed?

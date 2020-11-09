@@ -1,12 +1,18 @@
 #include <iostream>
 #include <random>
 
+#define LEGION_DISABLE_DEPRECATED_ENUMS
+
 #include <legion.h>
 
 #include "COOMatrix.hpp"
 #include "ConjugateGradientSolver.hpp"
 #include "Planner.hpp"
 #include "Tasks.hpp"
+
+using LegionSolvers::ConjugateGradientSolver;
+using LegionSolvers::COOMatrix;
+using LegionSolvers::Planner;
 
 constexpr Legion::coord_t MATRIX_SIZE = 16;
 constexpr Legion::coord_t NUM_NONZERO_ENTRIES = 3 * MATRIX_SIZE - 2;
@@ -78,7 +84,7 @@ void top_level_task(const Legion::Task *,
         Legion::TaskLauncher launcher{FILL_COO_MATRIX_TASK_ID,
                                       Legion::TaskArgument{nullptr, 0}};
         launcher.add_region_requirement(Legion::RegionRequirement{
-            coo_matrix, WRITE_DISCARD, EXCLUSIVE, coo_matrix});
+            coo_matrix, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix});
         launcher.add_field(0, FID_COO_I);
         launcher.add_field(0, FID_COO_J);
         launcher.add_field(0, FID_COO_ENTRY);
@@ -88,8 +94,9 @@ void top_level_task(const Legion::Task *,
     { // Fill input vector entries.
         Legion::TaskLauncher launcher{FILL_VECTOR_TASK_ID,
                                       Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            input_vector, WRITE_DISCARD, EXCLUSIVE, input_vector});
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{input_vector, LEGION_WRITE_DISCARD,
+                                      LEGION_EXCLUSIVE, input_vector});
         launcher.add_field(0, FID_VEC_ENTRY);
         rt->execute_task(ctx, launcher);
     }
@@ -107,7 +114,7 @@ void top_level_task(const Legion::Task *,
         Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
                                       Legion::TaskArgument{nullptr, 0}};
         launcher.add_region_requirement(Legion::RegionRequirement{
-            output_vector, READ_ONLY, EXCLUSIVE, output_vector});
+            output_vector, LEGION_READ_ONLY, LEGION_EXCLUSIVE, output_vector});
         launcher.add_field(0, FID_VEC_ENTRY);
         rt->execute_task(ctx, launcher);
     }
@@ -124,7 +131,7 @@ void top_level_task(const Legion::Task *,
         Legion::TaskLauncher launcher{BOUNDARY_FILL_VECTOR_TASK_ID,
                                       Legion::TaskArgument{nullptr, 0}};
         launcher.add_region_requirement(Legion::RegionRequirement{
-            rhs_vector, WRITE_DISCARD, EXCLUSIVE, rhs_vector});
+            rhs_vector, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, rhs_vector});
         launcher.add_field(0, FID_VEC_ENTRY);
         rt->execute_task(ctx, launcher);
     }
@@ -138,24 +145,26 @@ void top_level_task(const Legion::Task *,
                            FID_COO_ENTRY, ctx, rt);
 
     ConjugateGradientSolver solver{planner, ctx, rt};
-    solver.set_residual_threshold(0.2);
+    solver.set_max_iterations(17);
     solver.solve(ctx, rt);
 
     {
         Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
                                       Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            solver.workspace[0], READ_ONLY, EXCLUSIVE, solver.workspace[0]});
-        launcher.add_field(0, FID_CG_X);
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{solver.workspace[0], LEGION_READ_ONLY,
+                                      LEGION_EXCLUSIVE, solver.workspace[0]});
+        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver::FID_CG_X);
         rt->execute_task(ctx, launcher);
     }
 
     {
         Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
                                       Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            solver.workspace[1], READ_ONLY, EXCLUSIVE, solver.workspace[1]});
-        launcher.add_field(0, FID_CG_X);
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{solver.workspace[1], LEGION_READ_ONLY,
+                                      LEGION_EXCLUSIVE, solver.workspace[1]});
+        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver::FID_CG_X);
         rt->execute_task(ctx, launcher);
     }
 }
@@ -167,11 +176,11 @@ void fill_coo_matrix_task(const Legion::Task *task,
     assert(regions.size() == 1);
     const auto &coo_matrix = regions[0];
 
-    const Legion::FieldAccessor<WRITE_DISCARD, Legion::coord_t, 1> i_writer{
-        coo_matrix, FID_COO_I};
-    const Legion::FieldAccessor<WRITE_DISCARD, Legion::coord_t, 1> j_writer{
-        coo_matrix, FID_COO_J};
-    const Legion::FieldAccessor<WRITE_DISCARD, double, 1> entry_writer{
+    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::coord_t, 1>
+        i_writer{coo_matrix, FID_COO_I};
+    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::coord_t, 1>
+        j_writer{coo_matrix, FID_COO_J};
+    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, double, 1> entry_writer{
         coo_matrix, FID_COO_ENTRY};
 
     if (NUM_NONZERO_ENTRIES == 3 * MATRIX_SIZE - 2) {
@@ -220,7 +229,7 @@ void fill_vector_task(const Legion::Task *task,
                       Legion::Context ctx, Legion::Runtime *rt) {
     assert(regions.size() == 1);
     const auto &vector = regions[0];
-    const Legion::FieldAccessor<WRITE_DISCARD, double, 1> entry_writer{
+    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, double, 1> entry_writer{
         vector, FID_VEC_ENTRY};
     std::random_device rng{};
     std::uniform_real_distribution<double> entry_dist{0.0, 1.0};
@@ -237,7 +246,7 @@ void boundary_fill_vector_task(
     Legion::Runtime *rt) {
     assert(regions.size() == 1);
     const auto &vector = regions[0];
-    const Legion::FieldAccessor<WRITE_DISCARD, double, 1> entry_writer{
+    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, double, 1> entry_writer{
         vector, FID_VEC_ENTRY};
     for (Legion::PointInDomainIterator<1> iter{vector}; iter(); ++iter) {
         auto i = *iter;
@@ -256,11 +265,11 @@ void print_task(const Legion::Task *task,
                 Legion::Context ctx, Legion::Runtime *rt) {
     assert(regions.size() == 1);
     const auto &coo_matrix = regions[0];
-    const Legion::FieldAccessor<READ_ONLY, Legion::coord_t, 1> i_reader{
+    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::coord_t, 1> i_reader{
         coo_matrix, FID_COO_I};
-    const Legion::FieldAccessor<READ_ONLY, Legion::coord_t, 1> j_reader{
+    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::coord_t, 1> j_reader{
         coo_matrix, FID_COO_J};
-    const Legion::FieldAccessor<READ_ONLY, double, 1> entry_reader{
+    const Legion::FieldAccessor<LEGION_READ_ONLY, double, 1> entry_reader{
         coo_matrix, FID_COO_ENTRY};
     std::cout << task->index_point << std::endl;
     for (Legion::PointInDomainIterator<1> iter{coo_matrix}; iter(); ++iter) {
@@ -283,8 +292,8 @@ void print_vec_task(const Legion::Task *task,
     assert(vector_req.privilege_fields.size() == 1);
     const Legion::FieldID vector_fid = *vector_req.privilege_fields.begin();
 
-    const Legion::FieldAccessor<READ_ONLY, double, 1> entry_reader{vector,
-                                                                   vector_fid};
+    const Legion::FieldAccessor<LEGION_READ_ONLY, double, 1> entry_reader{
+        vector, vector_fid};
 
     for (Legion::PointInDomainIterator<1> iter{vector}; iter(); ++iter) {
         std::cout << task->index_point << ' ' << *iter << ": "
@@ -293,7 +302,9 @@ void print_vec_task(const Legion::Task *task,
 }
 
 int main(int argc, char **argv) {
+
     preregister_solver_tasks<double, 1>();
+
     preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
     preregister_cpu_task<fill_coo_matrix_task>(FILL_COO_MATRIX_TASK_ID,
                                                "fill_coo_matrix");
