@@ -2,6 +2,7 @@
 #define LEGION_SOLVERS_PLANNER_HPP
 
 #include <cstddef>
+#include <memory>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -9,6 +10,7 @@
 #include <legion.h>
 
 #include "COOMatrix.hpp"
+#include "LinearOperator.hpp"
 
 
 namespace LegionSolvers {
@@ -22,7 +24,8 @@ namespace LegionSolvers {
             dimensions;
         std::vector<std::pair<Legion::LogicalRegion, Legion::FieldID>>
             right_hand_sides;
-        std::vector<std::tuple<int, int, COOMatrix>> operators;
+        std::vector<std::tuple<int, int, std::unique_ptr<LinearOperator>>>
+            operators;
 
 
         void add_rhs(Legion::LogicalRegion rhs_region, Legion::FieldID fid_rhs,
@@ -37,11 +40,11 @@ namespace LegionSolvers {
                             Legion::FieldID fid_i, Legion::FieldID fid_j,
                             Legion::FieldID fid_entry, Legion::Context ctx,
                             Legion::Runtime *rt) {
-            operators.emplace_back(
-                rhs_index, sol_index,
-                COOMatrix{matrix_region, fid_i, fid_j, fid_entry,
-                          dimensions[sol_index].second,
-                          dimensions[rhs_index].second, ctx, rt});
+            operators.emplace_back(rhs_index, sol_index,
+                                   std::make_unique<COOMatrix>(
+                                       matrix_region, fid_i, fid_j, fid_entry,
+                                       dimensions[sol_index].second,
+                                       dimensions[rhs_index].second, ctx, rt));
         }
 
 
@@ -53,8 +56,8 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (const auto &[dst_index, src_index, matrix] : operators) {
-                matrix.launch_matvec(workspace[dst_index], fid_dst,
-                                     workspace[src_index], fid_src, ctx, rt);
+                matrix->launch_matvec(workspace[dst_index], fid_dst,
+                                      workspace[src_index], fid_src, ctx, rt);
             }
         }
 

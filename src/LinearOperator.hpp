@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_LINEAR_OPERATOR_HPP
 #define LEGION_SOLVERS_LINEAR_OPERATOR_HPP
 
+#include <legion.h>
+
 
 namespace LegionSolvers {
 
@@ -8,7 +10,13 @@ namespace LegionSolvers {
     class LinearOperator {
 
 
-        // TODO
+      public:
+        virtual void launch_matvec(Legion::LogicalRegion output_vector,
+                                   Legion::FieldID output_fid,
+                                   Legion::LogicalRegion input_vector,
+                                   Legion::FieldID input_fid,
+                                   Legion::Context ctx,
+                                   Legion::Runtime *rt) const = 0;
 
 
     }; // class LinearOperator

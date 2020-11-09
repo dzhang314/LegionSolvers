@@ -105,11 +105,12 @@ namespace LegionSolvers {
         }
 
 
-        void launch_matvec(Legion::LogicalRegion output_vector,
-                           Legion::FieldID output_fid,
-                           Legion::LogicalRegion input_vector,
-                           Legion::FieldID input_fid, Legion::Context ctx,
-                           Legion::Runtime *rt) const {
+        virtual void launch_matvec(Legion::LogicalRegion output_vector,
+                                   Legion::FieldID output_fid,
+                                   Legion::LogicalRegion input_vector,
+                                   Legion::FieldID input_fid,
+                                   Legion::Context ctx,
+                                   Legion::Runtime *rt) const override {
             {
                 Legion::IndexLauncher launcher{
                     ZERO_FILL_TASK_ID,
