@@ -19,7 +19,13 @@ namespace LegionSolvers {
                                    Legion::Runtime *rt) const = 0;
 
 
+        virtual ~LinearOperator() = 0;
+
+
     }; // class LinearOperator
+
+
+    LinearOperator::~LinearOperator() {}
 
 
 } // namespace LegionSolvers
