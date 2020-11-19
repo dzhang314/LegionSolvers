@@ -19,7 +19,6 @@ namespace LegionSolvers {
     class Planner {
 
 
-      public:
         std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>>
             dimensions;
         std::vector<std::pair<Legion::LogicalRegion, Legion::FieldID>>
@@ -28,10 +27,19 @@ namespace LegionSolvers {
             operators;
 
 
-        void add_rhs(Legion::LogicalRegion rhs_region, Legion::FieldID fid_rhs,
-                     Legion::IndexPartition partition) {
+      public:
+        const std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>>
+            &get_dimensions() const noexcept {
+            return dimensions;
+        }
+
+
+        std::size_t add_rhs(Legion::LogicalRegion rhs_region,
+                            Legion::FieldID fid_rhs,
+                            Legion::IndexPartition partition) {
             right_hand_sides.emplace_back(rhs_region, fid_rhs);
             dimensions.emplace_back(rhs_region.get_index_space(), partition);
+            return right_hand_sides.size() - 1;
         }
 
 

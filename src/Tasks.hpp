@@ -71,9 +71,11 @@ void coo_matvec_task(const Legion::Task *task,
     const Legion::FieldID fid_j = argptr[1];
     const Legion::FieldID fid_entry = argptr[2];
 
-    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::coord_t, MATRIX_DIM>
+    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::Point<OUTPUT_DIM>,
+                                MATRIX_DIM>
         i_reader{coo_matrix, fid_i};
-    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::coord_t, MATRIX_DIM>
+    const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::Point<INPUT_DIM>,
+                                MATRIX_DIM>
         j_reader{coo_matrix, fid_j};
     const Legion::FieldAccessor<LEGION_READ_ONLY, T, MATRIX_DIM> entry_reader{
         coo_matrix, fid_entry};
@@ -297,10 +299,10 @@ template <typename T, int DIM>
 void preregister_solver_tasks() {
     preregister_cpu_task<zero_fill_task<T, DIM>>(ZERO_FILL_TASK_ID,
                                                  "zero_fill");
-    preregister_cpu_task<coo_matvec_task<T, DIM, DIM, DIM>>(COO_MATVEC_TASK_ID,
-                                                            "coo_matvec");
-    preregister_cpu_task<bool, is_nonempty_task<DIM>>(IS_NONEMPTY_TASK_ID,
-                                                      "is_nonempty");
+    preregister_cpu_task<coo_matvec_task<T, 1, DIM, DIM>>(COO_MATVEC_TASK_ID,
+                                                          "coo_matvec");
+    preregister_cpu_task<bool, is_nonempty_task<1>>(IS_NONEMPTY_TASK_ID,
+                                                    "is_nonempty");
     preregister_cpu_task<T, division_task<T>>(DIVISION_TASK_ID, "division");
     preregister_cpu_task<T, negation_task<T>>(NEGATION_TASK_ID, "negation");
     preregister_cpu_task<axpy_task<T, DIM>>(AXPY_TASK_ID, "axpy");

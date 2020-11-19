@@ -64,6 +64,7 @@ namespace LegionSolvers {
                                    Legion::Future>>
                 nonempty_futures{};
 
+            // TODO: Rewrite using index launches
             for (Legion::PointInDomainIterator<1> input_iter{
                      rt->get_index_partition_color_space(input_partition)};
                  input_iter(); ++input_iter) {

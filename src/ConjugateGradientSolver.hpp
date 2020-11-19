@@ -36,7 +36,7 @@ namespace LegionSolvers {
                                          Legion::Runtime *rt)
             : planner{planner} {
             for (const auto &[index_space, index_partition] :
-                 planner.dimensions) {
+                 planner.get_dimensions()) {
                 const Legion::FieldSpace field_space =
                     rt->create_field_space(ctx);
                 Legion::FieldAllocator allocator =
