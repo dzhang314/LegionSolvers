@@ -67,6 +67,122 @@ void top_level_task(const Legion::Task *,
                     Legion::Context ctx, Legion::Runtime *rt) {
 
     // Create matrix and two vector regions (input and output).
+    const auto coo_matrix =
+        create_region(rt->create_index_space(
+                          ctx, Legion::Rect<1>{0, NUM_NONZERO_ENTRIES - 1}),
+                      {{sizeof(Legion::coord_t), FID_COO_I},
+                       {sizeof(Legion::coord_t), FID_COO_J},
+                       {sizeof(double), FID_COO_ENTRY}},
+                      ctx, rt);
+    const Legion::IndexSpace index_space =
+        rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
+    const auto input_vector =
+        create_region(index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
+    const auto output_vector =
+        create_region(index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
+
+    // Partition input and output vectors.
+    const auto input_color_space = rt->create_index_space(
+        ctx, Legion::Rect<1>{0, NUM_INPUT_PARTITIONS - 1});
+    const auto output_color_space = rt->create_index_space(
+        ctx, Legion::Rect<1>{0, NUM_OUTPUT_PARTITIONS - 1});
+    const auto input_partition = rt->create_equal_partition(
+        ctx, input_vector.get_index_space(), input_color_space);
+    const auto output_partition = rt->create_equal_partition(
+        ctx, output_vector.get_index_space(), output_color_space);
+
+    { // Fill matrix entries.
+        Legion::TaskLauncher launcher{FILL_COO_MATRIX_TASK_ID,
+                                      Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(Legion::RegionRequirement{
+            coo_matrix, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix});
+        launcher.add_field(0, FID_COO_I);
+        launcher.add_field(0, FID_COO_J);
+        launcher.add_field(0, FID_COO_ENTRY);
+        rt->execute_task(ctx, launcher);
+    }
+
+    { // Fill input vector entries.
+        Legion::TaskLauncher launcher{FILL_VECTOR_TASK_ID,
+                                      Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{input_vector, LEGION_WRITE_DISCARD,
+                                      LEGION_EXCLUSIVE, input_vector});
+        launcher.add_field(0, FID_VEC_ENTRY);
+        rt->execute_task(ctx, launcher);
+    }
+
+    // Construct map of nonzero tiles.
+    COOMatrix matrix_obj{
+        coo_matrix,      FID_COO_I,        FID_COO_J, FID_COO_ENTRY,
+        input_partition, output_partition, ctx,       rt};
+
+    // Launch matrix-vector multiplication tasks.
+    matrix_obj.launch_matvec(output_vector, FID_VEC_ENTRY, input_vector,
+                             FID_VEC_ENTRY, ctx, rt);
+
+    { // Print output vector.
+        Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
+                                      Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(Legion::RegionRequirement{
+            output_vector, LEGION_READ_ONLY, LEGION_EXCLUSIVE, output_vector});
+        launcher.add_field(0, FID_VEC_ENTRY);
+        rt->execute_task(ctx, launcher);
+    }
+
+    // Create another rhs vector and partition it.
+    const Legion::IndexSpace rhs_index_space =
+        rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
+    const auto rhs_vector = create_region(
+        rhs_index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
+    const auto rhs_partition = rt->create_equal_partition(
+        ctx, rhs_vector.get_index_space(), input_color_space);
+
+    { // Fill new rhs vector.
+        Legion::TaskLauncher launcher{BOUNDARY_FILL_VECTOR_TASK_ID,
+                                      Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(Legion::RegionRequirement{
+            rhs_vector, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, rhs_vector});
+        launcher.add_field(0, FID_VEC_ENTRY);
+        rt->execute_task(ctx, launcher);
+    }
+
+    Planner planner{};
+    planner.add_rhs(output_vector, FID_VEC_ENTRY, output_partition);
+    planner.add_rhs(rhs_vector, FID_VEC_ENTRY, rhs_partition);
+    planner.add_coo_matrix(0, 0, coo_matrix, FID_COO_I, FID_COO_J,
+                           FID_COO_ENTRY, ctx, rt);
+    planner.add_coo_matrix(1, 1, coo_matrix, FID_COO_I, FID_COO_J,
+                           FID_COO_ENTRY, ctx, rt);
+
+    ConjugateGradientSolver solver{planner, ctx, rt};
+    solver.set_max_iterations(17);
+    solver.solve(ctx, rt);
+
+    {
+        Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
+                                      Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{solver.workspace[0], LEGION_READ_ONLY,
+                                      LEGION_EXCLUSIVE, solver.workspace[0]});
+        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver::FID_CG_X);
+        rt->execute_task(ctx, launcher);
+    }
+
+    {
+        Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
+                                      Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{solver.workspace[1], LEGION_READ_ONLY,
+                                      LEGION_EXCLUSIVE, solver.workspace[1]});
+        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver::FID_CG_X);
+        rt->execute_task(ctx, launcher);
+    }
+
+
+#ifdef TEST_2D
+
+    // Create matrix and two vector regions (input and output).
     const Legion::coord_t kernel_size =
         laplacian_2d_kernel_size(GRID_HEIGHT, GRID_WIDTH);
     const auto negative_laplacian = create_region(
@@ -76,8 +192,11 @@ void top_level_task(const Legion::Task *,
          {sizeof(double), FID_COO_ENTRY}},
         ctx, rt);
 
-    const Legion::IndexSpace index_space = rt->create_index_space(
-        ctx, Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
+    // const Legion::IndexSpace index_space = rt->create_index_space(
+    //     ctx, Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
+    const Legion::IndexSpace index_space =
+        rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
+
     const auto input_vector =
         create_region(index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
     const auto output_vector =
@@ -124,68 +243,16 @@ void top_level_task(const Legion::Task *,
     matrix_obj.launch_matvec(output_vector, FID_VEC_ENTRY, input_vector,
                              FID_VEC_ENTRY, ctx, rt);
 
-    // { // Print output vector.
-    //     Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
-    //                                   Legion::TaskArgument{nullptr, 0}};
-    //     launcher.add_region_requirement(Legion::RegionRequirement{
-    //         output_vector, LEGION_READ_ONLY, LEGION_EXCLUSIVE,
-    //         output_vector});
-    //     launcher.add_field(0, FID_VEC_ENTRY);
-    //     rt->execute_task(ctx, launcher);
-    // }
-
-    // // Create another rhs vector and partition it.
-    // const Legion::IndexSpace rhs_index_space =
-    //     rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
-    // const auto rhs_vector = create_region(
-    //     rhs_index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
-    // const auto rhs_partition = rt->create_equal_partition(
-    //     ctx, rhs_vector.get_index_space(), input_color_space);
-
-    // { // Fill new rhs vector.
-    //     Legion::TaskLauncher launcher{BOUNDARY_FILL_VECTOR_TASK_ID,
-    //                                   Legion::TaskArgument{nullptr, 0}};
-    //     launcher.add_region_requirement(Legion::RegionRequirement{
-    //         rhs_vector, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, rhs_vector});
-    //     launcher.add_field(0, FID_VEC_ENTRY);
-    //     rt->execute_task(ctx, launcher);
-    // }
-
     Planner planner{};
     planner.add_rhs(output_vector, FID_VEC_ENTRY, output_partition);
-    // planner.add_rhs(rhs_vector, FID_VEC_ENTRY, rhs_partition);
     planner.add_coo_matrix(0, 0, negative_laplacian, FID_COO_I, FID_COO_J,
                            FID_COO_ENTRY, ctx, rt);
-    // planner.add_coo_matrix(1, 1, coo_matrix, FID_COO_I, FID_COO_J,
-    //                        FID_COO_ENTRY, ctx, rt);
 
     ConjugateGradientSolver solver{planner, ctx, rt};
     solver.set_max_iterations(300);
     solver.solve(ctx, rt);
 
-    // {
-    //     Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
-    //                                   Legion::TaskArgument{nullptr, 0}};
-    //     launcher.add_region_requirement(
-    //         Legion::RegionRequirement{solver.workspace[0], LEGION_READ_ONLY,
-    //                                   LEGION_EXCLUSIVE,
-    //                                   solver.workspace[0]});
-    //     launcher.add_field(0,
-    //     LegionSolvers::ConjugateGradientSolver::FID_CG_X);
-    //     rt->execute_task(ctx, launcher);
-    // }
-
-    // {
-    //     Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID,
-    //                                   Legion::TaskArgument{nullptr, 0}};
-    //     launcher.add_region_requirement(
-    //         Legion::RegionRequirement{solver.workspace[1], LEGION_READ_ONLY,
-    //                                   LEGION_EXCLUSIVE,
-    //                                   solver.workspace[1]});
-    //     launcher.add_field(0,
-    //     LegionSolvers::ConjugateGradientSolver::FID_CG_X);
-    //     rt->execute_task(ctx, launcher);
-    // }
+#endif
 }
 
 void fill_coo_matrix_task(const Legion::Task *task,
@@ -382,10 +449,10 @@ void print_vec_task(const Legion::Task *task,
     assert(vector_req.privilege_fields.size() == 1);
     const Legion::FieldID vector_fid = *vector_req.privilege_fields.begin();
 
-    const Legion::FieldAccessor<LEGION_READ_ONLY, double, 2> entry_reader{
+    const Legion::FieldAccessor<LEGION_READ_ONLY, double, 1> entry_reader{
         vector, vector_fid};
 
-    for (Legion::PointInDomainIterator<2> iter{vector}; iter(); ++iter) {
+    for (Legion::PointInDomainIterator<1> iter{vector}; iter(); ++iter) {
         std::cout << task->index_point << ' ' << *iter << ": "
                   << entry_reader[*iter] << std::endl;
     }
@@ -393,7 +460,7 @@ void print_vec_task(const Legion::Task *task,
 
 int main(int argc, char **argv) {
 
-    preregister_solver_tasks<double, 2>();
+    preregister_solver_tasks<double, 1>();
 
     preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
     preregister_cpu_task<fill_coo_matrix_task>(FILL_COO_MATRIX_TASK_ID,
