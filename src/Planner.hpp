@@ -43,16 +43,20 @@ namespace LegionSolvers {
         }
 
 
+        template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM,
+                  typename ENTRY_T>
         void add_coo_matrix(int rhs_index, int sol_index,
                             Legion::LogicalRegion matrix_region,
                             Legion::FieldID fid_i, Legion::FieldID fid_j,
                             Legion::FieldID fid_entry, Legion::Context ctx,
                             Legion::Runtime *rt) {
-            operators.emplace_back(rhs_index, sol_index,
-                                   std::make_unique<COOMatrix>(
-                                       matrix_region, fid_i, fid_j, fid_entry,
-                                       dimensions[sol_index].second,
-                                       dimensions[rhs_index].second, ctx, rt));
+            operators.emplace_back(
+                rhs_index, sol_index,
+                std::make_unique<
+                    COOMatrix<KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, ENTRY_T>>(
+                    matrix_region, fid_i, fid_j, fid_entry,
+                    dimensions[sol_index].second, dimensions[rhs_index].second,
+                    ctx, rt));
         }
 
 
@@ -64,8 +68,8 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (const auto &[dst_index, src_index, matrix] : operators) {
-                matrix->launch_matvec(workspace[dst_index], fid_dst,
-                                      workspace[src_index], fid_src, ctx, rt);
+                matrix->matvec(workspace[dst_index], fid_dst,
+                               workspace[src_index], fid_src, ctx, rt);
             }
         }
 

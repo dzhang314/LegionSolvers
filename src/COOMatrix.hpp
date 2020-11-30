@@ -14,7 +14,9 @@
 namespace LegionSolvers {
 
 
-    class COOMatrix : public SparseMatrix {
+    template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, typename ENTRY_T>
+    class COOMatrix
+        : public SparseMatrix<KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, ENTRY_T> {
 
 
       private:
@@ -32,6 +34,26 @@ namespace LegionSolvers {
 
 
       public:
+        virtual Legion::IndexPartitionT<KERNEL_DIM>
+        kernel_partition_from_domain_partition(
+            Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
+            Legion::Context ctx, Legion::Runtime *rt) const override {
+            return rt->create_partition_by_preimage(
+                ctx, domain_partition, matrix_region, matrix_region, fid_j,
+                rt->get_index_partition_color_space_name(domain_partition));
+        }
+
+
+        virtual Legion::IndexPartitionT<KERNEL_DIM>
+        kernel_partition_from_range_partition(
+            Legion::IndexPartitionT<RANGE_DIM> range_partition,
+            Legion::Context ctx, Legion::Runtime *rt) const override {
+            return rt->create_partition_by_preimage(
+                ctx, range_partition, matrix_region, matrix_region, fid_i,
+                rt->get_index_partition_color_space_name(range_partition));
+        }
+
+
         explicit COOMatrix(Legion::LogicalRegion matrix_region,
                            Legion::FieldID fid_i, Legion::FieldID fid_j,
                            Legion::FieldID fid_entry,
@@ -43,22 +65,22 @@ namespace LegionSolvers {
               fid_entry(fid_entry), input_partition(input_partition),
               output_partition(output_partition) {
 
-            const auto matrix_input_partition =
+            const auto kernel_domain_partition =
                 rt->create_partition_by_preimage(
                     ctx, input_partition, matrix_region, matrix_region, fid_j,
                     rt->get_index_partition_color_space_name(input_partition));
 
-            const auto matrix_output_partition =
+            const auto kernel_range_partition =
                 rt->create_partition_by_preimage(
                     ctx, output_partition, matrix_region, matrix_region, fid_i,
                     rt->get_index_partition_color_space_name(output_partition));
 
             column_logical_partition = rt->get_logical_partition(
-                matrix_region, matrix_input_partition);
+                matrix_region, kernel_domain_partition);
 
             std::map<Legion::IndexSpace, Legion::IndexPartition> map{};
             tile_partition = rt->create_cross_product_partitions(
-                ctx, matrix_input_partition, matrix_output_partition, map);
+                ctx, kernel_domain_partition, kernel_range_partition, map);
 
             std::vector<std::tuple<Legion::DomainPoint, Legion::DomainPoint,
                                    Legion::Future>>
@@ -96,7 +118,7 @@ namespace LegionSolvers {
             }
             for (const auto [input_color, output_color, is_nonempty] :
                  nonempty_futures) {
-                if (is_nonempty.get_result<bool>()) {
+                if (is_nonempty.template get_result<bool>()) {
                     nonempty_tiles.emplace_back(input_color, output_color);
                     std::cout << "Tile " << output_color << ", " << input_color
                               << " contains nonzero values." << std::endl;
@@ -106,12 +128,11 @@ namespace LegionSolvers {
         }
 
 
-        virtual void launch_matvec(Legion::LogicalRegion output_vector,
-                                   Legion::FieldID output_fid,
-                                   Legion::LogicalRegion input_vector,
-                                   Legion::FieldID input_fid,
-                                   Legion::Context ctx,
-                                   Legion::Runtime *rt) const override {
+        virtual void matvec(Legion::LogicalRegion output_vector,
+                            Legion::FieldID output_fid,
+                            Legion::LogicalRegion input_vector,
+                            Legion::FieldID input_fid, Legion::Context ctx,
+                            Legion::Runtime *rt) const override {
             {
                 Legion::IndexLauncher launcher{
                     ZERO_FILL_TASK_ID,
