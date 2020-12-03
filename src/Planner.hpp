@@ -46,7 +46,7 @@ namespace LegionSolvers {
         template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM,
                   typename ENTRY_T>
         void add_coo_matrix(int rhs_index, int sol_index,
-                            Legion::LogicalRegion matrix_region,
+                            Legion::LogicalRegionT<KERNEL_DIM> matrix_region,
                             Legion::FieldID fid_i, Legion::FieldID fid_j,
                             Legion::FieldID fid_entry, Legion::Context ctx,
                             Legion::Runtime *rt) {
@@ -55,7 +55,10 @@ namespace LegionSolvers {
                 std::make_unique<
                     COOMatrix<KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, ENTRY_T>>(
                     matrix_region, fid_i, fid_j, fid_entry,
-                    dimensions[sol_index].second, dimensions[rhs_index].second,
+                    Legion::IndexPartitionT<DOMAIN_DIM>{
+                        dimensions[sol_index].second}, // TODO: assert
+                    Legion::IndexPartitionT<RANGE_DIM>{
+                        dimensions[rhs_index].second}, // TODO: assert
                     ctx, rt));
         }
 

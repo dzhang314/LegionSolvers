@@ -253,7 +253,7 @@ void copy_task(const Legion::Task *task,
                                                                      src_fid};
 
     for (Legion::PointInDomainIterator<DIM> iter{dst}; iter(); ++iter) {
-        dst_writer[*iter] = +src_reader[*iter]; // TODO: Why is + needed?
+        dst_writer[*iter] = src_reader[*iter]; // TODO: Why is + needed?
     }
 }
 

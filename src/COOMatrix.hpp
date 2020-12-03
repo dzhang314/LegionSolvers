@@ -1,6 +1,7 @@
 #ifndef LEGION_SOLVERS_COO_MATRIX_HPP
 #define LEGION_SOLVERS_COO_MATRIX_HPP
 
+#include <cassert>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -20,12 +21,12 @@ namespace LegionSolvers {
 
 
       private:
-        Legion::LogicalRegion matrix_region;
+        Legion::LogicalRegionT<KERNEL_DIM> matrix_region;
         Legion::FieldID fid_i;
         Legion::FieldID fid_j;
         Legion::FieldID fid_entry;
-        Legion::IndexPartition input_partition;
-        Legion::IndexPartition output_partition;
+        Legion::IndexPartitionT<DOMAIN_DIM> input_partition;
+        Legion::IndexPartitionT<RANGE_DIM> output_partition;
 
         Legion::LogicalPartition column_logical_partition;
         Legion::Color tile_partition;
@@ -38,9 +39,14 @@ namespace LegionSolvers {
         kernel_partition_from_domain_partition(
             Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
             Legion::Context ctx, Legion::Runtime *rt) const override {
-            return rt->create_partition_by_preimage(
-                ctx, domain_partition, matrix_region, matrix_region, fid_j,
-                rt->get_index_partition_color_space_name(domain_partition));
+            const Legion::IndexSpace color_space =
+                rt->get_index_partition_color_space_name(domain_partition);
+            const Legion::IndexPartition result =
+                rt->create_partition_by_preimage(ctx, domain_partition,
+                                                 matrix_region, matrix_region,
+                                                 fid_j, color_space);
+            assert(result.get_dim() == KERNEL_DIM);
+            return Legion::IndexPartitionT<KERNEL_DIM>{result};
         }
 
 
@@ -48,17 +54,22 @@ namespace LegionSolvers {
         kernel_partition_from_range_partition(
             Legion::IndexPartitionT<RANGE_DIM> range_partition,
             Legion::Context ctx, Legion::Runtime *rt) const override {
-            return rt->create_partition_by_preimage(
-                ctx, range_partition, matrix_region, matrix_region, fid_i,
-                rt->get_index_partition_color_space_name(range_partition));
+            const Legion::IndexSpace color_space =
+                rt->get_index_partition_color_space_name(range_partition);
+            const Legion::IndexPartition result =
+                rt->create_partition_by_preimage(ctx, range_partition,
+                                                 matrix_region, matrix_region,
+                                                 fid_i, color_space);
+            assert(result.get_dim() == KERNEL_DIM);
+            return Legion::IndexPartitionT<KERNEL_DIM>{result};
         }
 
 
-        explicit COOMatrix(Legion::LogicalRegion matrix_region,
+        explicit COOMatrix(Legion::LogicalRegionT<KERNEL_DIM> matrix_region,
                            Legion::FieldID fid_i, Legion::FieldID fid_j,
                            Legion::FieldID fid_entry,
-                           Legion::IndexPartition input_partition,
-                           Legion::IndexPartition output_partition,
+                           Legion::IndexPartitionT<DOMAIN_DIM> input_partition,
+                           Legion::IndexPartitionT<RANGE_DIM> output_partition,
                            Legion::Context ctx, Legion::Runtime *rt)
 
             : matrix_region(matrix_region), fid_i(fid_i), fid_j(fid_j),
@@ -66,14 +77,12 @@ namespace LegionSolvers {
               output_partition(output_partition) {
 
             const auto kernel_domain_partition =
-                rt->create_partition_by_preimage(
-                    ctx, input_partition, matrix_region, matrix_region, fid_j,
-                    rt->get_index_partition_color_space_name(input_partition));
+                kernel_partition_from_domain_partition(input_partition, ctx,
+                                                       rt);
 
             const auto kernel_range_partition =
-                rt->create_partition_by_preimage(
-                    ctx, output_partition, matrix_region, matrix_region, fid_i,
-                    rt->get_index_partition_color_space_name(output_partition));
+                kernel_partition_from_range_partition(output_partition, ctx,
+                                                      rt);
 
             column_logical_partition = rt->get_logical_partition(
                 matrix_region, kernel_domain_partition);
