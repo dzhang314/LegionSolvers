@@ -47,13 +47,15 @@ namespace LegionSolvers {
                             Legion::FieldID fid_entry,
                             Legion::Context ctx,
                             Legion::Runtime *rt) {
-            operators.emplace_back(
-                rhs_index, sol_index,
-                std::make_unique<COOMatrix<KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, ENTRY_T>>(
-                    matrix_region, fid_i, fid_j, fid_entry,
-                    Legion::IndexPartitionT<DOMAIN_DIM>{dimensions[sol_index].second}, // TODO: assert
-                    Legion::IndexPartitionT<RANGE_DIM>{dimensions[rhs_index].second},  // TODO: assert
-                    ctx, rt));
+            const Legion::IndexPartition domain_partition = dimensions[sol_index].second;
+            assert(domain_partition.get_dim() == DOMAIN_DIM);
+            const Legion::IndexPartition range_partition = dimensions[rhs_index].second;
+            assert(range_partition.get_dim() == RANGE_DIM);
+            operators.emplace_back(rhs_index, sol_index,
+                                   std::make_unique<COOMatrix<KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, ENTRY_T>>(
+                                       matrix_region, fid_i, fid_j, fid_entry,
+                                       Legion::IndexPartitionT<DOMAIN_DIM>{domain_partition},
+                                       Legion::IndexPartitionT<RANGE_DIM>{range_partition}, ctx, rt));
         }
 
 

@@ -9,7 +9,8 @@ AlwaysBreakTemplateDeclarations: 'Yes'
 FixNamespaceComments: 'true'
 NamespaceIndentation: All
 IndentWidth: 4
-ColumnLimit: 80
+ColumnLimit: 120
 MaxEmptyLinesToKeep: 2
+BinPackParameters: 'false'
 
 ...
