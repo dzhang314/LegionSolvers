@@ -14,7 +14,8 @@ namespace LegionSolvers {
         virtual void matvec(Legion::LogicalRegion output_vector,
                             Legion::FieldID output_fid,
                             Legion::LogicalRegion input_vector,
-                            Legion::FieldID input_fid, Legion::Context ctx,
+                            Legion::FieldID input_fid,
+                            Legion::Context ctx,
                             Legion::Runtime *rt) const = 0;
 
 

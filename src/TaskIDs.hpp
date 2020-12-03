@@ -10,7 +10,7 @@ namespace LegionSolvers {
 
         IS_NONEMPTY_TASK_BASE_ID = 0,
 
-    }
+    };
 
 } // namespace LegionSolvers
 

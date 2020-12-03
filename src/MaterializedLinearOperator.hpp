@@ -12,16 +12,12 @@ namespace LegionSolvers {
 
 
       public:
-        virtual Legion::IndexPartitionT<KERNEL_DIM>
-        kernel_partition_from_domain_partition(
-            Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
-            Legion::Context ctx, Legion::Runtime *rt) const = 0;
+        virtual Legion::IndexPartitionT<KERNEL_DIM> kernel_partition_from_domain_partition(
+            Legion::IndexPartitionT<DOMAIN_DIM> domain_partition, Legion::Context ctx, Legion::Runtime *rt) const = 0;
 
 
-        virtual Legion::IndexPartitionT<KERNEL_DIM>
-        kernel_partition_from_range_partition(
-            Legion::IndexPartitionT<RANGE_DIM> range_partition,
-            Legion::Context ctx, Legion::Runtime *rt) const = 0;
+        virtual Legion::IndexPartitionT<KERNEL_DIM> kernel_partition_from_range_partition(
+            Legion::IndexPartitionT<RANGE_DIM> range_partition, Legion::Context ctx, Legion::Runtime *rt) const = 0;
 
 
     }; // class MaterializedLinearOperator
