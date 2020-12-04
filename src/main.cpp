@@ -529,7 +529,14 @@ void print_vec_task(const Legion::Task *task,
 
 int main(int argc, char **argv) {
 
+    using LegionSolvers::preregister_cpu_task;
+
     preregister_solver_tasks<double, 1>();
+    LegionSolvers::preregister<LegionSolvers::AdditionTask>("addition");
+    LegionSolvers::preregister<LegionSolvers::SubtractionTask>("subtraction");
+    LegionSolvers::preregister<LegionSolvers::NegationTask>("negation");
+    LegionSolvers::preregister<LegionSolvers::MultiplicationTask>("multiplication");
+    LegionSolvers::preregister<LegionSolvers::DivisionTask>("division");
 
     preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
     preregister_cpu_task<fill_coo_matrix_task>(FILL_COO_MATRIX_TASK_ID, "fill_coo_matrix");

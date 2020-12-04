@@ -62,11 +62,11 @@ namespace LegionSolvers {
         void step(Legion::Context ctx, Legion::Runtime *rt) {
             planner.matvec(FID_CG_Q, FID_CG_P, workspace, ctx, rt);
             Legion::Future p_norm = planner.dot_product(FID_CG_P, FID_CG_Q, workspace, ctx, rt);
-            Legion::Future alpha = planner.divide(residual_norm_squared, p_norm, ctx, rt);
+            Legion::Future alpha = divide<double>(residual_norm_squared, p_norm, ctx, rt);
             planner.axpy(FID_CG_X, alpha, FID_CG_P, workspace, ctx, rt);
-            planner.axpy(FID_CG_R, planner.negate(alpha, ctx, rt), FID_CG_Q, workspace, ctx, rt);
+            planner.axpy(FID_CG_R, negate<double>(alpha, ctx, rt), FID_CG_Q, workspace, ctx, rt);
             Legion::Future r_norm2_new = planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
-            Legion::Future beta = planner.divide(r_norm2_new, residual_norm_squared, ctx, rt);
+            Legion::Future beta = divide<double>(r_norm2_new, residual_norm_squared, ctx, rt);
             residual_norm_squared = r_norm2_new;
             planner.xpay(FID_CG_P, beta, FID_CG_R, workspace, ctx, rt);
         }

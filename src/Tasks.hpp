@@ -3,18 +3,18 @@
 
 #include <legion.h>
 
+#include "TaskIDs.hpp"
+#include "UtilityTasks.hpp"
+
 
 enum SolverTaskIDs : Legion::TaskID {
     ZERO_FILL_TASK_ID = 4001,
     COO_MATVEC_TASK_ID = 4002,
     IS_NONEMPTY_TASK_ID = 4003,
-    DIVISION_TASK_ID = 4004,
-    NEGATION_TASK_ID = 4005,
     AXPY_TASK_ID = 4006,
     XPAY_TASK_ID = 4007,
     DOT_PRODUCT_TASK_ID = 4008,
     COPY_TASK_ID = 4009,
-    ADDITION_TASK_ID = 4010,
 };
 
 
@@ -100,33 +100,6 @@ bool is_nonempty_task(const Legion::Task *task,
         break;
     }
     return result;
-}
-
-
-template <typename T>
-T division_task(const Legion::Task *task,
-                const std::vector<Legion::PhysicalRegion> &regions,
-                Legion::Context,
-                Legion::Runtime *) {
-
-    assert(task->futures.size() == 2);
-    Legion::Future numerator = task->futures[0];
-    Legion::Future denominator = task->futures[1];
-
-    return numerator.get_result<T>() / denominator.get_result<T>();
-}
-
-
-template <typename T>
-T negation_task(const Legion::Task *task,
-                const std::vector<Legion::PhysicalRegion> &regions,
-                Legion::Context,
-                Legion::Runtime *) {
-
-    assert(task->futures.size() == 1);
-    Legion::Future x = task->futures[0];
-
-    return -x.get_result<T>();
 }
 
 
@@ -249,51 +222,16 @@ void copy_task(const Legion::Task *task,
 }
 
 
-template <typename T>
-T addition_task(const Legion::Task *task,
-                const std::vector<Legion::PhysicalRegion> &regions,
-                Legion::Context,
-                Legion::Runtime *) {
-
-    assert(task->futures.size() == 2);
-    Legion::Future a = task->futures[0];
-    Legion::Future b = task->futures[1];
-
-    return a.get_result<T>() + b.get_result<T>();
-}
-
-
-template <void (*TaskPtr)(
-    const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *)>
-void preregister_cpu_task(Legion::TaskID task_id, const char *task_name) {
-    Legion::TaskVariantRegistrar registrar(task_id, task_name);
-    registrar.add_constraint(Legion::ProcessorConstraint{Legion::Processor::LOC_PROC});
-    Legion::Runtime::preregister_task_variant<TaskPtr>(registrar, task_name);
-}
-
-
-template <typename ReturnType,
-          ReturnType (*TaskPtr)(
-              const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *)>
-void preregister_cpu_task(Legion::TaskID task_id, const char *task_name) {
-    Legion::TaskVariantRegistrar registrar(task_id, task_name);
-    registrar.add_constraint(Legion::ProcessorConstraint{Legion::Processor::LOC_PROC});
-    Legion::Runtime::preregister_task_variant<ReturnType, TaskPtr>(registrar, task_name);
-}
-
-
 template <typename T, int DIM>
 void preregister_solver_tasks() {
+    using LegionSolvers::preregister_cpu_task;
     preregister_cpu_task<zero_fill_task<T, DIM>>(ZERO_FILL_TASK_ID, "zero_fill");
     preregister_cpu_task<coo_matvec_task<T, 1, DIM, DIM>>(COO_MATVEC_TASK_ID, "coo_matvec");
     preregister_cpu_task<bool, is_nonempty_task<1>>(IS_NONEMPTY_TASK_ID, "is_nonempty");
-    preregister_cpu_task<T, division_task<T>>(DIVISION_TASK_ID, "division");
-    preregister_cpu_task<T, negation_task<T>>(NEGATION_TASK_ID, "negation");
     preregister_cpu_task<axpy_task<T, DIM>>(AXPY_TASK_ID, "axpy");
     preregister_cpu_task<xpay_task<T, DIM>>(XPAY_TASK_ID, "xpay");
     preregister_cpu_task<T, dot_product_task<T, DIM>>(DOT_PRODUCT_TASK_ID, "dot_product");
     preregister_cpu_task<copy_task<T, DIM>>(COPY_TASK_ID, "copy");
-    preregister_cpu_task<T, addition_task<T>>(ADDITION_TASK_ID, "addition");
 }
 
 

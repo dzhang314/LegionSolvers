@@ -11,6 +11,7 @@
 
 #include "COOMatrix.hpp"
 #include "LinearOperator.hpp"
+#include "UtilityTasks.hpp"
 
 
 namespace LegionSolvers {
@@ -139,7 +140,7 @@ namespace LegionSolvers {
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{workspace[i], LEGION_READ_ONLY, LEGION_EXCLUSIVE, workspace[i]});
                 launcher.add_field(1, fid_w);
-                result = add(result, rt->execute_task(ctx, launcher), ctx, rt);
+                result = add<double>(result, rt->execute_task(ctx, launcher), ctx, rt);
             }
             return result;
         }
@@ -198,30 +199,6 @@ namespace LegionSolvers {
                 launcher.add_future(alpha);
                 rt->execute_index_space(ctx, launcher);
             }
-        }
-
-
-        Legion::Future add(Legion::Future a, Legion::Future b, Legion::Context ctx, Legion::Runtime *rt) const {
-            Legion::TaskLauncher launcher{ADDITION_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-            launcher.add_future(a);
-            launcher.add_future(b);
-            return rt->execute_task(ctx, launcher);
-        }
-
-
-        Legion::Future
-        divide(Legion::Future numer, Legion::Future denom, Legion::Context ctx, Legion::Runtime *rt) const {
-            Legion::TaskLauncher launcher{DIVISION_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-            launcher.add_future(numer);
-            launcher.add_future(denom);
-            return rt->execute_task(ctx, launcher);
-        }
-
-
-        Legion::Future negate(Legion::Future x, Legion::Context ctx, Legion::Runtime *rt) const {
-            Legion::TaskLauncher launcher{NEGATION_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-            launcher.add_future(x);
-            return rt->execute_task(ctx, launcher);
         }
 
 
