@@ -7,7 +7,7 @@
 namespace LegionSolvers {
 
 
-    template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, typename ENTRY_T>
+    template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
     class MaterializedLinearOperator : public LinearOperator {
 
 

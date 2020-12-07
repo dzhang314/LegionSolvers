@@ -39,7 +39,7 @@ namespace LegionSolvers {
         }
 
 
-        template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, typename ENTRY_T>
+        template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
         void add_coo_matrix(int rhs_index,
                             int sol_index,
                             Legion::LogicalRegionT<KERNEL_DIM> matrix_region,
@@ -53,7 +53,7 @@ namespace LegionSolvers {
             const Legion::IndexPartition range_partition = dimensions[rhs_index].second;
             assert(range_partition.get_dim() == RANGE_DIM);
             operators.emplace_back(rhs_index, sol_index,
-                                   std::make_unique<COOMatrix<KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, ENTRY_T>>(
+                                   std::make_unique<COOMatrix<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>>(
                                        matrix_region, fid_i, fid_j, fid_entry,
                                        Legion::IndexPartitionT<DOMAIN_DIM>{domain_partition},
                                        Legion::IndexPartitionT<RANGE_DIM>{range_partition}, ctx, rt));

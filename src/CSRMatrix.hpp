@@ -7,8 +7,8 @@
 namespace LegionSolvers {
 
 
-    template <int DOMAIN_DIM, int RANGE_DIM, typename ENTRY_T>
-    class CSRMatrix : public SparseMatrix<1, DOMAIN_DIM, RANGE_DIM, ENTRY_T> {
+    template <typename ENTRY_T, int DOMAIN_DIM, int RANGE_DIM>
+    class CSRMatrix : public SparseMatrix<ENTRY_T, 1, DOMAIN_DIM, RANGE_DIM> {
 
 
         Legion::LogicalRegionT<1> matrix_region;

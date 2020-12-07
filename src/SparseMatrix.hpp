@@ -7,8 +7,8 @@
 namespace LegionSolvers {
 
 
-    template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, typename ENTRY_T>
-    class SparseMatrix : public MaterializedLinearOperator<KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, ENTRY_T> {
+    template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
+    class SparseMatrix : public MaterializedLinearOperator<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
 
 
         // TODO
