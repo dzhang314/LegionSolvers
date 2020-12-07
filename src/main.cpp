@@ -12,6 +12,7 @@
 #include "ConjugateGradientSolver.hpp"
 #include "ExampleSystems.hpp"
 #include "Planner.hpp"
+#include "TaskRegistration.hpp"
 
 using LegionSolvers::ConjugateGradientSolver;
 using LegionSolvers::COOMatrix;
@@ -527,28 +528,8 @@ void print_vec_task(const Legion::Task *task,
 }
 
 int main(int argc, char **argv) {
-
     using namespace LegionSolvers;
-
-    preregister<AdditionTask>("addition");
-    preregister<SubtractionTask>("subtraction");
-    preregister<NegationTask>("negation");
-    preregister<MultiplicationTask>("multiplication");
-    preregister<DivisionTask>("division");
-    preregister<bool, IsNonemptyTask>("is_nonempty");
-    CartesianProductPreregistrationHelper<ConstantFillTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                          IntList<LEGION_SOLVERS_MAX_DIM>>::execute();
-    CartesianProductPreregistrationHelper<CopyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                          IntList<LEGION_SOLVERS_MAX_DIM>>::execute();
-    CartesianProductPreregistrationHelper<AxpyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                          IntList<LEGION_SOLVERS_MAX_DIM>>::execute();
-    CartesianProductPreregistrationHelper<XpayTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                          IntList<LEGION_SOLVERS_MAX_DIM>>::execute();
-    CartesianProductPreregistrationHelperRT<DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                            IntList<LEGION_SOLVERS_MAX_DIM>>::execute();
-    CartesianProductPreregistrationHelper<
-        CooMatvecTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-        IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute();
+    preregister_solver_tasks();
 
     preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
     preregister_cpu_task<fill_coo_matrix_task>(FILL_COO_MATRIX_TASK_ID, "fill_coo_matrix");

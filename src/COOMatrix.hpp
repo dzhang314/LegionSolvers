@@ -8,6 +8,7 @@
 
 #include <legion.h>
 
+#include "COOMatrixTasks.hpp"
 #include "SparseMatrix.hpp"
 #include "UtilityTasks.hpp"
 

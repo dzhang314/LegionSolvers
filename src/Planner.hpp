@@ -10,6 +10,7 @@
 #include <legion.h>
 
 #include "COOMatrix.hpp"
+#include "LinearAlgebraTasks.hpp"
 #include "LinearOperator.hpp"
 #include "UtilityTasks.hpp"
 
