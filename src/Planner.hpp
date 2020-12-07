@@ -84,7 +84,7 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
-                Legion::IndexLauncher launcher{COPY_TASK_ID,
+                Legion::IndexLauncher launcher{CopyTask<double, 1>::task_id,
                                                rt->get_index_partition_color_space_name(dimensions[i].second),
                                                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
                 launcher.add_region_requirement(
@@ -109,9 +109,10 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
-                Legion::IndexLauncher launcher{ZERO_FILL_TASK_ID,
+                const double zero = 0.0;
+                Legion::IndexLauncher launcher{ConstantFillTask<double, 1>::task_id,
                                                rt->get_index_partition_color_space_name(dimensions[i].second),
-                                               Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
+                                               Legion::TaskArgument{&zero, sizeof(double)}, Legion::ArgumentMap{}};
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{rt->get_logical_partition(ctx, workspace[i], dimensions[i].second), 0,
                                               LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, workspace[i]});
@@ -133,7 +134,7 @@ namespace LegionSolvers {
             Legion::Future result = Legion::Future::from_value<double>(rt, 0.0);
             for (std::size_t i = 0; i < workspace.size(); ++i) {
                 // TODO: Implement inner reduction.
-                Legion::TaskLauncher launcher{DOT_PRODUCT_TASK_ID, Legion::TaskArgument{nullptr, 0}};
+                Legion::TaskLauncher launcher{DotProductTask<double, 1>::task_id, Legion::TaskArgument{nullptr, 0}};
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{workspace[i], LEGION_READ_ONLY, LEGION_EXCLUSIVE, workspace[i]});
                 launcher.add_field(0, fid_v);
@@ -157,7 +158,7 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
-                Legion::IndexLauncher launcher{AXPY_TASK_ID,
+                Legion::IndexLauncher launcher{AxpyTask<double, 1>::task_id,
                                                rt->get_index_partition_color_space_name(dimensions[i].second),
                                                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
                 launcher.add_region_requirement(
@@ -185,7 +186,7 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
-                Legion::IndexLauncher launcher{XPAY_TASK_ID,
+                Legion::IndexLauncher launcher{XpayTask<double, 1>::task_id,
                                                rt->get_index_partition_color_space_name(dimensions[i].second),
                                                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
                 launcher.add_region_requirement(

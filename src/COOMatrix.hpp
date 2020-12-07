@@ -9,7 +9,7 @@
 #include <legion.h>
 
 #include "SparseMatrix.hpp"
-#include "Tasks.hpp"
+#include "UtilityTasks.hpp"
 
 
 namespace LegionSolvers {
@@ -95,12 +95,8 @@ namespace LegionSolvers {
 
                     const Legion::DomainPoint output_color{*output_iter};
                     const auto tile = rt->get_logical_subregion_by_color(column_partition, output_color);
-
-                    Legion::TaskLauncher launcher{IS_NONEMPTY_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-                    launcher.add_region_requirement(
-                        Legion::RegionRequirement{tile, LEGION_READ_ONLY, LEGION_EXCLUSIVE, matrix_region});
-                    launcher.add_field(0, fid_entry);
-                    nonempty_futures.emplace_back(input_color, output_color, rt->execute_task(ctx, launcher));
+                    nonempty_futures.emplace_back(input_color, output_color,
+                                                  is_nonempty<KERNEL_DIM>(tile, fid_entry, ctx, rt));
                 }
             }
             for (const auto [input_color, output_color, is_nonempty] : nonempty_futures) {
@@ -121,9 +117,10 @@ namespace LegionSolvers {
                             Legion::Context ctx,
                             Legion::Runtime *rt) const override {
             {
-                Legion::IndexLauncher launcher{ZERO_FILL_TASK_ID,
+                const ENTRY_T zero = static_cast<ENTRY_T>(0);
+                Legion::IndexLauncher launcher{ConstantFillTask<ENTRY_T, RANGE_DIM>::task_id,
                                                rt->get_index_partition_color_space(ctx, output_partition),
-                                               Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
+                                               Legion::TaskArgument{&zero, sizeof(ENTRY_T)}, Legion::ArgumentMap{}};
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{rt->get_logical_partition(output_vector, output_partition), 0,
                                               LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, output_vector});
@@ -140,7 +137,7 @@ namespace LegionSolvers {
                     rt->get_logical_partition(output_vector, output_partition), output_color);
                 const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
                 {
-                    Legion::TaskLauncher launcher{COO_MATVEC_TASK_ID,
+                    Legion::TaskLauncher launcher{CooMatvecTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
                                                   Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])}};
                     launcher.add_region_requirement(Legion::RegionRequirement{output_subregion, LEGION_READ_WRITE,
                                                                               LEGION_EXCLUSIVE, output_vector});
