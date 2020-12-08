@@ -277,11 +277,11 @@ void top_level_task(const Legion::Task *,
         rt->execute_task(ctx, launcher);
     }
 
-    Planner planner{};
+    Planner<double> planner{};
     planner.add_rhs(output_vector, FID_VEC_ENTRY, output_partition);
     planner.add_rhs(rhs_vector, FID_VEC_ENTRY, rhs_partition);
-    planner.add_coo_matrix<double, 1, 1, 1>(0, 0, coo_matrix, FID_COO_I, FID_COO_J, FID_COO_ENTRY, ctx, rt);
-    planner.add_coo_matrix<double, 1, 1, 1>(1, 1, coo_matrix, FID_COO_I, FID_COO_J, FID_COO_ENTRY, ctx, rt);
+    planner.add_coo_matrix<1, 1, 1>(0, 0, coo_matrix, FID_COO_I, FID_COO_J, FID_COO_ENTRY, ctx, rt);
+    planner.add_coo_matrix<1, 1, 1>(1, 1, coo_matrix, FID_COO_I, FID_COO_J, FID_COO_ENTRY, ctx, rt);
 
     ConjugateGradientSolver solver{planner, ctx, rt};
     solver.set_max_iterations(17);
@@ -291,7 +291,7 @@ void top_level_task(const Legion::Task *,
         Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID, Legion::TaskArgument{nullptr, 0}};
         launcher.add_region_requirement(
             Legion::RegionRequirement{solver.workspace[0], LEGION_READ_ONLY, LEGION_EXCLUSIVE, solver.workspace[0]});
-        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver::FID_CG_X);
+        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X);
         rt->execute_task(ctx, launcher);
     }
 
@@ -299,7 +299,7 @@ void top_level_task(const Legion::Task *,
         Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID, Legion::TaskArgument{nullptr, 0}};
         launcher.add_region_requirement(
             Legion::RegionRequirement{solver.workspace[1], LEGION_READ_ONLY, LEGION_EXCLUSIVE, solver.workspace[1]});
-        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver::FID_CG_X);
+        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X);
         rt->execute_task(ctx, launcher);
     }
 

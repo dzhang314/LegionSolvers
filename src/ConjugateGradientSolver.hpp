@@ -12,13 +12,14 @@
 namespace LegionSolvers {
 
 
+    template <typename T>
     class ConjugateGradientSolver {
 
 
-        const Planner &planner;
+        const Planner<T> &planner;
         Legion::Future residual_norm_squared;
         int max_iterations = 1'000;
-        double residual_threshold = 1.0e-16;
+        T residual_threshold = 1.0e-16;
 
 
       public:
@@ -31,15 +32,15 @@ namespace LegionSolvers {
         };
 
 
-        explicit ConjugateGradientSolver(const Planner &planner, Legion::Context ctx, Legion::Runtime *rt)
+        explicit ConjugateGradientSolver(const Planner<T> &planner, Legion::Context ctx, Legion::Runtime *rt)
             : planner{planner} {
             for (const auto &[index_space, index_partition] : planner.get_dimensions()) {
                 const Legion::FieldSpace field_space = rt->create_field_space(ctx);
                 Legion::FieldAllocator allocator = rt->create_field_allocator(ctx, field_space);
-                allocator.allocate_field(sizeof(double), FID_CG_P);
-                allocator.allocate_field(sizeof(double), FID_CG_Q);
-                allocator.allocate_field(sizeof(double), FID_CG_R);
-                allocator.allocate_field(sizeof(double), FID_CG_X);
+                allocator.allocate_field(sizeof(T), FID_CG_P);
+                allocator.allocate_field(sizeof(T), FID_CG_Q);
+                allocator.allocate_field(sizeof(T), FID_CG_R);
+                allocator.allocate_field(sizeof(T), FID_CG_X);
                 workspace.push_back(rt->create_logical_region(ctx, index_space, field_space));
             }
         }
@@ -48,7 +49,7 @@ namespace LegionSolvers {
         void set_max_iterations(int n) { max_iterations = n; }
 
 
-        void set_residual_threshold(double x) { residual_threshold = x; }
+        void set_residual_threshold(T x) { residual_threshold = x; }
 
 
         void setup(Legion::Context ctx, Legion::Runtime *rt) {
@@ -62,11 +63,11 @@ namespace LegionSolvers {
         void step(Legion::Context ctx, Legion::Runtime *rt) {
             planner.matvec(FID_CG_Q, FID_CG_P, workspace, ctx, rt);
             Legion::Future p_norm = planner.dot_product(FID_CG_P, FID_CG_Q, workspace, ctx, rt);
-            Legion::Future alpha = divide<double>(residual_norm_squared, p_norm, ctx, rt);
+            Legion::Future alpha = divide<T>(residual_norm_squared, p_norm, ctx, rt);
             planner.axpy(FID_CG_X, alpha, FID_CG_P, workspace, ctx, rt);
-            planner.axpy(FID_CG_R, negate<double>(alpha, ctx, rt), FID_CG_Q, workspace, ctx, rt);
+            planner.axpy(FID_CG_R, negate<T>(alpha, ctx, rt), FID_CG_Q, workspace, ctx, rt);
             Legion::Future r_norm2_new = planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
-            Legion::Future beta = divide<double>(r_norm2_new, residual_norm_squared, ctx, rt);
+            Legion::Future beta = divide<T>(r_norm2_new, residual_norm_squared, ctx, rt);
             residual_norm_squared = r_norm2_new;
             planner.xpay(FID_CG_P, beta, FID_CG_R, workspace, ctx, rt);
         }
@@ -75,8 +76,8 @@ namespace LegionSolvers {
         void solve(Legion::Context ctx, Legion::Runtime *rt) {
             setup(ctx, rt);
             for (int i = 0; i < max_iterations; ++i) {
-                std::cout << "residual: " << std::sqrt(residual_norm_squared.get_result<double>()) << std::endl;
-                if (residual_norm_squared.get_result<double>() <= residual_threshold * residual_threshold) { break; }
+                std::cout << "residual: " << std::sqrt(residual_norm_squared.get_result<T>()) << std::endl;
+                if (residual_norm_squared.get_result<T>() <= residual_threshold * residual_threshold) { break; }
                 step(ctx, rt);
             }
         }
