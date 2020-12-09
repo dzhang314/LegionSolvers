@@ -1,6 +1,7 @@
 #ifndef LEGION_SOLVERS_UTILITY_TASKS_HPP
 #define LEGION_SOLVERS_UTILITY_TASKS_HPP
 
+#include <iostream>
 #include <string>
 
 #include <legion.h>
@@ -180,6 +181,8 @@ namespace LegionSolvers {
     Legion::Future
     is_nonempty(Legion::LogicalRegion region, Legion::FieldID fid, Legion::Context ctx, Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{IsNonemptyTask<DIM>::task_id, Legion::TaskArgument{nullptr, 0}};
+        // TODO: Why doesn't this work?
+        // launcher.silence_warnings = true;
         launcher.add_region_requirement(Legion::RegionRequirement{region, LEGION_READ_ONLY, LEGION_EXCLUSIVE, region});
         launcher.add_field(0, fid);
         return rt->execute_task(ctx, launcher);
@@ -215,6 +218,23 @@ namespace LegionSolvers {
     }; // struct ConstantFillTask
 
 
+    template <typename T>
+    void zero_fill(Legion::LogicalRegion region,
+                   Legion::FieldID fid,
+                   Legion::IndexPartition partition,
+                   Legion::Context ctx,
+                   Legion::Runtime *rt) {
+        const T zero = static_cast<T>(0);
+        Legion::IndexLauncher launcher{ConstantFillTask<T, 0>::task_id(region.get_dim()),
+                                       rt->get_index_partition_color_space_name(partition),
+                                       Legion::TaskArgument{&zero, sizeof(T)}, Legion::ArgumentMap{}};
+        launcher.add_region_requirement(Legion::RegionRequirement{rt->get_logical_partition(region, partition), 0,
+                                                                  LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, region});
+        launcher.add_field(0, fid);
+        rt->execute_index_space(ctx, launcher);
+    }
+
+
     template <typename T, int DIM>
     struct CopyTask : TaskTD<COPY_TASK_BLOCK_ID, T, DIM> {
 
@@ -248,6 +268,58 @@ namespace LegionSolvers {
         }
 
     }; // struct CopyTask
+
+
+    template <typename T, int DIM>
+    struct PrintVectorTask : TaskTD<PRINT_VECTOR_TASK_BLOCK_ID, T, DIM> {
+
+        static std::string task_name() { return "print_vector"; }
+
+        static void task(const Legion::Task *task,
+                         const std::vector<Legion::PhysicalRegion> &regions,
+                         Legion::Context ctx,
+                         Legion::Runtime *rt) {
+
+            assert(regions.size() == 1);
+            const auto &vector = regions[0];
+
+            assert(task->regions.size() == 1);
+            const auto &vector_req = task->regions[0];
+
+            assert(vector_req.privilege_fields.size() == 1);
+            const Legion::FieldID vector_fid = *vector_req.privilege_fields.begin();
+
+            const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> entry_reader{vector, vector_fid};
+
+            if (task->arglen == 0) {
+                for (Legion::PointInDomainIterator<DIM> iter{vector}; iter(); ++iter) {
+                    std::cout << task->index_point << ' ' << *iter << ": " << entry_reader[*iter] << '\n';
+                }
+            } else {
+                const std::string vector_name{reinterpret_cast<const char *>(task->args)};
+                for (Legion::PointInDomainIterator<DIM> iter{vector}; iter(); ++iter) {
+                    std::cout << vector_name << ' ' << task->index_point << ' ' << *iter << ": " << entry_reader[*iter]
+                              << '\n';
+                }
+            }
+            std::cout << std::flush;
+        }
+
+    }; // struct PrintVectorTask
+
+
+    template <typename T>
+    void print_vector(Legion::LogicalRegion region,
+                      Legion::FieldID fid,
+                      const std::string &name,
+                      Legion::Context ctx,
+                      Legion::Runtime *rt) {
+        Legion::TaskLauncher launcher{LegionSolvers::PrintVectorTask<T, 0>::task_id(region.get_dim()),
+                                      Legion::TaskArgument{name.c_str(), name.length() + 1}};
+        launcher.add_region_requirement(Legion::RegionRequirement{region, LEGION_READ_ONLY, LEGION_EXCLUSIVE, region});
+        launcher.add_field(0, fid);
+        rt->execute_task(ctx, launcher);
+    }
 
 
 } // namespace LegionSolvers

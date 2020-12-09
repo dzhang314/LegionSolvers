@@ -49,6 +49,8 @@ namespace LegionSolvers {
         XPAY_TASK_BLOCK_ID = 9,
         DOT_PRODUCT_TASK_BLOCK_ID = 10,
         COO_MATVEC_TASK_BLOCK_ID = 11,
+        PRINT_VECTOR_TASK_BLOCK_ID = 12,
+        COO_RMATVEC_TASK_BLOCK_ID = 13,
 
     };
 

@@ -11,10 +11,8 @@ namespace LegionSolvers {
     class CSRMatrix : public SparseMatrix<ENTRY_T, 1, DOMAIN_DIM, RANGE_DIM> {
 
 
-        Legion::LogicalRegionT<1> matrix_region;
         Legion::FieldID fid_j;
         Legion::FieldID fid_entry;
-
         Legion::LogicalRegionT<RANGE_DIM> rowptr_region;
         Legion::FieldID fid_rowptr;
 
@@ -24,9 +22,15 @@ namespace LegionSolvers {
                            Legion::FieldID fid_j,
                            Legion::FieldID fid_entry,
                            Legion::LogicalRegionT<RANGE_DIM> rowptr_region,
-                           Legion::FieldID fid_rowptr)
-            : matrix_region(matrix_region), fid_j(fid_j), fid_entry(fid_entry), rowptr_region(rowptr_region),
-              fid_rowptr(fid_rowptr) {}
+                           Legion::FieldID fid_rowptr,
+                           Legion::IndexPartitionT<DOMAIN_DIM> input_partition,
+                           Legion::IndexPartitionT<RANGE_DIM> output_partition,
+                           Legion::Context ctx,
+                           Legion::Runtime *rt)
+            : SparseMatrix<ENTRY_T, 1, DOMAIN_DIM, RANGE_DIM>(matrix_region, input_partition, output_partition),
+              fid_j(fid_j), fid_entry(fid_entry), rowptr_region(rowptr_region), fid_rowptr(fid_rowptr) {
+            this->compute_nonempty_tiles(fid_entry, ctx, rt);
+        }
 
 
         virtual Legion::IndexPartitionT<1>
@@ -34,7 +38,7 @@ namespace LegionSolvers {
                                                Legion::Context ctx,
                                                Legion::Runtime *rt) const override {
             return Legion::IndexPartitionT<1>{
-                rt->create_partition_by_preimage(ctx, domain_partition, matrix_region, matrix_region, fid_j,
+                rt->create_partition_by_preimage(ctx, domain_partition, this->matrix_region, this->matrix_region, fid_j,
                                                  rt->get_index_partition_color_space_name(domain_partition))};
         }
 
@@ -44,7 +48,7 @@ namespace LegionSolvers {
                                               Legion::Context ctx,
                                               Legion::Runtime *rt) const override {
             return Legion::IndexPartitionT<1>{rt->create_partition_by_image_range(
-                ctx, matrix_region.get_index_space(), rt->get_logical_partition(rowptr_region, range_partition),
+                ctx, this->matrix_region.get_index_space(), rt->get_logical_partition(rowptr_region, range_partition),
                 rowptr_region, fid_rowptr, rt->get_index_partition_color_space_name(range_partition))};
         }
 

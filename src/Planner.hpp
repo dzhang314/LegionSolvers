@@ -111,15 +111,7 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
-                const T zero = 0.0;
-                Legion::IndexLauncher launcher{ConstantFillTask<T, 0>::task_id(dimensions[i].first.get_dim()),
-                                               rt->get_index_partition_color_space_name(dimensions[i].second),
-                                               Legion::TaskArgument{&zero, sizeof(T)}, Legion::ArgumentMap{}};
-                launcher.add_region_requirement(
-                    Legion::RegionRequirement{rt->get_logical_partition(ctx, workspace[i], dimensions[i].second), 0,
-                                              LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, workspace[i]});
-                launcher.add_field(0, fid_dst);
-                rt->execute_index_space(ctx, launcher);
+                LegionSolvers::zero_fill<T>(workspace[i], fid_dst, dimensions[i].second, ctx, rt);
             }
         }
 

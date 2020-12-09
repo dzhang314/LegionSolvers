@@ -29,7 +29,6 @@ enum TaskIDs : Legion::TaskID {
     FILL_COO_MATRIX_TASK_ID = 11,
     FILL_VECTOR_TASK_ID = 12,
     PRINT_TASK_ID = 13,
-    PRINT_VEC_TASK_ID = 16,
     BOUNDARY_FILL_VECTOR_TASK_ID = 17,
     FILL_NEGATIVE_LAPLACIAN_2D_TASK_ID = 18,
     FILL_2D_PLANE_TASK_ID = 19,
@@ -116,93 +115,75 @@ void top_level_task(const Legion::Task *,
 
 #if 0
 
-    const Legion::IndexSpaceT<1> kernel_is = rt->create_index_space(
-        ctx, Legion::Rect<1>{0, NUM_NONZERO_ENTRIES - 1});
+    const Legion::IndexSpaceT<1> kernel_is = rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_NONZERO_ENTRIES - 1});
 
-    const Legion::LogicalRegionT<1> csr_matrix = create_region(
-        kernel_is,
-        {{sizeof(Legion::coord_t), FID_COL}, {sizeof(double), FID_ENTRY}}, ctx,
-        rt);
+    const Legion::LogicalRegionT<1> csr_matrix =
+        create_region(kernel_is, {{sizeof(Legion::coord_t), FID_COL}, {sizeof(double), FID_ENTRY}}, ctx, rt);
 
     {
-        Legion::TaskLauncher launcher{FILL_CSR_NEGATIVE_LAPLACIAN_1D_TASK_ID,
-                                      Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            csr_matrix, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, csr_matrix});
+        Legion::TaskLauncher launcher{FILL_CSR_NEGATIVE_LAPLACIAN_1D_TASK_ID, Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{csr_matrix, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, csr_matrix});
         launcher.add_field(0, FID_COL);
         launcher.add_field(0, FID_ENTRY);
         rt->execute_task(ctx, launcher);
     }
 
-    const auto vec_is =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
-    const auto csr_rowptr =
-        create_region(vec_is, {{sizeof(Legion::Rect<1>), FID_ROWPTR}}, ctx, rt);
+    const auto vec_is = rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
+    const auto csr_rowptr = create_region(vec_is, {{sizeof(Legion::Rect<1>), FID_ROWPTR}}, ctx, rt);
 
     {
-        Legion::TaskLauncher launcher{
-            FILL_CSR_NEGATIVE_LAPLACIAN_1D_ROWPTR_TASK_ID,
-            Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            csr_rowptr, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, csr_rowptr});
+        Legion::TaskLauncher launcher{FILL_CSR_NEGATIVE_LAPLACIAN_1D_ROWPTR_TASK_ID, Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{csr_rowptr, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, csr_rowptr});
         launcher.add_field(0, FID_ROWPTR);
         rt->execute_task(ctx, launcher);
     }
 
     {
-        Legion::TaskLauncher launcher{PRINT_CSR_TASK_ID,
-                                      Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            csr_matrix, LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_matrix});
+        Legion::TaskLauncher launcher{PRINT_CSR_TASK_ID, Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{csr_matrix, LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_matrix});
         launcher.add_field(0, FID_COL);
         launcher.add_field(0, FID_ENTRY);
         rt->execute_task(ctx, launcher);
     }
 
     {
-        Legion::TaskLauncher launcher{PRINT_CSR_ROWPTR_TASK_ID,
-                                      Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            csr_rowptr, LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_rowptr});
+        Legion::TaskLauncher launcher{PRINT_CSR_ROWPTR_TASK_ID, Legion::TaskArgument{nullptr, 0}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{csr_rowptr, LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_rowptr});
         launcher.add_field(0, FID_ROWPTR);
         rt->execute_task(ctx, launcher);
     }
 
-    CSRMatrix<1, 1, double> matrix_obj{csr_matrix, FID_COL, FID_ENTRY,
-                                       csr_rowptr, FID_ROWPTR};
+    const Legion::IndexSpaceT<1> color_is = rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_OUTPUT_PARTITIONS - 1});
+    const auto equal_partition = rt->create_equal_partition(ctx, vec_is, color_is);
 
-    const Legion::IndexSpaceT<1> color_is = rt->create_index_space(
-        ctx, Legion::Rect<1>{0, NUM_OUTPUT_PARTITIONS - 1});
-    const auto equal_partition =
-        rt->create_equal_partition(ctx, vec_is, color_is);
+    CSRMatrix<double, 1, 1> matrix_obj{csr_matrix,      FID_COL,         FID_ENTRY, csr_rowptr, FID_ROWPTR,
+                                       equal_partition, equal_partition, ctx,       rt};
 
-    const auto kernel_range_partition =
-        matrix_obj.kernel_partition_from_range_partition(equal_partition, ctx,
-                                                         rt);
+    const auto kernel_range_partition = matrix_obj.kernel_partition_from_range_partition(equal_partition, ctx, rt);
 
     {
-        Legion::IndexLauncher launcher{PRINT_CSR_TASK_ID, color_is,
-                                       Legion::TaskArgument{nullptr, 0},
+        Legion::IndexLauncher launcher{PRINT_CSR_TASK_ID, color_is, Legion::TaskArgument{nullptr, 0},
                                        Legion::ArgumentMap{}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            rt->get_logical_partition(csr_matrix, kernel_range_partition), 0,
-            LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_matrix});
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{rt->get_logical_partition(csr_matrix, kernel_range_partition), 0,
+                                      LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_matrix});
         launcher.add_field(0, FID_COL);
         launcher.add_field(0, FID_ENTRY);
         rt->execute_index_space(ctx, launcher);
     }
 
-    const auto kernel_domain_partition =
-        matrix_obj.kernel_partition_from_domain_partition(equal_partition, ctx,
-                                                          rt);
+    const auto kernel_domain_partition = matrix_obj.kernel_partition_from_domain_partition(equal_partition, ctx, rt);
 
     {
-        Legion::IndexLauncher launcher{PRINT_CSR_TASK_ID, color_is,
-                                       Legion::TaskArgument{nullptr, 0},
+        Legion::IndexLauncher launcher{PRINT_CSR_TASK_ID, color_is, Legion::TaskArgument{nullptr, 0},
                                        Legion::ArgumentMap{}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            rt->get_logical_partition(csr_matrix, kernel_domain_partition), 0,
-            LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_matrix});
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{rt->get_logical_partition(csr_matrix, kernel_domain_partition), 0,
+                                      LEGION_READ_ONLY, LEGION_EXCLUSIVE, csr_matrix});
         launcher.add_field(0, FID_COL);
         launcher.add_field(0, FID_ENTRY);
         rt->execute_index_space(ctx, launcher);
@@ -256,13 +237,7 @@ void top_level_task(const Legion::Task *,
     // Launch matrix-vector multiplication tasks.
     matrix_obj.matvec(output_vector, FID_VEC_ENTRY, input_vector, FID_VEC_ENTRY, ctx, rt);
 
-    { // Print output vector.
-        Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(
-            Legion::RegionRequirement{output_vector, LEGION_READ_ONLY, LEGION_EXCLUSIVE, output_vector});
-        launcher.add_field(0, FID_VEC_ENTRY);
-        rt->execute_task(ctx, launcher);
-    }
+    LegionSolvers::print_vector<double>(output_vector, FID_VEC_ENTRY, "output_vector", ctx, rt);
 
     // Create another rhs vector and partition it.
     const Legion::IndexSpaceT<1> rhs_index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
@@ -287,22 +262,11 @@ void top_level_task(const Legion::Task *,
     solver.set_max_iterations(17);
     solver.solve(ctx, rt);
 
-    {
-        Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(
-            Legion::RegionRequirement{solver.workspace[0], LEGION_READ_ONLY, LEGION_EXCLUSIVE, solver.workspace[0]});
-        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X);
-        rt->execute_task(ctx, launcher);
-    }
+    LegionSolvers::print_vector<double>(solver.workspace[0], LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X,
+                                        "sol0", ctx, rt);
 
-    {
-        Legion::TaskLauncher launcher{PRINT_VEC_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(
-            Legion::RegionRequirement{solver.workspace[1], LEGION_READ_ONLY, LEGION_EXCLUSIVE, solver.workspace[1]});
-        launcher.add_field(0, LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X);
-        rt->execute_task(ctx, launcher);
-    }
-
+    LegionSolvers::print_vector<double>(solver.workspace[1], LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X,
+                                        "sol1", ctx, rt);
 
 #ifdef TEST_2D
 
@@ -506,36 +470,15 @@ void print_csr_rowptr_task(const Legion::Task *task,
     }
 }
 
-void print_vec_task(const Legion::Task *task,
-                    const std::vector<Legion::PhysicalRegion> &regions,
-                    Legion::Context ctx,
-                    Legion::Runtime *rt) {
-
-    assert(regions.size() == 1);
-    const auto &vector = regions[0];
-
-    assert(task->regions.size() == 1);
-    const auto &vector_req = task->regions[0];
-
-    assert(vector_req.privilege_fields.size() == 1);
-    const Legion::FieldID vector_fid = *vector_req.privilege_fields.begin();
-
-    const Legion::FieldAccessor<LEGION_READ_ONLY, double, 1> entry_reader{vector, vector_fid};
-
-    for (Legion::PointInDomainIterator<1> iter{vector}; iter(); ++iter) {
-        std::cout << task->index_point << ' ' << *iter << ": " << entry_reader[*iter] << std::endl;
-    }
-}
 
 int main(int argc, char **argv) {
     using namespace LegionSolvers;
-    preregister_solver_tasks();
+    preregister_solver_tasks(false);
 
     preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
     preregister_cpu_task<fill_coo_matrix_task>(FILL_COO_MATRIX_TASK_ID, "fill_coo_matrix");
     preregister_cpu_task<fill_vector_task>(FILL_VECTOR_TASK_ID, "fill_vector");
     preregister_cpu_task<print_task>(PRINT_TASK_ID, "print");
-    preregister_cpu_task<print_vec_task>(PRINT_VEC_TASK_ID, "print_vec_task");
     preregister_cpu_task<boundary_fill_vector_task>(BOUNDARY_FILL_VECTOR_TASK_ID, "boundary_fill");
     preregister_cpu_task<fill_negative_laplacian_2d_task>(FILL_NEGATIVE_LAPLACIAN_2D_TASK_ID,
                                                           "fill_negative_laplacian_2d");

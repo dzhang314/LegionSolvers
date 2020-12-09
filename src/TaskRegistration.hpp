@@ -157,7 +157,12 @@ namespace LegionSolvers {
         CartesianProductRegistrarRT<DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
                                     IntList<LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
         CartesianProductRegistrar<
-            CooMatvecTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
+            COOMatvecTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
+            IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
+        CartesianProductRegistrar<PrintVectorTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
+                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
+        CartesianProductRegistrar<
+            COORmatvecTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
             IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
     }
 
