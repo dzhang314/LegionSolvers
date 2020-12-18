@@ -12,7 +12,7 @@ namespace LegionSolvers {
     class SparseMatrix : public MaterializedLinearOperator<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
 
 
-      protected:
+      public:
         Legion::LogicalRegionT<KERNEL_DIM> matrix_region;
         Legion::IndexPartitionT<DOMAIN_DIM> input_partition;
         Legion::IndexPartitionT<RANGE_DIM> output_partition;
@@ -31,6 +31,9 @@ namespace LegionSolvers {
 
         virtual void compute_nonempty_tiles(Legion::FieldID fid, Legion::Context ctx, Legion::Runtime *rt) {
 
+            std::cout << "Computing nonempty tiles." << std::endl;
+            // print_vector<ENTRY_T>(matrix_region, 103, "full matrix", ctx, rt);
+
             const auto kernel_domain_partition = this->kernel_partition_from_domain_partition(input_partition, ctx, rt);
             const auto kernel_range_partition = this->kernel_partition_from_range_partition(output_partition, ctx, rt);
             column_logical_partition = rt->get_logical_partition(matrix_region, kernel_domain_partition);
@@ -48,6 +51,7 @@ namespace LegionSolvers {
                 const Legion::DomainPoint input_color{*input_iter};
                 const auto column = rt->get_logical_subregion_by_color(column_logical_partition, input_color);
                 const auto column_partition = rt->get_logical_partition_by_color(column, tile_partition);
+                // print_vector<ENTRY_T>(column, 103, "column", ctx, rt);
 
                 for (Legion::PointInDomainIterator<1> output_iter{
                          rt->get_index_partition_color_space(output_partition)};
@@ -55,6 +59,8 @@ namespace LegionSolvers {
 
                     const Legion::DomainPoint output_color{*output_iter};
                     const auto tile = rt->get_logical_subregion_by_color(column_partition, output_color);
+                    std::cout << "Launching check for " << output_color << ", " << input_color << std::endl;
+                    // print_vector<ENTRY_T>(tile, 103, "tile", ctx, rt);
                     nonempty_futures.emplace_back(input_color, output_color,
                                                   is_nonempty<KERNEL_DIM>(tile, fid, ctx, rt));
                 }

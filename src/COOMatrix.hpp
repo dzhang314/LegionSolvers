@@ -63,7 +63,20 @@ namespace LegionSolvers {
             : SparseMatrix<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>(
                   matrix_region, input_partition, output_partition),
               fid_i(fid_i), fid_j(fid_j), fid_entry(fid_entry) {
+
+            assert(rt->is_index_partition_complete(ctx, this->input_partition));
+            assert(rt->is_index_partition_disjoint(ctx, this->input_partition));
+            assert(rt->is_index_partition_complete(ctx, this->output_partition));
+            assert(rt->is_index_partition_disjoint(ctx, this->output_partition));
+
+            const Legion::Domain input_color_space = rt->get_index_partition_color_space(this->input_partition);
+            const Legion::Domain output_color_space = rt->get_index_partition_color_space(this->output_partition);
+
+            std::cout << "Constructing COOMatrix" << std::endl;
+            std::cout << "Input color space: " << input_color_space.get_volume() << std::endl;
+            std::cout << "Output color space: " << output_color_space.get_volume() << std::endl;
             this->compute_nonempty_tiles(fid_entry, ctx, rt);
+            std::cout << "Computed " << this->nonempty_tiles.size() << " nonempty tiles." << std::endl;
         }
 
 
@@ -75,6 +88,7 @@ namespace LegionSolvers {
                             Legion::Runtime *rt) const override {
             zero_fill<ENTRY_T>(output_vector, output_fid, this->output_partition, ctx, rt);
             for (const auto [input_color, output_color] : this->nonempty_tiles) {
+                std::cout << "Launching matvec on tile " << input_color << " " << output_color << std::endl;
                 const auto column = rt->get_logical_subregion_by_color(this->column_logical_partition, input_color);
                 const auto column_partition = rt->get_logical_partition_by_color(column, this->tile_partition);
                 const auto tile = rt->get_logical_subregion_by_color(column_partition, output_color);
@@ -100,6 +114,19 @@ namespace LegionSolvers {
                     rt->execute_task(ctx, launcher);
                 }
             }
+        }
+
+
+        virtual void print(Legion::Context ctx, Legion::Runtime *rt) const override {
+            const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
+            Legion::TaskLauncher launcher{COOPrintTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
+                                          Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])}};
+            launcher.add_region_requirement(Legion::RegionRequirement{this->matrix_region, LEGION_READ_ONLY,
+                                                                      LEGION_EXCLUSIVE, this->matrix_region});
+            launcher.add_field(0, fid_i);
+            launcher.add_field(0, fid_j);
+            launcher.add_field(0, fid_entry);
+            rt->execute_task(ctx, launcher);
         }
 
 

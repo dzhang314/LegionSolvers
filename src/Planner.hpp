@@ -24,10 +24,12 @@ namespace LegionSolvers {
 
         std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>> dimensions;
         std::vector<std::pair<Legion::LogicalRegion, Legion::FieldID>> right_hand_sides;
-        std::vector<std::tuple<int, int, std::unique_ptr<LinearOperator>>> operators;
 
 
       public:
+        std::vector<std::tuple<int, int, std::unique_ptr<LinearOperator>>> operators;
+
+
         const std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>> &get_dimensions() const noexcept {
             return dimensions;
         }
@@ -59,6 +61,10 @@ namespace LegionSolvers {
                                        matrix_region, fid_i, fid_j, fid_entry,
                                        Legion::IndexPartitionT<DOMAIN_DIM>{domain_partition},
                                        Legion::IndexPartitionT<RANGE_DIM>{range_partition}, ctx, rt));
+            const auto matrix =
+                dynamic_cast<COOMatrix<T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> *>(std::get<2>(operators.back()).get());
+            assert(matrix != nullptr);
+            std::cout << "Found " << matrix->nonempty_tiles.size() << " tiles." << std::endl;
         }
 
 
@@ -72,6 +78,7 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (const auto &[dst_index, src_index, matrix] : operators) {
+                std::cout << "Launching matvec from " << src_index << " to " << dst_index << std::endl;
                 matrix->matvec(workspace[dst_index], fid_dst, workspace[src_index], fid_src, ctx, rt);
             }
         }

@@ -61,6 +61,10 @@ namespace LegionSolvers {
                 const T entry = entry_reader[*iter];
                 output_writer[i] = output_writer[i] + entry * input_reader[j];
             }
+
+            for (Legion::PointInDomainIterator<RANGE_DIM> iter{output_vec}; iter(); ++iter) {
+                std::cout << "COO MATVEC OUTPUT" << *iter << output_writer[*iter] << std::endl;
+            }
         }
 
     }; // struct COOMatvecTask
@@ -119,6 +123,44 @@ namespace LegionSolvers {
         }
 
     }; // struct COORmatvecTask
+
+
+    template <typename T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
+    struct COOPrintTask : TaskTDDD<COO_PRINT_TASK_BLOCK_ID, T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
+
+        static std::string task_name() { return "coo_print"; }
+
+        static void task(const Legion::Task *task,
+                         const std::vector<Legion::PhysicalRegion> &regions,
+                         Legion::Context ctx,
+                         Legion::Runtime *rt) {
+
+            assert(regions.size() == 1);
+            const auto &coo_matrix = regions[0];
+
+            assert(task->arglen == 3 * sizeof(Legion::FieldID));
+            const Legion::FieldID *argptr = reinterpret_cast<const Legion::FieldID *>(task->args);
+
+            const Legion::FieldID fid_i = argptr[0];
+            const Legion::FieldID fid_j = argptr[1];
+            const Legion::FieldID fid_entry = argptr[2];
+
+            const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::Point<RANGE_DIM>, KERNEL_DIM> i_reader{coo_matrix,
+                                                                                                         fid_i};
+            const Legion::FieldAccessor<LEGION_READ_ONLY, Legion::Point<DOMAIN_DIM>, KERNEL_DIM> j_reader{coo_matrix,
+                                                                                                          fid_j};
+            const Legion::FieldAccessor<LEGION_READ_ONLY, T, KERNEL_DIM> entry_reader{coo_matrix, fid_entry};
+
+            std::cout << task->index_point << std::endl;
+            for (Legion::PointInDomainIterator<KERNEL_DIM> iter{coo_matrix}; iter(); ++iter) {
+                const Legion::Point<RANGE_DIM> i{i_reader[*iter]};
+                const Legion::Point<DOMAIN_DIM> j{j_reader[*iter]};
+                const T entry = entry_reader[*iter];
+                std::cout << task->index_point << *iter << ": " << i << ", " << j << ", " << entry << std::endl;
+            }
+        }
+
+    }; // struct COOPrintTask
 
 
 } // namespace LegionSolvers

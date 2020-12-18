@@ -19,6 +19,9 @@ namespace LegionSolvers {
                             Legion::Runtime *rt) const = 0;
 
 
+        virtual void print(Legion::Context ctx, Legion::Runtime *rt) const = 0;
+
+
         virtual ~LinearOperator() = 0;
 
 

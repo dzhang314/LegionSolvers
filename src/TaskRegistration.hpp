@@ -7,6 +7,7 @@
 #include <legion.h>
 
 #include "COOMatrixTasks.hpp"
+#include "ExampleSystems.hpp"
 #include "LinearAlgebraTasks.hpp"
 #include "UtilityTasks.hpp"
 
@@ -164,6 +165,11 @@ namespace LegionSolvers {
         CartesianProductRegistrar<
             COORmatvecTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
             IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
+        CartesianProductRegistrar<
+            COOPrintTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
+            IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
+        CartesianProductRegistrar<FillCOONegativeLaplacian2DTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
+                                  IntList<>>::execute(verbose);
     }
 
 
