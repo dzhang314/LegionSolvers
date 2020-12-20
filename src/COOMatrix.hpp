@@ -55,28 +55,27 @@ namespace LegionSolvers {
                            Legion::FieldID fid_i,
                            Legion::FieldID fid_j,
                            Legion::FieldID fid_entry,
-                           Legion::IndexPartitionT<DOMAIN_DIM> input_partition,
-                           Legion::IndexPartitionT<RANGE_DIM> output_partition,
+                           Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
+                           Legion::IndexPartitionT<RANGE_DIM> range_partition,
                            Legion::Context ctx,
                            Legion::Runtime *rt)
 
             : SparseMatrix<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>(
-                  matrix_region, input_partition, output_partition),
+                  matrix_region, domain_partition, range_partition),
               fid_i(fid_i), fid_j(fid_j), fid_entry(fid_entry) {
 
-            assert(rt->is_index_partition_complete(ctx, this->input_partition));
-            assert(rt->is_index_partition_disjoint(ctx, this->input_partition));
-            assert(rt->is_index_partition_complete(ctx, this->output_partition));
-            assert(rt->is_index_partition_disjoint(ctx, this->output_partition));
+            assert(rt->is_index_partition_complete(ctx, this->domain_partition));
+            assert(rt->is_index_partition_disjoint(ctx, this->domain_partition));
+            assert(rt->is_index_partition_complete(ctx, this->range_partition));
+            assert(rt->is_index_partition_disjoint(ctx, this->range_partition));
 
-            const Legion::Domain input_color_space = rt->get_index_partition_color_space(this->input_partition);
-            const Legion::Domain output_color_space = rt->get_index_partition_color_space(this->output_partition);
+            const Legion::Domain input_color_space = rt->get_index_partition_color_space(this->domain_partition);
+            const Legion::Domain output_color_space = rt->get_index_partition_color_space(this->range_partition);
 
-            std::cout << "Constructing COOMatrix" << std::endl;
+            std::cout << "Constructing COOMatrix." << std::endl;
             std::cout << "Input color space: " << input_color_space.get_volume() << std::endl;
             std::cout << "Output color space: " << output_color_space.get_volume() << std::endl;
             this->compute_nonempty_tiles(fid_entry, ctx, rt);
-            std::cout << "Computed " << this->nonempty_tiles.size() << " nonempty tiles." << std::endl;
         }
 
 
@@ -86,16 +85,16 @@ namespace LegionSolvers {
                             Legion::FieldID input_fid,
                             Legion::Context ctx,
                             Legion::Runtime *rt) const override {
-            zero_fill<ENTRY_T>(output_vector, output_fid, this->output_partition, ctx, rt);
+            zero_fill<ENTRY_T>(output_vector, output_fid, this->range_partition, ctx, rt);
             for (const auto [input_color, output_color] : this->nonempty_tiles) {
                 std::cout << "Launching matvec on tile " << input_color << " " << output_color << std::endl;
                 const auto column = rt->get_logical_subregion_by_color(this->column_logical_partition, input_color);
                 const auto column_partition = rt->get_logical_partition_by_color(column, this->tile_partition);
                 const auto tile = rt->get_logical_subregion_by_color(column_partition, output_color);
                 const auto input_subregion = rt->get_logical_subregion_by_color(
-                    rt->get_logical_partition(input_vector, this->input_partition), input_color);
+                    rt->get_logical_partition(input_vector, this->domain_partition), input_color);
                 const auto output_subregion = rt->get_logical_subregion_by_color(
-                    rt->get_logical_partition(output_vector, this->output_partition), output_color);
+                    rt->get_logical_partition(output_vector, this->range_partition), output_color);
                 const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
                 {
                     Legion::TaskLauncher launcher{COOMatvecTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,

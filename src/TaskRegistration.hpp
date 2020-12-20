@@ -37,14 +37,6 @@ namespace LegionSolvers {
     }
 
 
-    template <typename RETURN_T, template <int> typename TASK_CLASS>
-    void preregister(const std::string &task_name) {
-        preregister_cpu_task<RETURN_T, TASK_CLASS<1>::task>(TASK_CLASS<1>::task_id, (task_name + "_1").c_str());
-        preregister_cpu_task<RETURN_T, TASK_CLASS<2>::task>(TASK_CLASS<2>::task_id, (task_name + "_2").c_str());
-        preregister_cpu_task<RETURN_T, TASK_CLASS<3>::task>(TASK_CLASS<3>::task_id, (task_name + "_3").c_str());
-    }
-
-
     template <template <typename, int...> typename TASK_CLASS, typename... TS>
     struct CartesianProductRegistrar;
 
@@ -146,7 +138,6 @@ namespace LegionSolvers {
             verbose);
         CartesianProductRegistrarRT<DivisionTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
             verbose);
-        preregister<bool, IsNonemptyTask>("is_nonempty");
         CartesianProductRegistrar<ConstantFillTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
                                   IntList<LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
         CartesianProductRegistrar<CopyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,

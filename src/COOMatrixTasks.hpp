@@ -61,10 +61,6 @@ namespace LegionSolvers {
                 const T entry = entry_reader[*iter];
                 output_writer[i] = output_writer[i] + entry * input_reader[j];
             }
-
-            for (Legion::PointInDomainIterator<RANGE_DIM> iter{output_vec}; iter(); ++iter) {
-                std::cout << "COO MATVEC OUTPUT" << *iter << output_writer[*iter] << std::endl;
-            }
         }
 
     }; // struct COOMatvecTask

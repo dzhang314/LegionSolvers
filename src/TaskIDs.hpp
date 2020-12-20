@@ -15,7 +15,7 @@ namespace LegionSolvers {
 
     constexpr Legion::TaskID LEGION_SOLVERS_TASK_ID_ORIGIN = 1'000'000;
     constexpr int LEGION_SOLVERS_MAX_DIM = 3;
-    using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
+    using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double, long double>;
 
     // clang-format off
     template <typename T> const char *LEGION_SOLVERS_TYPE_NAME   () { return typeid(T).name(); }
@@ -42,7 +42,6 @@ namespace LegionSolvers {
         NEGATION_TASK_BLOCK_ID,
         MULTIPLICATION_TASK_BLOCK_ID,
         DIVISION_TASK_BLOCK_ID,
-        IS_NONEMPTY_TASK_BLOCK_ID,
         CONSTANT_FILL_TASK_BLOCK_ID,
         COPY_TASK_BLOCK_ID,
         AXPY_TASK_BLOCK_ID,
