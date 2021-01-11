@@ -6,19 +6,14 @@
 #include "Planner.hpp"
 #include "TaskRegistration.hpp"
 
-using LegionSolvers::ConjugateGradientSolver;
-using LegionSolvers::COOMatrix;
-using LegionSolvers::Planner;
-
 constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
 constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
-
 constexpr Legion::coord_t GRID_HEIGHT = 5;
 constexpr Legion::coord_t GRID_WIDTH = 5;
 
 enum TaskIDs : Legion::TaskID {
-    TOP_LEVEL_TASK_ID = 10,
-    FILL_2D_PLANE_TASK_ID = 19,
+    TOP_LEVEL_TASK_ID,
+    FILL_2D_PLANE_TASK_ID,
 };
 
 enum FieldIDs : Legion::FieldID {
@@ -32,22 +27,22 @@ void top_level_task(const Legion::Task *,
                     Legion::Context ctx,
                     Legion::Runtime *rt) {
 
-    const Legion::LogicalRegionT<1> negative_laplacian =
-        LegionSolvers::coo_negative_laplacian_2d<double>(FID_I, FID_J, FID_ENTRY, GRID_HEIGHT, GRID_WIDTH, ctx, rt);
-
-    using LegionSolvers::create_region;
-
+    // Create index space and two vector regions (input and output).
     const Legion::IndexSpaceT<2> index_space =
         rt->create_index_space(ctx, Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
-
-    const auto input_vector = create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
-    const auto output_vector = create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
+    const Legion::LogicalRegionT<2> input_vector =
+        LegionSolvers::create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
+    const Legion::LogicalRegionT<2> output_vector =
+        LegionSolvers::create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
 
     // Partition input and output vectors.
-    const auto input_color_space = rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_INPUT_PARTITIONS - 1});
-    const auto output_color_space = rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_OUTPUT_PARTITIONS - 1});
-    const auto input_partition = rt->create_equal_partition(ctx, index_space, input_color_space);
-    const auto output_partition = rt->create_equal_partition(ctx, index_space, output_color_space);
+    const Legion::IndexSpaceT<1> input_color_space =
+        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_INPUT_PARTITIONS - 1});
+    const Legion::IndexSpaceT<1> output_color_space =
+        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_OUTPUT_PARTITIONS - 1});
+    const Legion::IndexPartitionT<2> input_partition = rt->create_equal_partition(ctx, index_space, input_color_space);
+    const Legion::IndexPartitionT<2> output_partition =
+        rt->create_equal_partition(ctx, index_space, output_color_space);
 
     { // Fill input vector entries.
         Legion::TaskLauncher launcher{FILL_2D_PLANE_TASK_ID, Legion::TaskArgument{nullptr, 0}};
@@ -57,28 +52,23 @@ void top_level_task(const Legion::Task *,
         rt->execute_task(ctx, launcher);
     }
 
-    // Construct map of nonzero tiles.
-    COOMatrix<double, 1, 2, 2> matrix_obj{negative_laplacian, FID_I, FID_J, FID_ENTRY, input_partition,
-                                          output_partition,   ctx,   rt};
+    // Create 2D Laplacian matrix.
+    const Legion::LogicalRegionT<1> negative_laplacian =
+        LegionSolvers::coo_negative_laplacian_2d<double>(FID_I, FID_J, FID_ENTRY, GRID_HEIGHT, GRID_WIDTH, ctx, rt);
 
-    // Construct map of nonzero tiles.
-    COOMatrix<double, 1, 2, 2> matrix_obj_2{negative_laplacian, FID_I, FID_J, FID_ENTRY, output_partition,
-                                            output_partition,   ctx,   rt};
+    // Call COOMatrix constructor, which computes map of nonzero tiles.
+    LegionSolvers::COOMatrix<double, 1, 2, 2> matrix_obj{negative_laplacian, FID_I, FID_J, FID_ENTRY, input_partition,
+                                                         output_partition,   ctx,   rt};
 
-    // Launch matrix-vector multiplication tasks.
+    // Construct a linear system by computing output_vector = negative_laplacian * input_vector...
     matrix_obj.matvec(output_vector, FID_ENTRY, input_vector, FID_ENTRY, ctx, rt);
-    // LegionSolvers::zero_fill<double>(output_vector, FID_ENTRY, output_partition, ctx, rt);
 
-    // Construct map of nonzero tiles.
-    COOMatrix<double, 1, 2, 2> matrix_obj_3{negative_laplacian, FID_I,           FID_J, FID_ENTRY,
-                                            input_partition,    input_partition, ctx,   rt};
-
-    Planner<double> planner{};
+    // ...then, discard the input_vector, and ask for the solution of output_vector == negative_laplacian * x.
+    LegionSolvers::Planner<double> planner{};
     planner.add_rhs(output_vector, FID_ENTRY, output_partition);
-
     planner.add_coo_matrix<1, 2, 2>(0, 0, negative_laplacian, FID_I, FID_J, FID_ENTRY, ctx, rt);
 
-    ConjugateGradientSolver<double> solver{planner, ctx, rt};
+    LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
     solver.set_max_iterations(100);
     solver.solve(ctx, rt);
 }
@@ -95,7 +85,7 @@ void fill_2d_plane_task(const Legion::Task *task,
 
     for (Legion::PointInDomainIterator<2> iter{vector}; iter(); ++iter) {
         const auto [i, j] = *iter;
-        entry_writer[*iter] = i + j;
+        entry_writer[*iter] = static_cast<double>(i + j);
     }
 }
 

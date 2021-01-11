@@ -9,26 +9,21 @@
 #include "Planner.hpp"
 #include "TaskRegistration.hpp"
 
-using LegionSolvers::ConjugateGradientSolver;
-using LegionSolvers::COOMatrix;
-using LegionSolvers::Planner;
-
-constexpr Legion::coord_t MATRIX_SIZE = 16;
-constexpr Legion::coord_t NUM_NONZERO_ENTRIES = 3 * MATRIX_SIZE - 2;
 constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
 constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
+constexpr Legion::coord_t GRID_SIZE = 16;
 
 enum TaskIDs : Legion::TaskID {
-    TOP_LEVEL_TASK_ID = 10,
-    FILL_VECTOR_TASK_ID = 12,
-    BOUNDARY_FILL_VECTOR_TASK_ID = 17,
+    TOP_LEVEL_TASK_ID,
+    FILL_VECTOR_TASK_ID,
+    BOUNDARY_FILL_VECTOR_TASK_ID,
 };
 
 
 enum COOMatrixFieldIDs : Legion::FieldID {
-    FID_COO_I = 101,
-    FID_COO_J = 102,
-    FID_COO_ENTRY = 103,
+    FID_I = 101,
+    FID_J = 102,
+    FID_ENTRY = 103,
 };
 
 
@@ -42,8 +37,8 @@ void top_level_task(const Legion::Task *,
                     Legion::Context ctx,
                     Legion::Runtime *rt) {
 
-    // Create two vector regions (input and output).
-    const Legion::IndexSpaceT<1> index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
+    // Create index space and two vector regions (input and output).
+    const Legion::IndexSpaceT<1> index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, GRID_SIZE - 1});
     const Legion::LogicalRegionT<1> input_vector =
         LegionSolvers::create_region(index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
     const Legion::LogicalRegionT<1> output_vector =
@@ -54,10 +49,9 @@ void top_level_task(const Legion::Task *,
         rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_INPUT_PARTITIONS - 1});
     const Legion::IndexSpaceT<1> output_color_space =
         rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_OUTPUT_PARTITIONS - 1});
-    const Legion::IndexPartitionT<1> input_partition =
-        Legion::IndexPartitionT<1>{rt->create_equal_partition(ctx, input_vector.get_index_space(), input_color_space)};
-    const Legion::IndexPartitionT<1> output_partition = Legion::IndexPartitionT<1>{
-        rt->create_equal_partition(ctx, output_vector.get_index_space(), output_color_space)};
+    const Legion::IndexPartitionT<1> input_partition = rt->create_equal_partition(ctx, index_space, input_color_space);
+    const Legion::IndexPartitionT<1> output_partition =
+        rt->create_equal_partition(ctx, index_space, output_color_space);
 
     { // Fill input vector entries.
         Legion::TaskLauncher launcher{FILL_VECTOR_TASK_ID, Legion::TaskArgument{nullptr, 0}};
@@ -69,11 +63,11 @@ void top_level_task(const Legion::Task *,
 
     // Create 1D Laplacian matrix.
     const auto coo_matrix =
-        LegionSolvers::coo_negative_laplacian_1d<double>(FID_COO_I, FID_COO_J, FID_COO_ENTRY, MATRIX_SIZE, ctx, rt);
+        LegionSolvers::coo_negative_laplacian_1d<double>(FID_I, FID_J, FID_ENTRY, GRID_SIZE, ctx, rt);
 
-    // Construct map of nonzero tiles.
-    COOMatrix<double, 1, 1, 1> matrix_obj{coo_matrix,      FID_COO_I,        FID_COO_J, FID_COO_ENTRY,
-                                          input_partition, output_partition, ctx,       rt};
+    // Call COOMatrix constructor, which computes map of nonzero tiles.
+    LegionSolvers::COOMatrix<double, 1, 1, 1> matrix_obj{coo_matrix,       FID_I, FID_J, FID_ENTRY, input_partition,
+                                                         output_partition, ctx,   rt};
 
     // Launch matrix-vector multiplication tasks.
     matrix_obj.matvec(output_vector, FID_VEC_ENTRY, input_vector, FID_VEC_ENTRY, ctx, rt);
@@ -81,7 +75,7 @@ void top_level_task(const Legion::Task *,
     LegionSolvers::print_vector<double>(output_vector, FID_VEC_ENTRY, "output_vector", ctx, rt);
 
     // Create another rhs vector and partition it.
-    const Legion::IndexSpaceT<1> rhs_index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
+    const Legion::IndexSpaceT<1> rhs_index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, GRID_SIZE - 1});
     const auto rhs_vector = LegionSolvers::create_region(rhs_index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
     const auto rhs_partition = rt->create_equal_partition(ctx, rhs_vector.get_index_space(), input_color_space);
 
@@ -93,13 +87,13 @@ void top_level_task(const Legion::Task *,
         rt->execute_task(ctx, launcher);
     }
 
-    Planner<double> planner{};
+    LegionSolvers::Planner<double> planner{};
     planner.add_rhs(output_vector, FID_VEC_ENTRY, output_partition);
     planner.add_rhs(rhs_vector, FID_VEC_ENTRY, rhs_partition);
-    planner.add_coo_matrix<1, 1, 1>(0, 0, coo_matrix, FID_COO_I, FID_COO_J, FID_COO_ENTRY, ctx, rt);
-    planner.add_coo_matrix<1, 1, 1>(1, 1, coo_matrix, FID_COO_I, FID_COO_J, FID_COO_ENTRY, ctx, rt);
+    planner.add_coo_matrix<1, 1, 1>(0, 0, coo_matrix, FID_I, FID_J, FID_ENTRY, ctx, rt);
+    planner.add_coo_matrix<1, 1, 1>(1, 1, coo_matrix, FID_I, FID_J, FID_ENTRY, ctx, rt);
 
-    ConjugateGradientSolver solver{planner, ctx, rt};
+    LegionSolvers::ConjugateGradientSolver solver{planner, ctx, rt};
     solver.set_max_iterations(17);
     solver.solve(ctx, rt);
 
@@ -137,7 +131,7 @@ void boundary_fill_vector_task(const Legion::Task *task,
         auto i = *iter;
         if (i[0] == 0) {
             entry_writer[*iter] = -1.0;
-        } else if (i[0] == MATRIX_SIZE - 1) {
+        } else if (i[0] == GRID_SIZE - 1) {
             entry_writer[*iter] = 2.0;
         } else {
             entry_writer[*iter] = 0.0;
