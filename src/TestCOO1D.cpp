@@ -1,14 +1,9 @@
 #include <iostream>
 #include <random>
 
-#define LEGION_DISABLE_DEPRECATED_ENUMS
-
 #include <legion.h>
 
-#undef NDEBUG
-
 #include "COOMatrix.hpp"
-#include "CSRMatrix.hpp"
 #include "ConjugateGradientSolver.hpp"
 #include "ExampleSystems.hpp"
 #include "Planner.hpp"
@@ -16,7 +11,6 @@
 
 using LegionSolvers::ConjugateGradientSolver;
 using LegionSolvers::COOMatrix;
-using LegionSolvers::CSRMatrix;
 using LegionSolvers::Planner;
 
 constexpr Legion::coord_t MATRIX_SIZE = 16;
@@ -26,7 +20,6 @@ constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
 
 enum TaskIDs : Legion::TaskID {
     TOP_LEVEL_TASK_ID = 10,
-    FILL_COO_MATRIX_TASK_ID = 11,
     FILL_VECTOR_TASK_ID = 12,
     BOUNDARY_FILL_VECTOR_TASK_ID = 17,
 };
@@ -49,11 +42,7 @@ void top_level_task(const Legion::Task *,
                     Legion::Context ctx,
                     Legion::Runtime *rt) {
 
-    // Create matrix and two vector regions (input and output).
-    const auto coo_matrix = LegionSolvers::create_region(
-        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_NONZERO_ENTRIES - 1}),
-        {{sizeof(Legion::coord_t), FID_COO_I}, {sizeof(Legion::coord_t), FID_COO_J}, {sizeof(double), FID_COO_ENTRY}},
-        ctx, rt);
+    // Create two vector regions (input and output).
     const Legion::IndexSpaceT<1> index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, MATRIX_SIZE - 1});
     const Legion::LogicalRegionT<1> input_vector =
         LegionSolvers::create_region(index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
@@ -70,16 +59,6 @@ void top_level_task(const Legion::Task *,
     const Legion::IndexPartitionT<1> output_partition = Legion::IndexPartitionT<1>{
         rt->create_equal_partition(ctx, output_vector.get_index_space(), output_color_space)};
 
-    { // Fill matrix entries.
-        Legion::TaskLauncher launcher{FILL_COO_MATRIX_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(
-            Legion::RegionRequirement{coo_matrix, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix});
-        launcher.add_field(0, FID_COO_I);
-        launcher.add_field(0, FID_COO_J);
-        launcher.add_field(0, FID_COO_ENTRY);
-        rt->execute_task(ctx, launcher);
-    }
-
     { // Fill input vector entries.
         Legion::TaskLauncher launcher{FILL_VECTOR_TASK_ID, Legion::TaskArgument{nullptr, 0}};
         launcher.add_region_requirement(
@@ -87,6 +66,10 @@ void top_level_task(const Legion::Task *,
         launcher.add_field(0, FID_VEC_ENTRY);
         rt->execute_task(ctx, launcher);
     }
+
+    // Create 1D Laplacian matrix.
+    const auto coo_matrix =
+        LegionSolvers::coo_negative_laplacian_1d<double>(FID_COO_I, FID_COO_J, FID_COO_ENTRY, MATRIX_SIZE, ctx, rt);
 
     // Construct map of nonzero tiles.
     COOMatrix<double, 1, 1, 1> matrix_obj{coo_matrix,      FID_COO_I,        FID_COO_J, FID_COO_ENTRY,
@@ -125,54 +108,6 @@ void top_level_task(const Legion::Task *,
 
     LegionSolvers::print_vector<double>(solver.workspace[1], LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X,
                                         "sol1", ctx, rt);
-}
-
-void fill_coo_matrix_task(const Legion::Task *task,
-                          const std::vector<Legion::PhysicalRegion> &regions,
-                          Legion::Context ctx,
-                          Legion::Runtime *rt) {
-
-    assert(regions.size() == 1);
-    const auto &coo_matrix = regions[0];
-
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::coord_t, 1> i_writer{coo_matrix, FID_COO_I};
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::coord_t, 1> j_writer{coo_matrix, FID_COO_J};
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, double, 1> entry_writer{coo_matrix, FID_COO_ENTRY};
-
-    if (NUM_NONZERO_ENTRIES == 3 * MATRIX_SIZE - 2) {
-        Legion::PointInDomainIterator<1> iter{coo_matrix};
-        for (Legion::coord_t i = 0; i < MATRIX_SIZE; ++i) {
-            i_writer[*iter] = i;
-            j_writer[*iter] = i;
-            entry_writer[*iter] = 2.0;
-            ++iter;
-        }
-        for (Legion::coord_t i = 0; i < MATRIX_SIZE - 1; ++i) {
-            i_writer[*iter] = i + 1;
-            j_writer[*iter] = i;
-            entry_writer[*iter] = -1.0;
-            ++iter;
-            i_writer[*iter] = i;
-            j_writer[*iter] = i + 1;
-            entry_writer[*iter] = -1.0;
-            ++iter;
-        }
-    } else {
-        std::set<std::pair<Legion::coord_t, Legion::coord_t>> indices{};
-        std::random_device rng{};
-        std::uniform_int_distribution<Legion::coord_t> index_dist{0, MATRIX_SIZE - 1};
-        std::uniform_real_distribution<double> entry_dist{0.0, 1.0};
-        while (indices.size() < NUM_NONZERO_ENTRIES) { indices.emplace(index_dist(rng), index_dist(rng)); }
-        for (Legion::PointInDomainIterator<1> iter{coo_matrix}; iter(); ++iter) {
-            const auto [i, j] = *indices.begin();
-            indices.erase(indices.begin());
-            const double entry = entry_dist(rng);
-            i_writer[*iter] = i;
-            j_writer[*iter] = j;
-            entry_writer[*iter] = entry;
-            std::cout << *iter << ": " << i << ", " << j << ", " << entry << std::endl;
-        }
-    }
 }
 
 void fill_vector_task(const Legion::Task *task,
@@ -215,7 +150,6 @@ int main(int argc, char **argv) {
     LegionSolvers::preregister_solver_tasks();
 
     LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
-    LegionSolvers::preregister_cpu_task<fill_coo_matrix_task>(FILL_COO_MATRIX_TASK_ID, "fill_coo_matrix");
     LegionSolvers::preregister_cpu_task<fill_vector_task>(FILL_VECTOR_TASK_ID, "fill_vector");
     LegionSolvers::preregister_cpu_task<boundary_fill_vector_task>(BOUNDARY_FILL_VECTOR_TASK_ID, "boundary_fill");
 

@@ -79,7 +79,7 @@ void top_level_task(const Legion::Task *,
     planner.add_coo_matrix<1, 2, 2>(0, 0, negative_laplacian, FID_I, FID_J, FID_ENTRY, ctx, rt);
 
     ConjugateGradientSolver<double> solver{planner, ctx, rt};
-    solver.set_max_iterations(2);
+    solver.set_max_iterations(100);
     solver.solve(ctx, rt);
 }
 

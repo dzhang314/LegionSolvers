@@ -398,7 +398,6 @@ int main(int argc, char **argv) {
     preregister_cpu_task<fill_coo_matrix_task>(FILL_COO_MATRIX_TASK_ID, "fill_coo_matrix");
     preregister_cpu_task<fill_vector_task>(FILL_VECTOR_TASK_ID, "fill_vector");
     preregister_cpu_task<boundary_fill_vector_task>(BOUNDARY_FILL_VECTOR_TASK_ID, "boundary_fill");
-    preregister_cpu_task<fill_2d_plane_task>(FILL_2D_PLANE_TASK_ID, "fill_2d_plane");
     preregister_cpu_task<fill_csr_negative_laplacian_1d>(FILL_CSR_NEGATIVE_LAPLACIAN_1D_TASK_ID,
                                                          "fill_csr_negative_laplacian");
     preregister_cpu_task<fill_csr_negative_laplacian_1d_rowptr>(FILL_CSR_NEGATIVE_LAPLACIAN_1D_ROWPTR_TASK_ID,
