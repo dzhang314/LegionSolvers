@@ -3,81 +3,127 @@
 
 #include <legion.h>
 
-
-constexpr Legion::coord_t GRID_HEIGHT = 100;
-constexpr Legion::coord_t GRID_WIDTH = 200;
+#include "TaskIDs.hpp"
 
 
-enum COOMatrixFieldIDs : Legion::FieldID {
-    FID_COO_I = 101,
-    FID_COO_J = 102,
-    FID_COO_ENTRY = 103,
-};
+namespace LegionSolvers {
 
 
-enum VectorFieldIDs : Legion::FieldID {
-    FID_VEC_ENTRY = 200,
-};
+    template <int DIM>
+    Legion::LogicalRegionT<DIM> create_region(Legion::IndexSpaceT<DIM> index_space,
+                                              const std::vector<std::pair<std::size_t, Legion::FieldID>> &fields,
+                                              Legion::Context ctx,
+                                              Legion::Runtime *rt) {
+        Legion::FieldSpace field_space = rt->create_field_space(ctx);
+        Legion::FieldAllocator allocator = rt->create_field_allocator(ctx, field_space);
+        for (const auto [field_size, field_id] : fields) { allocator.allocate_field(field_size, field_id); }
+        return rt->create_logical_region(ctx, index_space, field_space);
+    }
 
 
-constexpr Legion::coord_t laplacian_2d_kernel_size(Legion::coord_t height, Legion::coord_t width) {
-    return 8 + (height - 2) * 2 * 3 + (width - 2) * 2 * 3 + (height - 2) * (width - 2) * 4 + width * height;
-}
+    constexpr Legion::coord_t laplacian_2d_kernel_size(Legion::coord_t height, Legion::coord_t width) {
+        return 8 + (height - 2) * 2 * 3 + (width - 2) * 2 * 3 + (height - 2) * (width - 2) * 4 + width * height;
+    }
 
 
-void fill_negative_laplacian_2d_task(const Legion::Task *task,
-                                     const std::vector<Legion::PhysicalRegion> &regions,
-                                     Legion::Context ctx,
-                                     Legion::Runtime *rt) {
+    template <typename T>
+    struct FillCOONegativeLaplacian2DTask : public TaskT<FILL_COO_NEGATIVE_LAPLACIAN_2D_TASK_BLOCK_ID, T> {
 
-    assert(regions.size() == 1);
-    const auto &negative_laplacian_matrix = regions[0];
+        static std::string task_name() { return "fill_coo_negative_laplacian_2d"; }
 
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<2>, 1> i_writer{negative_laplacian_matrix,
-                                                                                    FID_COO_I};
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<2>, 1> j_writer{negative_laplacian_matrix,
-                                                                                    FID_COO_J};
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, double, 1> entry_writer{negative_laplacian_matrix, FID_COO_ENTRY};
+        struct Args {
+            Legion::FieldID fid_i;
+            Legion::FieldID fid_j;
+            Legion::FieldID fid_entry;
+            Legion::coord_t grid_height;
+            Legion::coord_t grid_width;
+        };
 
-    Legion::PointInDomainIterator<1> iter{negative_laplacian_matrix};
-    for (Legion::coord_t i = 0; i < GRID_HEIGHT; ++i) {
-        for (Legion::coord_t j = 0; j < GRID_WIDTH; ++j) {
+        static void task(const Legion::Task *task,
+                         const std::vector<Legion::PhysicalRegion> &regions,
+                         Legion::Context ctx,
+                         Legion::Runtime *rt) {
 
-            i_writer[*iter] = Legion::Point<2>{i, j};
-            j_writer[*iter] = Legion::Point<2>{i, j};
-            entry_writer[*iter] = 4.0;
-            ++iter;
+            assert(regions.size() == 1);
+            const auto &matrix = regions[0];
 
-            if (i > 0) {
-                i_writer[*iter] = Legion::Point<2>{i, j};
-                j_writer[*iter] = Legion::Point<2>{i - 1, j};
-                entry_writer[*iter] = -1.0;
-                ++iter;
-            }
+            assert(task->arglen == sizeof(Args));
+            const Args args = *reinterpret_cast<const Args *>(task->args);
 
-            if (j > 0) {
-                i_writer[*iter] = Legion::Point<2>{i, j};
-                j_writer[*iter] = Legion::Point<2>{i, j - 1};
-                entry_writer[*iter] = -1.0;
-                ++iter;
-            }
+            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<2>, 1> i_writer{matrix, args.fid_i};
+            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<2>, 1> j_writer{matrix, args.fid_j};
+            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, 1> entry_writer{matrix, args.fid_entry};
 
-            if (i + 1 < GRID_HEIGHT) {
-                i_writer[*iter] = Legion::Point<2>{i, j};
-                j_writer[*iter] = Legion::Point<2>{i + 1, j};
-                entry_writer[*iter] = -1.0;
-                ++iter;
-            }
+            Legion::PointInDomainIterator<1> iter{matrix};
+            for (Legion::coord_t i = 0; i < args.grid_height; ++i) {
+                for (Legion::coord_t j = 0; j < args.grid_width; ++j) {
 
-            if (j + 1 < GRID_WIDTH) {
-                i_writer[*iter] = Legion::Point<2>{i, j};
-                j_writer[*iter] = Legion::Point<2>{i, j + 1};
-                entry_writer[*iter] = -1.0;
-                ++iter;
+                    i_writer[*iter] = Legion::Point<2>{i, j};
+                    j_writer[*iter] = Legion::Point<2>{i, j};
+                    entry_writer[*iter] = 4.0;
+                    ++iter;
+
+                    if (i > 0) {
+                        i_writer[*iter] = Legion::Point<2>{i, j};
+                        j_writer[*iter] = Legion::Point<2>{i - 1, j};
+                        entry_writer[*iter] = -1.0;
+                        ++iter;
+                    }
+
+                    if (j > 0) {
+                        i_writer[*iter] = Legion::Point<2>{i, j};
+                        j_writer[*iter] = Legion::Point<2>{i, j - 1};
+                        entry_writer[*iter] = -1.0;
+                        ++iter;
+                    }
+
+                    if (i + 1 < args.grid_height) {
+                        i_writer[*iter] = Legion::Point<2>{i, j};
+                        j_writer[*iter] = Legion::Point<2>{i + 1, j};
+                        entry_writer[*iter] = -1.0;
+                        ++iter;
+                    }
+
+                    if (j + 1 < args.grid_width) {
+                        i_writer[*iter] = Legion::Point<2>{i, j};
+                        j_writer[*iter] = Legion::Point<2>{i, j + 1};
+                        entry_writer[*iter] = -1.0;
+                        ++iter;
+                    }
+                }
             }
         }
+
+    }; // struct FillCOONegativeLaplacian2DTask
+
+
+    template <typename T>
+    Legion::LogicalRegionT<1> coo_negative_laplacian_2d(Legion::FieldID fid_i,
+                                                        Legion::FieldID fid_j,
+                                                        Legion::FieldID fid_entry,
+                                                        Legion::coord_t height,
+                                                        Legion::coord_t width,
+                                                        Legion::Context ctx,
+                                                        Legion::Runtime *rt) {
+
+        const Legion::coord_t kernel_size = laplacian_2d_kernel_size(height, width);
+        const Legion::LogicalRegionT<1> negative_laplacian = create_region(
+            rt->create_index_space(ctx, Legion::Rect<1>{0, kernel_size - 1}),
+            {{sizeof(Legion::Point<2>), fid_i}, {sizeof(Legion::Point<2>), fid_j}, {sizeof(T), fid_entry}}, ctx, rt);
+        const typename FillCOONegativeLaplacian2DTask<T>::Args args{fid_i, fid_j, fid_entry, height, width};
+        Legion::TaskLauncher launcher{FillCOONegativeLaplacian2DTask<T>::task_id,
+                                      Legion::TaskArgument{&args, sizeof(args)}};
+        launcher.add_region_requirement(
+            Legion::RegionRequirement{negative_laplacian, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, negative_laplacian});
+        launcher.add_field(0, fid_i);
+        launcher.add_field(0, fid_j);
+        launcher.add_field(0, fid_entry);
+        rt->execute_task(ctx, launcher);
+        return negative_laplacian;
     }
-}
+
+
+} // namespace LegionSolvers
 
 
 #endif // LEGION_SOLVERS_EXAMPLE_SYSTEMS_HPP

@@ -15,7 +15,7 @@ namespace LegionSolvers {
 
     constexpr Legion::TaskID LEGION_SOLVERS_TASK_ID_ORIGIN = 1'000'000;
     constexpr int LEGION_SOLVERS_MAX_DIM = 3;
-    using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
+    using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double, long double>;
 
     // clang-format off
     template <typename T> const char *LEGION_SOLVERS_TYPE_NAME   () { return typeid(T).name(); }
@@ -35,22 +35,23 @@ namespace LegionSolvers {
     constexpr int LEGION_SOLVERS_TASK_BLOCK_SIZE = LEGION_SOLVERS_NUM_TYPES * LEGION_SOLVERS_MAX_DIM_3;
 
 
-    enum TaskBlockID {
+    enum TaskBlockID : Legion::TaskID {
 
-        ADDITION_TASK_BLOCK_ID = 0,
-        SUBTRACTION_TASK_BLOCK_ID = 1,
-        NEGATION_TASK_BLOCK_ID = 2,
-        MULTIPLICATION_TASK_BLOCK_ID = 3,
-        DIVISION_TASK_BLOCK_ID = 4,
-        IS_NONEMPTY_TASK_BLOCK_ID = 5,
-        CONSTANT_FILL_TASK_BLOCK_ID = 6,
-        COPY_TASK_BLOCK_ID = 7,
-        AXPY_TASK_BLOCK_ID = 8,
-        XPAY_TASK_BLOCK_ID = 9,
-        DOT_PRODUCT_TASK_BLOCK_ID = 10,
-        COO_MATVEC_TASK_BLOCK_ID = 11,
-        PRINT_VECTOR_TASK_BLOCK_ID = 12,
-        COO_RMATVEC_TASK_BLOCK_ID = 13,
+        ADDITION_TASK_BLOCK_ID,
+        SUBTRACTION_TASK_BLOCK_ID,
+        NEGATION_TASK_BLOCK_ID,
+        MULTIPLICATION_TASK_BLOCK_ID,
+        DIVISION_TASK_BLOCK_ID,
+        CONSTANT_FILL_TASK_BLOCK_ID,
+        COPY_TASK_BLOCK_ID,
+        AXPY_TASK_BLOCK_ID,
+        XPAY_TASK_BLOCK_ID,
+        DOT_PRODUCT_TASK_BLOCK_ID,
+        COO_MATVEC_TASK_BLOCK_ID,
+        PRINT_VECTOR_TASK_BLOCK_ID,
+        COO_RMATVEC_TASK_BLOCK_ID,
+        COO_PRINT_TASK_BLOCK_ID,
+        FILL_COO_NEGATIVE_LAPLACIAN_2D_TASK_BLOCK_ID,
 
     };
 

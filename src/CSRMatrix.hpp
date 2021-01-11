@@ -61,6 +61,9 @@ namespace LegionSolvers {
                             Legion::Runtime *rt) const override {}
 
 
+        virtual void print(Legion::Context ctx, Legion::Runtime *rt) const override {}
+
+
     }; // class CSRMatrix
 
 

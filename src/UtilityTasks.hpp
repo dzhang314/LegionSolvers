@@ -155,40 +155,6 @@ namespace LegionSolvers {
     }
 
 
-    template <int DIM>
-    struct IsNonemptyTask : TaskD<IS_NONEMPTY_TASK_BLOCK_ID, DIM> {
-
-        static bool task(const Legion::Task *task,
-                         const std::vector<Legion::PhysicalRegion> &regions,
-                         Legion::Context ctx,
-                         Legion::Runtime *rt) {
-
-            assert(regions.size() == 1);
-            const auto region = regions[0];
-
-            bool result = false;
-            for (Legion::PointInDomainIterator<DIM> iter{region}; iter(); ++iter) {
-                result = true;
-                break;
-            }
-            return result;
-        }
-
-    }; // struct IsNonemptyTask
-
-
-    template <int DIM>
-    Legion::Future
-    is_nonempty(Legion::LogicalRegion region, Legion::FieldID fid, Legion::Context ctx, Legion::Runtime *rt) {
-        Legion::TaskLauncher launcher{IsNonemptyTask<DIM>::task_id, Legion::TaskArgument{nullptr, 0}};
-        // TODO: Why doesn't this work?
-        // launcher.silence_warnings = true;
-        launcher.add_region_requirement(Legion::RegionRequirement{region, LEGION_READ_ONLY, LEGION_EXCLUSIVE, region});
-        launcher.add_field(0, fid);
-        return rt->execute_task(ctx, launcher);
-    }
-
-
     template <typename T, int DIM>
     struct ConstantFillTask : TaskTD<CONSTANT_FILL_TASK_BLOCK_ID, T, DIM> {
 
