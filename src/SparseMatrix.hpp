@@ -65,8 +65,8 @@ namespace LegionSolvers {
 
                     if (tile_iter()) {
                         nonempty_tiles.emplace_back(domain_color, range_color);
-                        std::cout << "Tile " << range_color << ", " << domain_color << " contains nonzero values."
-                                  << std::endl;
+                        // std::cout << "Tile " << range_color << ", " << domain_color << " contains nonzero values."
+                        //           << std::endl;
                     }
                 }
             }

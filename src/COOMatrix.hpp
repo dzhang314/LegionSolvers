@@ -87,7 +87,7 @@ namespace LegionSolvers {
                             Legion::Runtime *rt) const override {
             zero_fill<ENTRY_T>(output_vector, output_fid, this->range_partition, ctx, rt);
             for (const auto [input_color, output_color] : this->nonempty_tiles) {
-                std::cout << "Launching matvec on tile " << input_color << " " << output_color << std::endl;
+                // std::cout << "Launching matvec on tile " << input_color << " " << output_color << std::endl;
                 const auto column = rt->get_logical_subregion_by_color(this->column_logical_partition, input_color);
                 const auto column_partition = rt->get_logical_partition_by_color(column, this->tile_partition);
                 const auto tile = rt->get_logical_subregion_by_color(column_partition, output_color);
