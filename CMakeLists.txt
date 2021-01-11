@@ -14,8 +14,8 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-but-set-variable -Wno-u
 find_package(Legion REQUIRED)
 find_package(Kokkos REQUIRED)
 
-add_executable(LegionSolvers src/main.cpp)
+add_executable(LegionSolversMain src/main.cpp)
 add_executable(LegionSolversTest src/test.cpp)
 
-target_link_libraries(LegionSolvers Legion::Legion)
+target_link_libraries(LegionSolversMain Legion::Legion)
 target_link_libraries(LegionSolversTest Legion::Legion)
