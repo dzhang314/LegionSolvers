@@ -64,7 +64,6 @@ namespace LegionSolvers {
             const auto matrix =
                 dynamic_cast<COOMatrix<T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> *>(std::get<2>(operators.back()).get());
             assert(matrix != nullptr);
-            std::cout << "Found " << matrix->nonempty_tiles.size() << " tiles." << std::endl;
         }
 
 
@@ -78,7 +77,6 @@ namespace LegionSolvers {
             assert(workspace.size() == right_hand_sides.size());
 
             for (const auto &[dst_index, src_index, matrix] : operators) {
-                std::cout << "Launching matvec from " << src_index << " to " << dst_index << std::endl;
                 matrix->matvec(workspace[dst_index], fid_dst, workspace[src_index], fid_src, ctx, rt);
             }
         }
