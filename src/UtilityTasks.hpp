@@ -2,6 +2,7 @@
 #define LEGION_SOLVERS_UTILITY_TASKS_HPP
 
 #include <iostream>
+#include <random>
 #include <string>
 
 #include <legion.h>
@@ -194,6 +195,60 @@ namespace LegionSolvers {
         Legion::IndexLauncher launcher{ConstantFillTask<T, 0>::task_id(region.get_dim()),
                                        rt->get_index_partition_color_space_name(partition),
                                        Legion::TaskArgument{&zero, sizeof(T)}, Legion::ArgumentMap{}};
+        launcher.add_region_requirement(Legion::RegionRequirement{rt->get_logical_partition(region, partition), 0,
+                                                                  LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, region});
+        launcher.add_field(0, fid);
+        rt->execute_index_space(ctx, launcher);
+    }
+
+
+    template <typename T, int DIM>
+    struct RandomFillTask : TaskTD<RANDOM_FILL_TASK_BLOCK_ID, T, DIM> {
+
+        static std::string task_name() { return "random_fill"; }
+
+        static void task(const Legion::Task *task,
+                         const std::vector<Legion::PhysicalRegion> &regions,
+                         Legion::Context ctx,
+                         Legion::Runtime *rt) {
+
+            assert(regions.size() == 1);
+            const auto &region = regions[0];
+
+            assert(task->regions.size() == 1);
+            const auto &region_req = task->regions[0];
+
+            assert(region_req.privilege_fields.size() == 1);
+            const Legion::FieldID fid = *region_req.privilege_fields.begin();
+
+            assert(task->arglen == 2 * sizeof(T));
+            const T *arg_ptr = reinterpret_cast<const T *>(task->args);
+            const T low = arg_ptr[0];
+            const T high = arg_ptr[1];
+
+            std::random_device rng{};
+            std::uniform_real_distribution<T> entry_dist{low, high};
+            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, DIM> entry_writer{region, fid};
+            for (Legion::PointInDomainIterator<DIM> iter{region}; iter(); ++iter) {
+                entry_writer[*iter] = entry_dist(rng);
+            }
+        }
+
+    }; // struct RandomFillTask
+
+
+    template <typename T>
+    void random_fill(Legion::LogicalRegion region,
+                     Legion::FieldID fid,
+                     Legion::IndexPartition partition,
+                     Legion::Context ctx,
+                     Legion::Runtime *rt,
+                     T low = static_cast<T>(0),
+                     T high = static_cast<T>(1)) {
+        const T args[2] = {low, high};
+        Legion::IndexLauncher launcher{RandomFillTask<T, 0>::task_id(region.get_dim()),
+                                       rt->get_index_partition_color_space_name(partition),
+                                       Legion::TaskArgument{&args, 2 * sizeof(T)}, Legion::ArgumentMap{}};
         launcher.add_region_requirement(Legion::RegionRequirement{rt->get_logical_partition(region, partition), 0,
                                                                   LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, region});
         launcher.add_field(0, fid);

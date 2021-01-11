@@ -9,13 +9,14 @@
 #include "Planner.hpp"
 #include "TaskRegistration.hpp"
 
+
 constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
 constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
 constexpr Legion::coord_t GRID_SIZE = 16;
 
+
 enum TaskIDs : Legion::TaskID {
     TOP_LEVEL_TASK_ID,
-    FILL_VECTOR_TASK_ID,
     BOUNDARY_FILL_VECTOR_TASK_ID,
 };
 
@@ -53,13 +54,9 @@ void top_level_task(const Legion::Task *,
     const Legion::IndexPartitionT<1> output_partition =
         rt->create_equal_partition(ctx, index_space, output_color_space);
 
-    { // Fill input vector entries.
-        Legion::TaskLauncher launcher{FILL_VECTOR_TASK_ID, Legion::TaskArgument{nullptr, 0}};
-        launcher.add_region_requirement(
-            Legion::RegionRequirement{input_vector, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, input_vector});
-        launcher.add_field(0, FID_VEC_ENTRY);
-        rt->execute_task(ctx, launcher);
-    }
+    // Fill input vector entries.
+    LegionSolvers::random_fill<double>(input_vector, FID_VEC_ENTRY, input_partition, ctx, rt);
+    LegionSolvers::print_vector<double>(input_vector, FID_VEC_ENTRY, "input_vector", ctx, rt);
 
     // Create 1D Laplacian matrix.
     const auto coo_matrix =
@@ -104,21 +101,6 @@ void top_level_task(const Legion::Task *,
                                         "sol1", ctx, rt);
 }
 
-void fill_vector_task(const Legion::Task *task,
-                      const std::vector<Legion::PhysicalRegion> &regions,
-                      Legion::Context ctx,
-                      Legion::Runtime *rt) {
-    assert(regions.size() == 1);
-    const auto &vector = regions[0];
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, double, 1> entry_writer{vector, FID_VEC_ENTRY};
-    std::random_device rng{};
-    std::uniform_real_distribution<double> entry_dist{0.0, 1.0};
-    for (Legion::PointInDomainIterator<1> iter{vector}; iter(); ++iter) {
-        const double entry = entry_dist(rng);
-        entry_writer[*iter] = entry;
-        std::cout << *iter << ": " << entry << std::endl;
-    }
-}
 
 void boundary_fill_vector_task(const Legion::Task *task,
                                const std::vector<Legion::PhysicalRegion> &regions,
@@ -144,7 +126,6 @@ int main(int argc, char **argv) {
     LegionSolvers::preregister_solver_tasks();
 
     LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
-    LegionSolvers::preregister_cpu_task<fill_vector_task>(FILL_VECTOR_TASK_ID, "fill_vector");
     LegionSolvers::preregister_cpu_task<boundary_fill_vector_task>(BOUNDARY_FILL_VECTOR_TASK_ID, "boundary_fill");
 
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);

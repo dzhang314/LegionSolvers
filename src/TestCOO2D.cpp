@@ -6,21 +6,25 @@
 #include "Planner.hpp"
 #include "TaskRegistration.hpp"
 
+
 constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
 constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
 constexpr Legion::coord_t GRID_HEIGHT = 5;
 constexpr Legion::coord_t GRID_WIDTH = 5;
+
 
 enum TaskIDs : Legion::TaskID {
     TOP_LEVEL_TASK_ID,
     FILL_2D_PLANE_TASK_ID,
 };
 
+
 enum FieldIDs : Legion::FieldID {
     FID_I = 101,
     FID_J = 102,
     FID_ENTRY = 103,
 };
+
 
 void top_level_task(const Legion::Task *,
                     const std::vector<Legion::PhysicalRegion> &,
@@ -73,6 +77,7 @@ void top_level_task(const Legion::Task *,
     solver.solve(ctx, rt);
 }
 
+
 void fill_2d_plane_task(const Legion::Task *task,
                         const std::vector<Legion::PhysicalRegion> &regions,
                         Legion::Context ctx,
@@ -88,6 +93,7 @@ void fill_2d_plane_task(const Legion::Task *task,
         entry_writer[*iter] = static_cast<double>(i + j);
     }
 }
+
 
 int main(int argc, char **argv) {
     LegionSolvers::preregister_solver_tasks();

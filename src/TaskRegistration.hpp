@@ -140,6 +140,8 @@ namespace LegionSolvers {
             verbose);
         CartesianProductRegistrar<ConstantFillTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
                                   IntList<LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
+        CartesianProductRegistrar<RandomFillTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
+                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
         CartesianProductRegistrar<CopyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
                                   IntList<LEGION_SOLVERS_MAX_DIM>>::execute(verbose);
         CartesianProductRegistrar<AxpyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
