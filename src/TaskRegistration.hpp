@@ -127,7 +127,7 @@ namespace LegionSolvers {
     };
 
 
-    void preregister_solver_tasks(bool verbose = true) {
+    void preregister_solver_tasks(bool verbose = false) {
         CartesianProductRegistrarRT<AdditionTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
             verbose);
         CartesianProductRegistrarRT<SubtractionTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
