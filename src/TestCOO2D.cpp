@@ -67,7 +67,7 @@ void top_level_task(const Legion::Task *,
     // Construct a linear system by computing output_vector = negative_laplacian * input_vector...
     matrix_obj.matvec(output_vector, FID_ENTRY, input_vector, FID_ENTRY, ctx, rt);
 
-    // ...then, discard the input_vector, and ask for the solution of output_vector == negative_laplacian * x.
+    // ...then, discard the input_vector, and ask for the solution of negative_laplacian * x == output_vector.
     LegionSolvers::Planner<double> planner{};
     planner.add_rhs(output_vector, FID_ENTRY, output_partition);
     planner.add_coo_matrix<1, 2, 2>(0, 0, negative_laplacian, FID_I, FID_J, FID_ENTRY, ctx, rt);
