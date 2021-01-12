@@ -74,7 +74,7 @@ void top_level_task(const Legion::Task *,
 
     LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
     solver.set_max_iterations(100);
-    solver.solve(ctx, rt);
+    solver.solve(ctx, rt, true);
 }
 
 

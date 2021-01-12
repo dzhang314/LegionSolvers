@@ -1,11 +1,7 @@
 #include <iostream>
 #include <random>
 
-#define LEGION_DISABLE_DEPRECATED_ENUMS
-
 #include <legion.h>
-
-#undef NDEBUG
 
 #include "COOMatrix.hpp"
 #include "CSRMatrix.hpp"
@@ -33,10 +29,6 @@ enum CSRMatrixFieldIDs : Legion::FieldID {
     FID_ENTRY,
     FID_ROWPTR,
 };
-
-
-constexpr Legion::coord_t GRID_HEIGHT = 5;
-constexpr Legion::coord_t GRID_WIDTH = 5;
 
 
 enum COOMatrixFieldIDs : Legion::FieldID {

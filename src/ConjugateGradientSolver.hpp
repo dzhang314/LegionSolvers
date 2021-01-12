@@ -78,11 +78,13 @@ namespace LegionSolvers {
         }
 
 
-        void solve(Legion::Context ctx, Legion::Runtime *rt) {
+        void solve(Legion::Context ctx, Legion::Runtime *rt, bool print_residual = false) {
             setup(ctx, rt);
-            print_vector<T>(workspace[0], FID_CG_X, "solution", ctx, rt);
+            // print_vector<T>(workspace[0], FID_CG_X, "solution", ctx, rt);
             for (int i = 0; i < max_iterations; ++i) {
-                std::cout << "residual: " << std::sqrt(residual_norm_squared.get_result<T>()) << std::endl;
+                if (print_residual) {
+                    std::cout << "residual: " << std::sqrt(residual_norm_squared.get_result<T>()) << std::endl;
+                }
                 if (residual_norm_squared.get_result<T>() <= residual_threshold * residual_threshold) { break; }
                 step(ctx, rt);
                 // print_vector<T>(workspace[0], FID_CG_X, "solution", ctx, rt);
