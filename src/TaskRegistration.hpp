@@ -8,6 +8,7 @@
 
 #include "COOMatrixTasks.hpp"
 #include "ExampleSystems.hpp"
+#include "LegionSolversMapper.hpp"
 #include "LinearAlgebraTasks.hpp"
 #include "UtilityTasks.hpp"
 
@@ -165,6 +166,7 @@ namespace LegionSolvers {
                                   IntList<>>::execute(verbose);
         CartesianProductRegistrar<FillCOONegativeLaplacian2DTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
                                   IntList<>>::execute(verbose);
+        Legion::Runtime::add_registration_callback(mapper_registration_callback);
     }
 
 

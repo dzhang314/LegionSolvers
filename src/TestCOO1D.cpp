@@ -2,6 +2,7 @@
 #include <random>
 
 #include <legion.h>
+#include <mappers/default_mapper.h>
 
 #include "COOMatrix.hpp"
 #include "ConjugateGradientSolver.hpp"

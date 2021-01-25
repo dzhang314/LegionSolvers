@@ -13,6 +13,7 @@
 namespace LegionSolvers {
 
 
+    constexpr Legion::MapperID LEGION_SOLVERS_MAPPER_ID = 1'000;
     constexpr Legion::TaskID LEGION_SOLVERS_TASK_ID_ORIGIN = 1'000'000;
     constexpr int LEGION_SOLVERS_MAX_DIM = 3;
     using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double, long double>;

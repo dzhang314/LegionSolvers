@@ -99,6 +99,7 @@ namespace LegionSolvers {
                 {
                     Legion::TaskLauncher launcher{COOMatvecTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
                                                   Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])}};
+                    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
                     launcher.add_region_requirement(Legion::RegionRequirement{output_subregion, LEGION_READ_WRITE,
                                                                               LEGION_EXCLUSIVE, output_vector});
                     launcher.add_field(0, output_fid);
