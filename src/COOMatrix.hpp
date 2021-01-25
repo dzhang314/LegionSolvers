@@ -69,12 +69,6 @@ namespace LegionSolvers {
             assert(rt->is_index_partition_complete(ctx, this->range_partition));
             assert(rt->is_index_partition_disjoint(ctx, this->range_partition));
 
-            const Legion::Domain input_color_space = rt->get_index_partition_color_space(this->domain_partition);
-            const Legion::Domain output_color_space = rt->get_index_partition_color_space(this->range_partition);
-
-            std::cout << "Constructing COOMatrix." << std::endl;
-            std::cout << "Input color space: " << input_color_space.get_volume() << std::endl;
-            std::cout << "Output color space: " << output_color_space.get_volume() << std::endl;
             this->compute_nonempty_tiles(fid_entry, ctx, rt);
         }
 
@@ -87,7 +81,6 @@ namespace LegionSolvers {
                             Legion::Runtime *rt) const override {
             zero_fill<ENTRY_T>(output_vector, output_fid, this->range_partition, ctx, rt);
             for (const auto [input_color, output_color] : this->nonempty_tiles) {
-                // std::cout << "Launching matvec on tile " << input_color << " " << output_color << std::endl;
                 const auto column = rt->get_logical_subregion_by_color(this->column_logical_partition, input_color);
                 const auto column_partition = rt->get_logical_partition_by_color(column, this->tile_partition);
                 const auto tile = rt->get_logical_subregion_by_color(column_partition, output_color);

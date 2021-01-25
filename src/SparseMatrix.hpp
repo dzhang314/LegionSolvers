@@ -31,8 +31,6 @@ namespace LegionSolvers {
 
         virtual void compute_nonempty_tiles(Legion::FieldID fid, Legion::Context ctx, Legion::Runtime *rt) {
 
-            std::cout << "Computing nonempty tiles." << std::endl;
-
             const Legion::IndexPartitionT<KERNEL_DIM> kernel_domain_partition =
                 this->kernel_partition_from_domain_partition(domain_partition, ctx, rt);
             const Legion::IndexPartitionT<KERNEL_DIM> kernel_range_partition =
@@ -63,14 +61,9 @@ namespace LegionSolvers {
                     const auto tile_domain = rt->get_index_space_domain(tile.get_index_space());
                     const Legion::PointInDomainIterator<KERNEL_DIM> tile_iter{tile_domain};
 
-                    if (tile_iter()) {
-                        nonempty_tiles.emplace_back(domain_color, range_color);
-                        // std::cout << "Tile " << range_color << ", " << domain_color << " contains nonzero values."
-                        //           << std::endl;
-                    }
+                    if (tile_iter()) { nonempty_tiles.emplace_back(domain_color, range_color); }
                 }
             }
-            std::cout << "Computed " << nonempty_tiles.size() << " nonempty tiles." << std::endl;
         }
 
 
