@@ -192,6 +192,7 @@ namespace LegionSolvers {
         const typename FillCOONegativeLaplacian2DTask<T>::Args args{fid_i, fid_j, fid_entry, height, width};
         Legion::TaskLauncher launcher{FillCOONegativeLaplacian2DTask<T>::task_id,
                                       Legion::TaskArgument{&args, sizeof(args)}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(
             Legion::RegionRequirement{negative_laplacian, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, negative_laplacian});
         launcher.add_field(0, fid_i);

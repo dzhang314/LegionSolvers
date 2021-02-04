@@ -9,8 +9,8 @@
 
 constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
 constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
-constexpr Legion::coord_t GRID_HEIGHT = 5;
-constexpr Legion::coord_t GRID_WIDTH = 5;
+constexpr Legion::coord_t GRID_HEIGHT = 400;
+constexpr Legion::coord_t GRID_WIDTH = 500;
 
 
 enum TaskIDs : Legion::TaskID {
@@ -50,6 +50,7 @@ void top_level_task(const Legion::Task *,
 
     { // Fill input vector entries.
         Legion::TaskLauncher launcher{FILL_2D_PLANE_TASK_ID, Legion::TaskArgument{nullptr, 0}};
+        launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(
             Legion::RegionRequirement{input_vector, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, input_vector});
         launcher.add_field(0, FID_ENTRY);
@@ -73,7 +74,7 @@ void top_level_task(const Legion::Task *,
     planner.add_coo_matrix<1, 2, 2>(0, 0, negative_laplacian, FID_I, FID_J, FID_ENTRY, ctx, rt);
 
     LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
-    solver.set_max_iterations(100);
+    solver.set_max_iterations(5);
     solver.solve(ctx, rt, true);
 }
 
