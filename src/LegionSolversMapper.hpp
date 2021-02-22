@@ -3,6 +3,7 @@
 
 #include <legion.h>
 #include <mappers/default_mapper.h>
+#include <mappers/logging_wrapper.h>
 
 #include "TaskIDs.hpp"
 
@@ -105,8 +106,10 @@ namespace LegionSolvers {
                                       Legion::Runtime *rt,
                                       const std::set<Legion::Processor> &local_procs) {
         for (const Legion::Processor &proc : local_procs) {
-            rt->add_mapper(LEGION_SOLVERS_MAPPER_ID, new LegionSolversMapper(rt->get_mapper_runtime(), machine, proc),
-                           proc);
+            rt->add_mapper(
+                LEGION_SOLVERS_MAPPER_ID,
+                new Legion::Mapping::LoggingWrapper(new LegionSolversMapper(rt->get_mapper_runtime(), machine, proc)),
+                proc);
         }
     }
 
