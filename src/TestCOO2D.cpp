@@ -99,8 +99,8 @@ void fill_2d_plane_task(const Legion::Task *task,
 int main(int argc, char **argv) {
     LegionSolvers::preregister_solver_tasks();
 
-    LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
-    LegionSolvers::preregister_cpu_task<fill_2d_plane_task>(FILL_2D_PLANE_TASK_ID, "fill_2d_plane");
+    LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level", false, false);
+    LegionSolvers::preregister_cpu_task<fill_2d_plane_task>(FILL_2D_PLANE_TASK_ID, "fill_2d_plane", true, false);
 
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     return Legion::Runtime::start(argc, argv);

@@ -209,13 +209,13 @@ int main(int argc, char **argv) {
     using namespace LegionSolvers;
     preregister_solver_tasks(false);
 
-    preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
+    preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level", false, false);
     preregister_cpu_task<fill_csr_negative_laplacian_1d>(FILL_CSR_NEGATIVE_LAPLACIAN_1D_TASK_ID,
-                                                         "fill_csr_negative_laplacian");
+                                                         "fill_csr_negative_laplacian", true, false);
     preregister_cpu_task<fill_csr_negative_laplacian_1d_rowptr>(FILL_CSR_NEGATIVE_LAPLACIAN_1D_ROWPTR_TASK_ID,
-                                                                "fill_csr_negative_laplacian_rowptr");
-    preregister_cpu_task<print_csr_task>(PRINT_CSR_TASK_ID, "print_csr");
-    preregister_cpu_task<print_csr_rowptr_task>(PRINT_CSR_ROWPTR_TASK_ID, "print_csr_rowptr");
+                                                                "fill_csr_negative_laplacian_rowptr", true, false);
+    preregister_cpu_task<print_csr_task>(PRINT_CSR_TASK_ID, "print_csr", true, false);
+    preregister_cpu_task<print_csr_rowptr_task>(PRINT_CSR_ROWPTR_TASK_ID, "print_csr_rowptr", true, false);
 
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     return Legion::Runtime::start(argc, argv);

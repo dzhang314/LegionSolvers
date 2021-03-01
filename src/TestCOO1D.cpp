@@ -126,8 +126,8 @@ void boundary_fill_vector_task(const Legion::Task *task,
 int main(int argc, char **argv) {
     LegionSolvers::preregister_solver_tasks();
 
-    LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level");
-    LegionSolvers::preregister_cpu_task<boundary_fill_vector_task>(BOUNDARY_FILL_VECTOR_TASK_ID, "boundary_fill");
+    LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level", false, false);
+    LegionSolvers::preregister_cpu_task<boundary_fill_vector_task>(BOUNDARY_FILL_VECTOR_TASK_ID, "boundary_fill", true, false);
 
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     return Legion::Runtime::start(argc, argv);
