@@ -36,6 +36,7 @@ namespace LegionSolvers {
     template <typename T>
     Legion::Future add(Legion::Future a, Legion::Future b, Legion::Context ctx, Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{AdditionTask<T>::task_id, Legion::TaskArgument{nullptr, 0}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_future(a);
         launcher.add_future(b);
         return rt->execute_task(ctx, launcher);
@@ -65,6 +66,7 @@ namespace LegionSolvers {
     template <typename T>
     Legion::Future subtract(Legion::Future a, Legion::Future b, Legion::Context ctx, Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{SubtractionTask<T>::task_id, Legion::TaskArgument{nullptr, 0}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_future(a);
         launcher.add_future(b);
         return rt->execute_task(ctx, launcher);
@@ -93,6 +95,7 @@ namespace LegionSolvers {
     template <typename T>
     Legion::Future negate(Legion::Future a, Legion::Context ctx, Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{NegationTask<T>::task_id, Legion::TaskArgument{nullptr, 0}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_future(a);
         return rt->execute_task(ctx, launcher);
     }
@@ -121,6 +124,7 @@ namespace LegionSolvers {
     template <typename T>
     Legion::Future multiply(Legion::Future a, Legion::Future b, Legion::Context ctx, Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{MultiplicationTask<T>::task_id, Legion::TaskArgument{nullptr, 0}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_future(a);
         launcher.add_future(b);
         return rt->execute_task(ctx, launcher);
@@ -150,6 +154,7 @@ namespace LegionSolvers {
     template <typename T>
     Legion::Future divide(Legion::Future a, Legion::Future b, Legion::Context ctx, Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{DivisionTask<T>::task_id, Legion::TaskArgument{nullptr, 0}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_future(a);
         launcher.add_future(b);
         return rt->execute_task(ctx, launcher);
@@ -195,6 +200,7 @@ namespace LegionSolvers {
         Legion::IndexLauncher launcher{ConstantFillTask<T, 0>::task_id(region.get_dim()),
                                        rt->get_index_partition_color_space_name(partition),
                                        Legion::TaskArgument{&zero, sizeof(T)}, Legion::ArgumentMap{}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(Legion::RegionRequirement{rt->get_logical_partition(region, partition), 0,
                                                                   LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, region});
         launcher.add_field(0, fid);
@@ -249,6 +255,7 @@ namespace LegionSolvers {
         Legion::IndexLauncher launcher{RandomFillTask<T, 0>::task_id(region.get_dim()),
                                        rt->get_index_partition_color_space_name(partition),
                                        Legion::TaskArgument{&args, 2 * sizeof(T)}, Legion::ArgumentMap{}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(Legion::RegionRequirement{rt->get_logical_partition(region, partition), 0,
                                                                   LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, region});
         launcher.add_field(0, fid);
@@ -337,6 +344,7 @@ namespace LegionSolvers {
                       Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{LegionSolvers::PrintVectorTask<T, 0>::task_id(region.get_dim()),
                                       Legion::TaskArgument{name.c_str(), name.length() + 1}};
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(Legion::RegionRequirement{region, LEGION_READ_ONLY, LEGION_EXCLUSIVE, region});
         launcher.add_field(0, fid);
         rt->execute_task(ctx, launcher);

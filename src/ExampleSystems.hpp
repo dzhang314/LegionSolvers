@@ -92,6 +92,7 @@ namespace LegionSolvers {
                                       Legion::TaskArgument{&args, sizeof(args)}};
         launcher.add_region_requirement(
             Legion::RegionRequirement{negative_laplacian, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, negative_laplacian});
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_field(0, fid_i);
         launcher.add_field(0, fid_j);
         launcher.add_field(0, fid_entry);

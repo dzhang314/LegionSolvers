@@ -114,6 +114,7 @@ namespace LegionSolvers {
             const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
             Legion::TaskLauncher launcher{COOPrintTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
                                           Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])}};
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_region_requirement(Legion::RegionRequirement{this->matrix_region, LEGION_READ_ONLY,
                                                                       LEGION_EXCLUSIVE, this->matrix_region});
             launcher.add_field(0, fid_i);

@@ -67,7 +67,7 @@ namespace LegionSolvers {
                               const Legion::Task &task,
                               const MapTaskInput &input,
                               MapTaskOutput &output) override {
-            if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID) || is_task(task.task_id, CONSTANT_FILL_TASK_BLOCK_ID)) {
+            if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
 
                 assert(input.valid_instances.size() == 3);
                 std::cout << "MAPPING TASK: " << task.get_task_name() << " (id " << task.task_id << ")" << std::endl;

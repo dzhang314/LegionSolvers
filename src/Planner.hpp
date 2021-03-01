@@ -94,6 +94,7 @@ namespace LegionSolvers {
                 Legion::IndexLauncher launcher{CopyTask<T, 0>::task_id(dimensions[i].first.get_dim()),
                                                rt->get_index_partition_color_space_name(dimensions[i].second),
                                                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
+                launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{rt->get_logical_partition(ctx, workspace[i], dimensions[i].second), 0,
                                               LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, workspace[i]});
@@ -135,6 +136,7 @@ namespace LegionSolvers {
                 // TODO: Implement inner reduction.
                 Legion::TaskLauncher launcher{DotProductTask<T, 0>::task_id(dimensions[i].first.get_dim()),
                                               Legion::TaskArgument{nullptr, 0}};
+                launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{workspace[i], LEGION_READ_ONLY, LEGION_EXCLUSIVE, workspace[i]});
                 launcher.add_field(0, fid_v);
@@ -161,6 +163,7 @@ namespace LegionSolvers {
                 Legion::IndexLauncher launcher{AxpyTask<T, 0>::task_id(dimensions[i].first.get_dim()),
                                                rt->get_index_partition_color_space_name(dimensions[i].second),
                                                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
+                launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{rt->get_logical_partition(ctx, workspace[i], dimensions[i].second), 0,
                                               LEGION_READ_WRITE, LEGION_EXCLUSIVE, workspace[i]});
@@ -189,6 +192,7 @@ namespace LegionSolvers {
                 Legion::IndexLauncher launcher{XpayTask<T, 0>::task_id(dimensions[i].first.get_dim()),
                                                rt->get_index_partition_color_space_name(dimensions[i].second),
                                                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
+                launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
                 launcher.add_region_requirement(
                     Legion::RegionRequirement{rt->get_logical_partition(ctx, workspace[i], dimensions[i].second), 0,
                                               LEGION_READ_WRITE, LEGION_EXCLUSIVE, workspace[i]});

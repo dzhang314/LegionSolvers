@@ -62,14 +62,9 @@ namespace LegionSolvers {
 
         void step(Legion::Context ctx, Legion::Runtime *rt) {
             planner.matvec(FID_CG_Q, FID_CG_P, workspace, ctx, rt);
-            // print_vector<T>(workspace[0], FID_CG_P, "p", ctx, rt);
-            // print_vector<T>(workspace[0], FID_CG_Q, "q", ctx, rt);
             Legion::Future p_norm = planner.dot_product(FID_CG_P, FID_CG_Q, workspace, ctx, rt);
-            // std::cout << "p_norm: " << p_norm.get_result<T>() << std::endl;
             Legion::Future alpha = divide<T>(residual_norm_squared, p_norm, ctx, rt);
-            // std::cout << "alpha: " << alpha.get_result<T>() << std::endl;
             planner.axpy(FID_CG_X, alpha, FID_CG_P, workspace, ctx, rt);
-            // print_vector<T>(workspace[0], FID_CG_X, "x", ctx, rt);
             planner.axpy(FID_CG_R, negate<T>(alpha, ctx, rt), FID_CG_Q, workspace, ctx, rt);
             Legion::Future r_norm2_new = planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
             Legion::Future beta = divide<T>(r_norm2_new, residual_norm_squared, ctx, rt);
@@ -80,14 +75,12 @@ namespace LegionSolvers {
 
         void solve(Legion::Context ctx, Legion::Runtime *rt, bool print_residual = false) {
             setup(ctx, rt);
-            // print_vector<T>(workspace[0], FID_CG_X, "solution", ctx, rt);
             for (int i = 0; i < max_iterations; ++i) {
                 if (print_residual) {
                     std::cout << "residual: " << std::sqrt(residual_norm_squared.get_result<T>()) << std::endl;
                 }
                 if (residual_norm_squared.get_result<T>() <= residual_threshold * residual_threshold) { break; }
                 step(ctx, rt);
-                // print_vector<T>(workspace[0], FID_CG_X, "solution", ctx, rt);
             }
         }
 
