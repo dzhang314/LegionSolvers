@@ -28,7 +28,6 @@ namespace LegionSolvers {
             FID_CG_P = 300, // step direction
             FID_CG_Q = 301, // conjugate step direction
             FID_CG_R = 302, // residual vector
-            FID_CG_X = 303, // solution vector
         };
 
 
@@ -40,7 +39,6 @@ namespace LegionSolvers {
                 allocator.allocate_field(sizeof(T), FID_CG_P);
                 allocator.allocate_field(sizeof(T), FID_CG_Q);
                 allocator.allocate_field(sizeof(T), FID_CG_R);
-                allocator.allocate_field(sizeof(T), FID_CG_X);
                 workspace.push_back(rt->create_logical_region(ctx, index_space, field_space));
             }
         }
@@ -53,7 +51,6 @@ namespace LegionSolvers {
 
 
         void setup(Legion::Context ctx, Legion::Runtime *rt) {
-            planner.zero_fill(FID_CG_X, workspace, ctx, rt);
             planner.copy_rhs(FID_CG_P, workspace, ctx, rt);
             planner.copy_rhs(FID_CG_R, workspace, ctx, rt);
             residual_norm_squared = planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
@@ -64,7 +61,7 @@ namespace LegionSolvers {
             planner.matvec(FID_CG_Q, FID_CG_P, workspace, ctx, rt);
             Legion::Future p_norm = planner.dot_product(FID_CG_P, FID_CG_Q, workspace, ctx, rt);
             Legion::Future alpha = divide<T>(residual_norm_squared, p_norm, ctx, rt);
-            planner.axpy(FID_CG_X, alpha, FID_CG_P, workspace, ctx, rt);
+            planner.axpy_sol(alpha, FID_CG_P, workspace, ctx, rt);
             planner.axpy(FID_CG_R, negate<T>(alpha, ctx, rt), FID_CG_Q, workspace, ctx, rt);
             Legion::Future r_norm2_new = planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
             Legion::Future beta = divide<T>(r_norm2_new, residual_norm_squared, ctx, rt);

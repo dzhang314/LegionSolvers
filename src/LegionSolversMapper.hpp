@@ -50,6 +50,7 @@ namespace LegionSolvers {
         //     bool                                   replicate; // = false
         //     TaskPriority                           parent_priority; // = current
         //   };
+
         virtual void select_task_options(const Legion::Mapping::MapperContext ctx,
                                          const Legion::Task &task,
                                          TaskOptions &output) override {
@@ -59,8 +60,11 @@ namespace LegionSolvers {
         }
 
         static bool is_task(Legion::TaskID task_id, Legion::TaskID block_id) {
-            return (LEGION_SOLVERS_TASK_ID_ORIGIN + LEGION_SOLVERS_TASK_BLOCK_SIZE * block_id <= task_id) &&
-                   (task_id < LEGION_SOLVERS_TASK_ID_ORIGIN + LEGION_SOLVERS_TASK_BLOCK_SIZE * (block_id + 1));
+            const Legion::TaskID block_origin =
+                LEGION_SOLVERS_TASK_ID_ORIGIN +
+                LEGION_SOLVERS_TASK_BLOCK_SIZE * block_id;
+            return (block_origin <= task_id) &&
+                   (task_id < block_origin + LEGION_SOLVERS_TASK_BLOCK_SIZE);
         }
 
         virtual void map_task(const Legion::Mapping::MapperContext ctx,
@@ -69,14 +73,14 @@ namespace LegionSolvers {
                               MapTaskOutput &output) override {
             if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
 
-                assert(input.valid_instances.size() == 3);
-                std::cout << "MAPPING TASK: " << task.get_task_name() << " (id " << task.task_id << ")" << std::endl;
-                for (std::size_t i = 0; i < 3; ++i) {
-                    std::cout << "    valid instances for " << i << ":" << std::endl;
-                    for (const Legion::Mapping::PhysicalInstance &instance : input.valid_instances[i]) {
-                        std::cout << "        " << instance.get_location() << std::endl;
-                    }
-                }
+                // assert(input.valid_instances.size() == 3);
+                // std::cout << "MAPPING TASK: " << task.get_task_name() << " (id " << task.task_id << ")" << std::endl;
+                // for (std::size_t i = 0; i < 3; ++i) {
+                //     std::cout << "    valid instances for " << i << ":" << std::endl;
+                //     for (const Legion::Mapping::PhysicalInstance &instance : input.valid_instances[i]) {
+                //         std::cout << "        " << instance.get_location() << std::endl;
+                //     }
+                // }
 
                 // bool create_physical_instance(
                 //   MapperContext ctx, Memory target_memory,
@@ -86,13 +90,13 @@ namespace LegionSolvers {
 
                 Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
 
-                assert(output.chosen_instances.size() == 3);
-                for (std::size_t i = 0; i < 3; ++i) {
-                    std::cout << "    chosen instances for " << i << ":" << std::endl;
-                    for (const Legion::Mapping::PhysicalInstance &instance : output.chosen_instances[i]) {
-                        std::cout << "        " << instance.get_location() << std::endl;
-                    }
-                }
+                // assert(output.chosen_instances.size() == 3);
+                // for (std::size_t i = 0; i < 3; ++i) {
+                //     std::cout << "    chosen instances for " << i << ":" << std::endl;
+                //     for (const Legion::Mapping::PhysicalInstance &instance : output.chosen_instances[i]) {
+                //         std::cout << "        " << instance.get_location() << std::endl;
+                //     }
+                // }
 
             } else {
                 Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
@@ -108,8 +112,11 @@ namespace LegionSolvers {
         for (const Legion::Processor &proc : local_procs) {
             rt->add_mapper(
                 LEGION_SOLVERS_MAPPER_ID,
-                new Legion::Mapping::LoggingWrapper(new LegionSolversMapper(rt->get_mapper_runtime(), machine, proc)),
-                proc);
+                new Legion::Mapping::LoggingWrapper(
+                    new LegionSolversMapper(rt->get_mapper_runtime(), machine, proc)
+                ),
+                proc
+            );
         }
     }
 

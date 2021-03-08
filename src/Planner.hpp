@@ -23,23 +23,34 @@ namespace LegionSolvers {
 
 
         std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>> dimensions;
-        std::vector<std::pair<Legion::LogicalRegion, Legion::FieldID>> right_hand_sides;
+        std::vector<std::pair<Legion::LogicalRegion, Legion::FieldID>> solution_vectors;
+        std::vector<std::pair<Legion::LogicalRegion, Legion::FieldID>> rhs_vectors;
 
 
       public:
         std::vector<std::tuple<int, int, std::unique_ptr<LinearOperator>>> operators;
 
 
-        const std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>> &get_dimensions() const noexcept {
-            return dimensions;
+        const std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>> &
+        get_dimensions() const noexcept { return dimensions; }
+
+
+        std::size_t add_rhs_vector(Legion::LogicalRegion rhs_region,
+                                   Legion::FieldID fid_rhs,
+                                   Legion::IndexPartition partition) {
+            rhs_vectors.emplace_back(rhs_region, fid_rhs);
+            dimensions.emplace_back(rhs_region.get_index_space(), partition);
+            return rhs_vectors.size() - 1;
         }
 
 
-        std::size_t
-        add_rhs(Legion::LogicalRegion rhs_region, Legion::FieldID fid_rhs, Legion::IndexPartition partition) {
-            right_hand_sides.emplace_back(rhs_region, fid_rhs);
-            dimensions.emplace_back(rhs_region.get_index_space(), partition);
-            return right_hand_sides.size() - 1;
+        std::size_t add_solution_vector(Legion::LogicalRegion sol_region,
+                                        Legion::FieldID fid_sol,
+                                        Legion::IndexPartition partition) {
+            solution_vectors.emplace_back(sol_region, fid_sol);
+            // TODO: Ensure consistent dimensions of RHS and solution vectors
+            // dimensions.emplace_back(sol_region.get_index_space(), partition);
+            return solution_vectors.size() - 1;
         }
 
 
@@ -74,7 +85,7 @@ namespace LegionSolvers {
                     Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
-            assert(workspace.size() == right_hand_sides.size());
+            assert(workspace.size() == rhs_vectors.size());
 
             for (const auto &[dst_index, src_index, matrix] : operators) {
                 matrix->matvec(workspace[dst_index], fid_dst, workspace[src_index], fid_src, ctx, rt);
@@ -88,7 +99,7 @@ namespace LegionSolvers {
                       Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
-            assert(workspace.size() == right_hand_sides.size());
+            assert(workspace.size() == rhs_vectors.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
                 Legion::IndexLauncher launcher{CopyTask<T, 0>::task_id(dimensions[i].first.get_dim()),
@@ -100,9 +111,9 @@ namespace LegionSolvers {
                                               LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, workspace[i]});
                 launcher.add_field(0, fid_dst);
                 launcher.add_region_requirement(Legion::RegionRequirement{
-                    rt->get_logical_partition(ctx, right_hand_sides[i].first, dimensions[i].second), 0,
-                    LEGION_READ_ONLY, LEGION_EXCLUSIVE, right_hand_sides[i].first});
-                launcher.add_field(1, right_hand_sides[i].second);
+                    rt->get_logical_partition(ctx, rhs_vectors[i].first, dimensions[i].second), 0,
+                    LEGION_READ_ONLY, LEGION_EXCLUSIVE, rhs_vectors[i].first});
+                launcher.add_field(1, rhs_vectors[i].second);
                 rt->execute_index_space(ctx, launcher);
             }
         }
@@ -114,7 +125,7 @@ namespace LegionSolvers {
                        Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
-            assert(workspace.size() == right_hand_sides.size());
+            assert(workspace.size() == rhs_vectors.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
                 LegionSolvers::zero_fill<T>(workspace[i], fid_dst, dimensions[i].second, ctx, rt);
@@ -129,7 +140,7 @@ namespace LegionSolvers {
                                    Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
-            assert(workspace.size() == right_hand_sides.size());
+            assert(workspace.size() == rhs_vectors.size());
 
             Legion::Future result = Legion::Future::from_value<T>(rt, 0.0);
             for (std::size_t i = 0; i < workspace.size(); ++i) {
@@ -157,7 +168,7 @@ namespace LegionSolvers {
                   Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
-            assert(workspace.size() == right_hand_sides.size());
+            assert(workspace.size() == rhs_vectors.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
                 Legion::IndexLauncher launcher{AxpyTask<T, 0>::task_id(dimensions[i].first.get_dim()),
@@ -178,6 +189,33 @@ namespace LegionSolvers {
         }
 
 
+        void axpy_sol(Legion::Future alpha, Legion::FieldID fid_x,
+                      const std::vector<Legion::LogicalRegion> &workspace,
+                      Legion::Context ctx, Legion::Runtime *rt) const {
+
+            assert(workspace.size() == dimensions.size());
+            assert(workspace.size() == solution_vectors.size());
+            assert(workspace.size() == rhs_vectors.size());
+
+            for (std::size_t i = 0; i < workspace.size(); ++i) {
+                Legion::IndexLauncher launcher{AxpyTask<T, 0>::task_id(dimensions[i].first.get_dim()),
+                                               rt->get_index_partition_color_space_name(dimensions[i].second),
+                                               Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}};
+                launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+                launcher.add_region_requirement(
+                    Legion::RegionRequirement{rt->get_logical_partition(ctx, solution_vectors[i].first, dimensions[i].second), 0,
+                                              LEGION_READ_WRITE, LEGION_EXCLUSIVE, solution_vectors[i].first});
+                launcher.add_field(0, solution_vectors[i].second);
+                launcher.add_region_requirement(
+                    Legion::RegionRequirement{rt->get_logical_partition(ctx, workspace[i], dimensions[i].second), 0,
+                                              LEGION_READ_ONLY, LEGION_EXCLUSIVE, workspace[i]});
+                launcher.add_field(1, fid_x);
+                launcher.add_future(alpha);
+                rt->execute_index_space(ctx, launcher);
+            }
+        }
+
+
         void xpay(Legion::FieldID fid_y,
                   Legion::Future alpha,
                   Legion::FieldID fid_x,
@@ -186,7 +224,7 @@ namespace LegionSolvers {
                   Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
-            assert(workspace.size() == right_hand_sides.size());
+            assert(workspace.size() == rhs_vectors.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
                 Legion::IndexLauncher launcher{XpayTask<T, 0>::task_id(dimensions[i].first.get_dim()),

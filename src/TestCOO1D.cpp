@@ -85,9 +85,16 @@ void top_level_task(const Legion::Task *,
         rt->execute_task(ctx, launcher);
     }
 
+    const auto rhs_sol = LegionSolvers::create_region(rhs_index_space, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
+    const auto output_sol = LegionSolvers::create_region(Legion::IndexSpaceT<1>{output_vector.get_index_space()}, {{sizeof(double), FID_VEC_ENTRY}}, ctx, rt);
+    LegionSolvers::zero_fill<double>(output_sol, FID_VEC_ENTRY, output_partition, ctx, rt);
+    LegionSolvers::zero_fill<double>(rhs_sol, FID_VEC_ENTRY, rhs_partition, ctx, rt);
+
     LegionSolvers::Planner<double> planner{};
-    planner.add_rhs(output_vector, FID_VEC_ENTRY, output_partition);
-    planner.add_rhs(rhs_vector, FID_VEC_ENTRY, rhs_partition);
+    planner.add_rhs_vector(output_vector, FID_VEC_ENTRY, output_partition);
+    planner.add_rhs_vector(rhs_vector, FID_VEC_ENTRY, rhs_partition);
+    planner.add_solution_vector(output_sol, FID_VEC_ENTRY, output_partition);
+    planner.add_solution_vector(rhs_sol, FID_VEC_ENTRY, rhs_partition);
     planner.add_coo_matrix<1, 1, 1>(0, 0, coo_matrix, FID_I, FID_J, FID_ENTRY, ctx, rt);
     planner.add_coo_matrix<1, 1, 1>(1, 1, coo_matrix, FID_I, FID_J, FID_ENTRY, ctx, rt);
 
@@ -95,11 +102,8 @@ void top_level_task(const Legion::Task *,
     solver.set_max_iterations(17);
     solver.solve(ctx, rt, true);
 
-    LegionSolvers::print_vector<double>(solver.workspace[0], LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X,
-                                        "sol0", ctx, rt);
-
-    LegionSolvers::print_vector<double>(solver.workspace[1], LegionSolvers::ConjugateGradientSolver<double>::FID_CG_X,
-                                        "sol1", ctx, rt);
+    LegionSolvers::print_vector<double>(rhs_sol, FID_VEC_ENTRY, "sol0", ctx, rt);
+    LegionSolvers::print_vector<double>(output_sol, FID_VEC_ENTRY, "sol1", ctx, rt);
 }
 
 

@@ -70,8 +70,13 @@ void top_level_task(const Legion::Task *,
 
     // ...then, discard the input_vector, and ask for the solution of negative_laplacian * x == output_vector.
     LegionSolvers::Planner<double> planner{};
-    planner.add_rhs(output_vector, FID_ENTRY, output_partition);
+    planner.add_rhs_vector(output_vector, FID_ENTRY, output_partition);
     planner.add_coo_matrix<1, 2, 2>(0, 0, negative_laplacian, FID_I, FID_J, FID_ENTRY, ctx, rt);
+
+    const Legion::LogicalRegionT<2> solution_vector =
+        LegionSolvers::create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
+    LegionSolvers::zero_fill<double>(solution_vector, FID_ENTRY, output_partition, ctx, rt);
+    planner.add_solution_vector(solution_vector, FID_ENTRY, output_partition);
 
     LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
     solver.set_max_iterations(5);
