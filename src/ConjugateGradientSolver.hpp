@@ -1,6 +1,7 @@
 #ifndef LEGION_SOLVERS_CONJUGATE_GRADIENT_SOLVER_HPP
 #define LEGION_SOLVERS_CONJUGATE_GRADIENT_SOLVER_HPP
 
+#include <cassert>
 #include <cmath>
 #include <vector>
 
@@ -31,7 +32,8 @@ namespace LegionSolvers {
         };
 
 
-        explicit ConjugateGradientSolver(const Planner<T> &planner, Legion::Context ctx, Legion::Runtime *rt)
+        explicit ConjugateGradientSolver(const Planner<T> &planner,
+                                         Legion::Context ctx, Legion::Runtime *rt)
             : planner{planner} {
             for (const auto &[index_space, index_partition] : planner.get_dimensions()) {
                 const Legion::FieldSpace field_space = rt->create_field_space(ctx);
@@ -41,6 +43,7 @@ namespace LegionSolvers {
                 allocator.allocate_field(sizeof(T), FID_CG_R);
                 workspace.push_back(rt->create_logical_region(ctx, index_space, field_space));
             }
+            planner.dummy_task_sol(ctx, rt);
         }
 
 

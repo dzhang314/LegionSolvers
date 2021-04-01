@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP
 #define LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP
 
+#include <map>
+
 #include <legion.h>
 #include <mappers/default_mapper.h>
 #include <mappers/logging_wrapper.h>
@@ -12,6 +14,8 @@ namespace LegionSolvers {
 
 
     class LegionSolversMapper : public Legion::Mapping::DefaultMapper {
+
+        std::map<std::pair<Legion::Domain, Legion::DomainPoint>, Legion::Memory> memory_map;
 
       public:
         LegionSolversMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine machine, Legion::Processor local)
@@ -71,16 +75,37 @@ namespace LegionSolvers {
                               const Legion::Task &task,
                               const MapTaskInput &input,
                               MapTaskOutput &output) override {
-            if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
 
-                // assert(input.valid_instances.size() == 3);
-                // std::cout << "MAPPING TASK: " << task.get_task_name() << " (id " << task.task_id << ")" << std::endl;
-                // for (std::size_t i = 0; i < 3; ++i) {
-                //     std::cout << "    valid instances for " << i << ":" << std::endl;
-                //     for (const Legion::Mapping::PhysicalInstance &instance : input.valid_instances[i]) {
-                //         std::cout << "        " << instance.get_location() << std::endl;
-                //     }
-                // }
+            if (is_task(task.task_id, DUMMY_TASK_BLOCK_ID)) {
+
+                assert(input.valid_instances.size() == 1);
+                assert(input.valid_instances[0].size() == 1);
+                assert(task.is_index_space);
+
+                Legion::Mapping::PhysicalInstance instance = *input.valid_instances[0].begin();
+                const auto key = std::make_pair(task.index_domain, task.index_point);
+                memory_map[key] = instance.get_location();
+
+                Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
+
+            } else if (is_task(task.task_id, AXPY_TASK_BLOCK_ID)) {
+
+                assert(input.valid_instances.size() == 2);
+                assert(task.is_index_space);
+                const auto key = std::make_pair(task.index_domain, task.index_point);
+
+                const auto it = memory_map.find(key);
+                if (it != memory_map.end()) {
+                    std::cout << it->second << std::endl;
+                }
+
+                std::cout << "MAPPING TASK: " << task.get_task_name() << " : " << task.index_point << " / " << task.index_domain << " (id " << task.task_id << ")" << std::endl;
+                for (std::size_t i = 0; i < 2; ++i) {
+                    std::cout << "    valid instances for " << i << ":" << std::endl;
+                    for (const Legion::Mapping::PhysicalInstance &instance : input.valid_instances[i]) {
+                        std::cout << "        " << instance.get_location() << std::endl;
+                    }
+                }
 
                 // bool create_physical_instance(
                 //   MapperContext ctx, Memory target_memory,
@@ -90,13 +115,13 @@ namespace LegionSolvers {
 
                 Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
 
-                // assert(output.chosen_instances.size() == 3);
-                // for (std::size_t i = 0; i < 3; ++i) {
-                //     std::cout << "    chosen instances for " << i << ":" << std::endl;
-                //     for (const Legion::Mapping::PhysicalInstance &instance : output.chosen_instances[i]) {
-                //         std::cout << "        " << instance.get_location() << std::endl;
-                //     }
-                // }
+                assert(output.chosen_instances.size() == 2);
+                for (std::size_t i = 0; i < 2; ++i) {
+                    std::cout << "    chosen instances for " << i << ":" << std::endl;
+                    for (const Legion::Mapping::PhysicalInstance &instance : output.chosen_instances[i]) {
+                        std::cout << "        " << instance.get_location() << std::endl;
+                    }
+                }
 
             } else {
                 Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);

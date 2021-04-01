@@ -78,11 +78,18 @@ namespace LegionSolvers {
         }
 
 
+        void dummy_task_sol(Legion::Context ctx, Legion::Runtime *rt) const {
+            assert(dimensions.size() == solution_vectors.size());
+            for (std::size_t i = 0; i < dimensions.size(); ++i) {
+                dummy_task<T>(solution_vectors[i].first, solution_vectors[i].second, dimensions[i].second, ctx, rt);
+            }
+        }
+
+
         void matvec(Legion::FieldID fid_dst,
                     Legion::FieldID fid_src,
                     const std::vector<Legion::LogicalRegion> &workspace,
-                    Legion::Context ctx,
-                    Legion::Runtime *rt) const {
+                    Legion::Context ctx, Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
             assert(workspace.size() == rhs_vectors.size());
@@ -95,8 +102,7 @@ namespace LegionSolvers {
 
         void copy_rhs(Legion::FieldID fid_dst,
                       const std::vector<Legion::LogicalRegion> &workspace,
-                      Legion::Context ctx,
-                      Legion::Runtime *rt) const {
+                      Legion::Context ctx, Legion::Runtime *rt) const {
 
             assert(workspace.size() == dimensions.size());
             assert(workspace.size() == rhs_vectors.size());
