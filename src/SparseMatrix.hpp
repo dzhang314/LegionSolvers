@@ -3,6 +3,7 @@
 
 #include "MaterializedLinearOperator.hpp"
 #include "UtilityTasks.hpp"
+#include "TaskRegistration.hpp"
 
 
 namespace LegionSolvers {
@@ -20,6 +21,7 @@ namespace LegionSolvers {
         Legion::LogicalPartition column_logical_partition;
         Legion::Color tile_partition;
         std::vector<std::pair<Legion::DomainPoint, Legion::DomainPoint>> nonempty_tiles;
+        Legion::IndexSpaceT<2> tile_index_space;
 
 
       public:
@@ -39,7 +41,13 @@ namespace LegionSolvers {
 
             std::map<Legion::IndexSpace, Legion::IndexPartition> map{};
             tile_partition =
-                rt->create_cross_product_partitions(ctx, kernel_domain_partition, kernel_range_partition, map);
+                rt->create_cross_product_partitions(
+                    ctx,
+                    kernel_domain_partition,
+                    kernel_range_partition,
+                    map,
+                    LEGION_DISJOINT_COMPLETE_KIND,
+                    GLOBAL_TILE_PARTITION_COLOR);
 
             // TODO: Handle multi-dimensional color spaces
             for (Legion::PointInDomainIterator<1> domain_color_iter{
@@ -64,6 +72,12 @@ namespace LegionSolvers {
                     if (tile_iter()) { nonempty_tiles.emplace_back(domain_color, range_color); }
                 }
             }
+
+            std::vector<Legion::Point<2>> tile_points{};
+            for (const auto &pair : nonempty_tiles) {
+                tile_points.emplace_back(pair.first[0], pair.second[0]);
+            }
+            tile_index_space = rt->create_index_space(ctx, tile_points);
         }
 
 

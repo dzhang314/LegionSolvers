@@ -88,40 +88,40 @@ namespace LegionSolvers {
 
                 Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
 
-            } else if (is_task(task.task_id, AXPY_TASK_BLOCK_ID)) {
+            // } else if (is_task(task.task_id, AXPY_TASK_BLOCK_ID)) {
 
-                assert(input.valid_instances.size() == 2);
-                assert(task.is_index_space);
-                const auto key = std::make_pair(task.index_domain, task.index_point);
+                // assert(input.valid_instances.size() == 2);
+                // assert(task.is_index_space);
+                // const auto key = std::make_pair(task.index_domain, task.index_point);
 
-                const auto it = memory_map.find(key);
-                if (it != memory_map.end()) {
-                    std::cout << it->second << std::endl;
-                }
+                // const auto it = memory_map.find(key);
+                // if (it != memory_map.end()) {
+                //     std::cout << it->second << std::endl;
+                // }
 
-                std::cout << "MAPPING TASK: " << task.get_task_name() << " : " << task.index_point << " / " << task.index_domain << " (id " << task.task_id << ")" << std::endl;
-                for (std::size_t i = 0; i < 2; ++i) {
-                    std::cout << "    valid instances for " << i << ":" << std::endl;
-                    for (const Legion::Mapping::PhysicalInstance &instance : input.valid_instances[i]) {
-                        std::cout << "        " << instance.get_location() << std::endl;
-                    }
-                }
+                // std::cout << "MAPPING TASK: " << task.get_task_name() << " : " << task.index_point << " / " << task.index_domain << " (id " << task.task_id << ")" << std::endl;
+                // for (std::size_t i = 0; i < 2; ++i) {
+                //     std::cout << "    valid instances for " << i << ":" << std::endl;
+                //     for (const Legion::Mapping::PhysicalInstance &instance : input.valid_instances[i]) {
+                //         std::cout << "        " << instance.get_location() << std::endl;
+                //     }
+                // }
 
-                // bool create_physical_instance(
-                //   MapperContext ctx, Memory target_memory,
-                //   const LayoutConstraintSet &constraints,
-                //   const std::vector<LogicalRegion> &regions,
-                //   PhysicalInstance &result) const;
+                // // bool create_physical_instance(
+                // //   MapperContext ctx, Memory target_memory,
+                // //   const LayoutConstraintSet &constraints,
+                // //   const std::vector<LogicalRegion> &regions,
+                // //   PhysicalInstance &result) const;
 
-                Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
+                // Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
 
-                assert(output.chosen_instances.size() == 2);
-                for (std::size_t i = 0; i < 2; ++i) {
-                    std::cout << "    chosen instances for " << i << ":" << std::endl;
-                    for (const Legion::Mapping::PhysicalInstance &instance : output.chosen_instances[i]) {
-                        std::cout << "        " << instance.get_location() << std::endl;
-                    }
-                }
+                // assert(output.chosen_instances.size() == 2);
+                // for (std::size_t i = 0; i < 2; ++i) {
+                //     std::cout << "    chosen instances for " << i << ":" << std::endl;
+                //     for (const Legion::Mapping::PhysicalInstance &instance : output.chosen_instances[i]) {
+                //         std::cout << "        " << instance.get_location() << std::endl;
+                //     }
+                // }
 
             } else {
                 Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);

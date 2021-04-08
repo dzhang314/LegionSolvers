@@ -80,33 +80,36 @@ namespace LegionSolvers {
                             Legion::Context ctx,
                             Legion::Runtime *rt) const override {
             zero_fill<ENTRY_T>(output_vector, output_fid, this->range_partition, ctx, rt);
-            for (const auto [input_color, output_color] : this->nonempty_tiles) {
-                const auto column = rt->get_logical_subregion_by_color(this->column_logical_partition, input_color);
-                const auto column_partition = rt->get_logical_partition_by_color(column, this->tile_partition);
-                const auto tile = rt->get_logical_subregion_by_color(column_partition, output_color);
-                const auto input_subregion = rt->get_logical_subregion_by_color(
-                    rt->get_logical_partition(input_vector, this->domain_partition), input_color);
-                const auto output_subregion = rt->get_logical_subregion_by_color(
-                    rt->get_logical_partition(output_vector, this->range_partition), output_color);
-                const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
-                {
-                    Legion::TaskLauncher launcher{COOMatvecTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
-                                                  Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])}};
-                    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-                    launcher.add_region_requirement(Legion::RegionRequirement{output_subregion, LEGION_READ_WRITE,
-                                                                              LEGION_EXCLUSIVE, output_vector});
-                    launcher.add_field(0, output_fid);
-                    launcher.add_region_requirement(
-                        Legion::RegionRequirement{tile, LEGION_READ_ONLY, LEGION_EXCLUSIVE, this->matrix_region});
-                    launcher.add_field(1, fid_i);
-                    launcher.add_field(1, fid_j);
-                    launcher.add_field(1, fid_entry);
-                    launcher.add_region_requirement(
-                        Legion::RegionRequirement{input_subregion, LEGION_READ_ONLY, LEGION_EXCLUSIVE, input_vector});
-                    launcher.add_field(2, input_fid);
-                    rt->execute_task(ctx, launcher);
-                }
-            }
+            const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
+            Legion::IndexLauncher launcher{
+                COOMatvecTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
+                this->tile_index_space,
+                Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
+                Legion::ArgumentMap{}
+            };
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                rt->get_logical_partition(output_vector, this->range_partition),
+                PFID_IJ_TO_J, LEGION_READ_WRITE, LEGION_EXCLUSIVE, output_vector
+            });
+            launcher.add_field(0, output_fid);
+
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                this->column_logical_partition, PFID_IJ_TO_IJ,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, this->matrix_region
+            });
+            launcher.add_field(1, fid_i);
+            launcher.add_field(1, fid_j);
+            launcher.add_field(1, fid_entry);
+
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                rt->get_logical_partition(input_vector, this->domain_partition),
+                PFID_IJ_TO_I, LEGION_READ_ONLY, LEGION_EXCLUSIVE, input_vector
+            });
+            launcher.add_field(2, input_fid);
+
+            rt->execute_index_space(ctx, launcher);
         }
 
 

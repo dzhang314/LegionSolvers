@@ -60,6 +60,14 @@ namespace LegionSolvers {
     };
 
 
+    enum ProjectionFunctorID : Legion::ProjectionID {
+        PFID_IJ_TO_I = 10'000,
+        PFID_IJ_TO_J,
+        PFID_IJ_TO_IJ,
+        PFID_IJ_TO_JI,
+    };
+
+
     template <TaskBlockID BLOCK_ID, typename T>
     struct TaskT {
 

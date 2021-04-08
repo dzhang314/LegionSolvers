@@ -145,6 +145,60 @@ namespace LegionSolvers {
     };
 
 
+    struct ProjectionOneLevel final : public Legion::ProjectionFunctor {
+
+        Legion::coord_t index;
+
+        explicit ProjectionOneLevel(Legion::coord_t index) noexcept :
+            index(index) {}
+
+        virtual bool is_functional(void) const noexcept { return true; }
+
+        virtual unsigned get_depth(void) const noexcept { return 0; }
+
+        // using Legion::ProjectionFunctor::project;
+
+        virtual Legion::LogicalRegion project(
+                Legion::LogicalPartition upper_bound,
+                const Legion::DomainPoint &point,
+                const Legion::Domain &launch_domain) override {
+            return runtime->get_logical_subregion_by_color(
+                upper_bound, point[index]);
+        }
+
+    }; // struct ProjectionOneLevel
+
+
+    Legion::Color GLOBAL_TILE_PARTITION_COLOR = 500;
+
+
+    struct ProjectionTwoLevel final : public Legion::ProjectionFunctor {
+
+        Legion::coord_t i;
+        Legion::coord_t j;
+
+        explicit ProjectionTwoLevel(Legion::coord_t i, Legion::coord_t j)
+            noexcept : i(i), j(j) {}
+
+        virtual bool is_functional(void) const noexcept { return true; }
+
+        virtual unsigned get_depth(void) const noexcept { return 1; }
+
+        virtual Legion::LogicalRegion project(
+                Legion::LogicalPartition upper_bound,
+                const Legion::DomainPoint &point,
+                const Legion::Domain &launch_domain) override {
+            const auto column = runtime->get_logical_subregion_by_color(
+                upper_bound, point[i]);
+            const auto column_partition = runtime->get_logical_partition_by_color(
+                column, GLOBAL_TILE_PARTITION_COLOR);
+            return runtime->get_logical_subregion_by_color(
+                column_partition, point[j]);
+        }
+
+    }; // struct ProjectionTwoLevel
+
+
     void preregister_solver_tasks(bool verbose = false) {
         CartesianProductRegistrarRT<AdditionTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
             true, verbose);
@@ -186,6 +240,14 @@ namespace LegionSolvers {
         CartesianProductRegistrar<FillCOONegativeLaplacian2DTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
                                   IntList<>>::execute(true, verbose);
         Legion::Runtime::add_registration_callback(mapper_registration_callback);
+        Legion::Runtime::preregister_projection_functor(
+            PFID_IJ_TO_I, new ProjectionOneLevel{0});
+        Legion::Runtime::preregister_projection_functor(
+            PFID_IJ_TO_J, new ProjectionOneLevel{1});
+        Legion::Runtime::preregister_projection_functor(
+            PFID_IJ_TO_IJ, new ProjectionTwoLevel{0, 1});
+        Legion::Runtime::preregister_projection_functor(
+            PFID_IJ_TO_JI, new ProjectionTwoLevel{1, 0});
     }
 
 
