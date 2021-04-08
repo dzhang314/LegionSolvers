@@ -79,7 +79,7 @@ void top_level_task(const Legion::Task *,
     planner.add_solution_vector(solution_vector, FID_ENTRY, output_partition);
 
     LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
-    solver.set_max_iterations(2);
+    solver.set_max_iterations(100);
     solver.solve(ctx, rt, true);
 }
 

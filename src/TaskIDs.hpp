@@ -16,16 +16,17 @@ namespace LegionSolvers {
     constexpr Legion::MapperID LEGION_SOLVERS_MAPPER_ID = 1'000;
     constexpr Legion::TaskID LEGION_SOLVERS_TASK_ID_ORIGIN = 1'000'000;
     constexpr int LEGION_SOLVERS_MAX_DIM = 3;
-    using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double, long double>;
+    using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
 
-    // clang-format off
+    template <typename T> constexpr Legion::ReductionOpID LEGION_REDOP_SUM;
+    template <> constexpr Legion::ReductionOpID LEGION_REDOP_SUM<float > = LEGION_REDOP_SUM_FLOAT32;
+    template <> constexpr Legion::ReductionOpID LEGION_REDOP_SUM<double> = LEGION_REDOP_SUM_FLOAT64;
+
     template <typename T> const char *LEGION_SOLVERS_TYPE_NAME   () { return typeid(T).name(); }
     template <> const char *LEGION_SOLVERS_TYPE_NAME<float      >() { return "float"         ; }
     template <> const char *LEGION_SOLVERS_TYPE_NAME<double     >() { return "double"        ; }
     template <> const char *LEGION_SOLVERS_TYPE_NAME<long double>() { return "longdouble"    ; }
     template <> const char *LEGION_SOLVERS_TYPE_NAME<__float128 >() { return "float128"      ; }
-    // clang-format on
-
 
     template <typename T>
     constexpr int LEGION_SOLVERS_TYPE_INDEX = ListIndex<LEGION_SOLVERS_SUPPORTED_TYPES, T>::value;

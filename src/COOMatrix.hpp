@@ -28,37 +28,43 @@ namespace LegionSolvers {
 
       public:
         virtual Legion::IndexPartitionT<KERNEL_DIM>
-        kernel_partition_from_domain_partition(Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
-                                               Legion::Context ctx,
-                                               Legion::Runtime *rt) const override {
-            const Legion::IndexSpace color_space = rt->get_index_partition_color_space_name(domain_partition);
-            const Legion::IndexPartition result = rt->create_partition_by_preimage(
-                ctx, domain_partition, this->matrix_region, this->matrix_region, fid_j, color_space);
+        kernel_partition_from_domain_partition(
+                Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
+                Legion::Context ctx, Legion::Runtime *rt) const override {
+            const Legion::IndexSpace color_space =
+                rt->get_index_partition_color_space_name(domain_partition);
+            const Legion::IndexPartition result =
+                rt->create_partition_by_preimage(
+                    ctx, domain_partition, this->matrix_region,
+                    this->matrix_region, fid_j, color_space,
+                    LEGION_DISJOINT_COMPLETE_KIND);
             assert(result.get_dim() == KERNEL_DIM);
             return Legion::IndexPartitionT<KERNEL_DIM>{result};
         }
 
 
         virtual Legion::IndexPartitionT<KERNEL_DIM>
-        kernel_partition_from_range_partition(Legion::IndexPartitionT<RANGE_DIM> range_partition,
-                                              Legion::Context ctx,
-                                              Legion::Runtime *rt) const override {
-            const Legion::IndexSpace color_space = rt->get_index_partition_color_space_name(range_partition);
-            const Legion::IndexPartition result = rt->create_partition_by_preimage(
-                ctx, range_partition, this->matrix_region, this->matrix_region, fid_i, color_space);
+        kernel_partition_from_range_partition(
+                Legion::IndexPartitionT<RANGE_DIM> range_partition,
+                Legion::Context ctx, Legion::Runtime *rt) const override {
+            const Legion::IndexSpace color_space =
+                rt->get_index_partition_color_space_name(range_partition);
+            const Legion::IndexPartition result =
+                rt->create_partition_by_preimage(
+                    ctx, range_partition, this->matrix_region,
+                    this->matrix_region, fid_i, color_space,
+                    LEGION_DISJOINT_COMPLETE_KIND);
             assert(result.get_dim() == KERNEL_DIM);
             return Legion::IndexPartitionT<KERNEL_DIM>{result};
         }
 
 
         explicit COOMatrix(Legion::LogicalRegionT<KERNEL_DIM> matrix_region,
-                           Legion::FieldID fid_i,
-                           Legion::FieldID fid_j,
+                           Legion::FieldID fid_i, Legion::FieldID fid_j,
                            Legion::FieldID fid_entry,
                            Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
                            Legion::IndexPartitionT<RANGE_DIM> range_partition,
-                           Legion::Context ctx,
-                           Legion::Runtime *rt)
+                           Legion::Context ctx, Legion::Runtime *rt)
 
             : SparseMatrix<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>(
                   matrix_region, domain_partition, range_partition),
@@ -91,7 +97,8 @@ namespace LegionSolvers {
 
             launcher.add_region_requirement(Legion::RegionRequirement{
                 rt->get_logical_partition(output_vector, this->range_partition),
-                PFID_IJ_TO_J, LEGION_READ_WRITE, LEGION_EXCLUSIVE, output_vector
+                PFID_IJ_TO_J, LEGION_REDOP_SUM<ENTRY_T>,
+                LEGION_SIMULTANEOUS, output_vector
             });
             launcher.add_field(0, output_fid);
 
