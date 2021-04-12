@@ -381,14 +381,15 @@ namespace LegionSolvers {
 
         virtual unsigned get_depth(void) const noexcept { return 0; }
 
-        // using Legion::ProjectionFunctor::project;
+        using Legion::ProjectionFunctor::project;
 
         virtual Legion::LogicalRegion project(
                 Legion::LogicalPartition upper_bound,
                 const Legion::DomainPoint &point,
                 const Legion::Domain &launch_domain) override {
             return runtime->get_logical_subregion_by_color(
-                upper_bound, point[index]);
+                upper_bound, point[index]
+            );
         }
 
     }; // struct ProjectionOneLevel
@@ -409,16 +410,19 @@ namespace LegionSolvers {
 
         virtual unsigned get_depth(void) const noexcept { return 1; }
 
+        using Legion::ProjectionFunctor::project;
+
         virtual Legion::LogicalRegion project(
                 Legion::LogicalPartition upper_bound,
                 const Legion::DomainPoint &point,
                 const Legion::Domain &launch_domain) override {
             const auto column = runtime->get_logical_subregion_by_color(
-                upper_bound, point[i]);
-            const auto column_partition = runtime->get_logical_partition_by_color(
-                column, GLOBAL_TILE_PARTITION_COLOR);
-            return runtime->get_logical_subregion_by_color(
-                column_partition, point[j]);
+                upper_bound, point[i]
+            );
+            const auto partition = runtime->get_logical_partition_by_color(
+                column, GLOBAL_TILE_PARTITION_COLOR
+            );
+            return runtime->get_logical_subregion_by_color(partition, point[j]);
         }
 
     }; // struct ProjectionTwoLevel
