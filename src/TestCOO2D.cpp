@@ -9,8 +9,8 @@
 
 constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
 constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
-constexpr Legion::coord_t GRID_HEIGHT = 20;
-constexpr Legion::coord_t GRID_WIDTH = 10;
+constexpr Legion::coord_t GRID_HEIGHT = 2000;
+constexpr Legion::coord_t GRID_WIDTH = 1000;
 
 
 enum TaskIDs : Legion::TaskID {
@@ -79,7 +79,7 @@ void top_level_task(const Legion::Task *,
     planner.add_solution_vector(solution_vector, FID_ENTRY, output_partition);
 
     LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
-    solver.set_max_iterations(100);
+    solver.set_max_iterations(10);
     solver.solve(ctx, rt, true);
 }
 

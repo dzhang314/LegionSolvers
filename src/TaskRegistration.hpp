@@ -200,16 +200,21 @@ namespace LegionSolvers {
 
 
     void preregister_solver_tasks(bool verbose = false) {
-        CartesianProductRegistrarRT<AdditionTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
-            true, verbose);
-        CartesianProductRegistrarRT<SubtractionTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
-            true, verbose);
-        CartesianProductRegistrarRT<NegationTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
-            true, verbose);
-        CartesianProductRegistrarRT<MultiplicationTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
-            true, verbose);
-        CartesianProductRegistrarRT<DivisionTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>>::execute(
-            true, verbose);
+        CartesianProductRegistrarRT<AdditionTask,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<>>::execute(true, verbose);
+        CartesianProductRegistrarRT<SubtractionTask,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<>>::execute(true, verbose);
+        CartesianProductRegistrarRT<NegationTask,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<>>::execute(true, verbose);
+        CartesianProductRegistrarRT<MultiplicationTask,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<>>::execute(true, verbose);
+        CartesianProductRegistrarRT<DivisionTask,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<>>::execute(true, verbose);
         CartesianProductRegistrar<DummyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
                                   IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
         CartesianProductRegistrar<ConstantFillTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,

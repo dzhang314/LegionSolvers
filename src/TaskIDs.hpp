@@ -38,7 +38,6 @@ namespace LegionSolvers {
 
 
     enum TaskBlockID : Legion::TaskID {
-
         ADDITION_TASK_BLOCK_ID,
         SUBTRACTION_TASK_BLOCK_ID,
         NEGATION_TASK_BLOCK_ID,
@@ -57,7 +56,6 @@ namespace LegionSolvers {
         COO_PRINT_TASK_BLOCK_ID,
         FILL_COO_NEGATIVE_LAPLACIAN_1D_TASK_BLOCK_ID,
         FILL_COO_NEGATIVE_LAPLACIAN_2D_TASK_BLOCK_ID,
-
     };
 
 
@@ -73,7 +71,9 @@ namespace LegionSolvers {
     struct TaskT {
 
         static constexpr Legion::TaskID task_id =
-            LEGION_SOLVERS_TASK_ID_ORIGIN + LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID + LEGION_SOLVERS_TYPE_INDEX<T>;
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            LEGION_SOLVERS_TYPE_INDEX<T>;
 
     }; // struct TaskT
 
@@ -82,7 +82,9 @@ namespace LegionSolvers {
     struct TaskD {
 
         static constexpr Legion::TaskID task_id =
-            LEGION_SOLVERS_TASK_ID_ORIGIN + LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID + (DIM - 1);
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            (DIM - 1);
 
     }; // struct TaskD
 
@@ -91,7 +93,9 @@ namespace LegionSolvers {
     struct TaskD<BLOCK_ID, 0> {
 
         static constexpr Legion::TaskID task_id(int DIM) {
-            return LEGION_SOLVERS_TASK_ID_ORIGIN + LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID + (DIM - 1);
+            return LEGION_SOLVERS_TASK_ID_ORIGIN +
+                   LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+                   (DIM - 1);
         }
 
     }; // struct TaskD
@@ -100,9 +104,11 @@ namespace LegionSolvers {
     template <TaskBlockID BLOCK_ID, typename T, int DIM>
     struct TaskTD {
 
-        static constexpr Legion::TaskID task_id = LEGION_SOLVERS_TASK_ID_ORIGIN +
-                                                  LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-                                                  LEGION_SOLVERS_NUM_TYPES * (DIM - 1) + LEGION_SOLVERS_TYPE_INDEX<T>;
+        static constexpr Legion::TaskID task_id =
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            LEGION_SOLVERS_NUM_TYPES * (DIM - 1) +
+            LEGION_SOLVERS_TYPE_INDEX<T>;
 
     }; // struct TaskTD
 
@@ -111,8 +117,10 @@ namespace LegionSolvers {
     struct TaskTD<BLOCK_ID, T, 0> {
 
         static constexpr Legion::TaskID task_id(int DIM) {
-            return LEGION_SOLVERS_TASK_ID_ORIGIN + LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-                   LEGION_SOLVERS_NUM_TYPES * (DIM - 1) + LEGION_SOLVERS_TYPE_INDEX<T>;
+            return LEGION_SOLVERS_TASK_ID_ORIGIN +
+                   LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+                   LEGION_SOLVERS_NUM_TYPES * (DIM - 1) +
+                   LEGION_SOLVERS_TYPE_INDEX<T>;
         }
 
     }; // struct TaskTD
@@ -121,11 +129,13 @@ namespace LegionSolvers {
     template <TaskBlockID BLOCK_ID, typename T, int DIM1, int DIM2, int DIM3>
     struct TaskTDDD {
 
-        static constexpr Legion::TaskID task_id = LEGION_SOLVERS_TASK_ID_ORIGIN +
-                                                  LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-                                                  LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_TYPES * (DIM1 - 1) +
-                                                  LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_TYPES * (DIM2 - 1) +
-                                                  LEGION_SOLVERS_NUM_TYPES * (DIM3 - 1) + LEGION_SOLVERS_TYPE_INDEX<T>;
+        static constexpr Legion::TaskID task_id =
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_TYPES * (DIM1 - 1) +
+            LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_TYPES * (DIM2 - 1) +
+            LEGION_SOLVERS_NUM_TYPES * (DIM3 - 1) +
+            LEGION_SOLVERS_TYPE_INDEX<T>;
 
     }; // struct TaskTDDD
 
@@ -134,10 +144,12 @@ namespace LegionSolvers {
     struct TaskTDDD<BLOCK_ID, T, 0, 0, 0> {
 
         static constexpr Legion::TaskID task_id(int DIM1, int DIM2, int DIM3) {
-            return LEGION_SOLVERS_TASK_ID_ORIGIN + LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            return LEGION_SOLVERS_TASK_ID_ORIGIN +
+                   LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
                    LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_TYPES * (DIM1 - 1) +
                    LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_TYPES * (DIM2 - 1) +
-                   LEGION_SOLVERS_NUM_TYPES * (DIM3 - 1) + LEGION_SOLVERS_TYPE_INDEX<T>;
+                   LEGION_SOLVERS_NUM_TYPES * (DIM3 - 1) +
+                   LEGION_SOLVERS_TYPE_INDEX<T>;
         }
 
     }; // struct TaskTDDD

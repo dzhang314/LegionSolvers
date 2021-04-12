@@ -98,7 +98,7 @@ namespace LegionSolvers {
             launcher.add_region_requirement(Legion::RegionRequirement{
                 rt->get_logical_partition(output_vector, this->range_partition),
                 PFID_IJ_TO_J, LEGION_REDOP_SUM<ENTRY_T>,
-                LEGION_SIMULTANEOUS, output_vector
+                LEGION_SIMULTANEOUS, output_vector // TODO: what does SIMULTANEOUS and EXCLUSIVE mean for reduction launch?
             });
             launcher.add_field(0, output_fid);
 
