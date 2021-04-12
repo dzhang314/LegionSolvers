@@ -17,7 +17,8 @@ namespace LegionSolvers {
 
 
     template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
-    class COOMatrix : public SparseMatrix<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
+    class COOMatrix : public SparseMatrix<ENTRY_T, KERNEL_DIM,
+                                          DOMAIN_DIM, RANGE_DIM> {
 
 
       protected:
@@ -85,10 +86,12 @@ namespace LegionSolvers {
                             Legion::FieldID input_fid,
                             Legion::Context ctx,
                             Legion::Runtime *rt) const override {
-            zero_fill<ENTRY_T>(output_vector, output_fid, this->range_partition, ctx, rt);
+            zero_fill<ENTRY_T>(output_vector, output_fid,
+                               this->range_partition, ctx, rt);
             const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
             Legion::IndexLauncher launcher{
-                COOMatvecTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
+                COOMatvecTask<ENTRY_T, KERNEL_DIM,
+                              DOMAIN_DIM, RANGE_DIM>::task_id,
                 this->tile_index_space,
                 Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
                 Legion::ArgumentMap{}
@@ -98,7 +101,7 @@ namespace LegionSolvers {
             launcher.add_region_requirement(Legion::RegionRequirement{
                 rt->get_logical_partition(output_vector, this->range_partition),
                 PFID_IJ_TO_J, LEGION_REDOP_SUM<ENTRY_T>,
-                LEGION_SIMULTANEOUS, output_vector // TODO: what does SIMULTANEOUS and EXCLUSIVE mean for reduction launch?
+                LEGION_SIMULTANEOUS, output_vector
             });
             launcher.add_field(0, output_fid);
 
@@ -120,17 +123,25 @@ namespace LegionSolvers {
         }
 
 
-        virtual void print(Legion::Context ctx, Legion::Runtime *rt) const override {
+        virtual void print(Legion::Context ctx,
+                           Legion::Runtime *rt) const override {
             const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
-            Legion::TaskLauncher launcher{COOPrintTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
-                                          Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])}};
+            Legion::IndexLauncher launcher{
+                COOPrintTask<ENTRY_T, KERNEL_DIM,
+                             DOMAIN_DIM, RANGE_DIM>::task_id,
+                this->tile_index_space,
+                Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
+                Legion::ArgumentMap{}
+            };
             launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-            launcher.add_region_requirement(Legion::RegionRequirement{this->matrix_region, LEGION_READ_ONLY,
-                                                                      LEGION_EXCLUSIVE, this->matrix_region});
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                this->column_logical_partition, PFID_IJ_TO_IJ,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, this->matrix_region
+            });
             launcher.add_field(0, fid_i);
             launcher.add_field(0, fid_j);
             launcher.add_field(0, fid_entry);
-            rt->execute_task(ctx, launcher);
+            rt->execute_index_space(ctx, launcher);
         }
 
 
