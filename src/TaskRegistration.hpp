@@ -23,15 +23,17 @@ namespace LegionSolvers {
                               const std::string &task_name,
                               bool is_leaf, bool verbose) {
         if (verbose) {
-            std::cout << "Registering task " << task_name
+            std::cout << "[LegionSolvers] Registering task " << task_name
                       << " with ID " << task_id << "." << std::endl;
         }
-        Legion::TaskVariantRegistrar registrar(task_id, task_name.c_str());
-        registrar.add_constraint(Legion::ProcessorConstraint{
-            Legion::Processor::LOC_PROC});
+        Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+        registrar.add_constraint(
+            Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
+        );
         registrar.set_leaf(is_leaf);
         Legion::Runtime::preregister_task_variant<TASK_PTR>(
-            registrar, task_name.c_str());
+            registrar, task_name.c_str()
+        );
     }
 
 
@@ -43,104 +45,195 @@ namespace LegionSolvers {
                               const std::string &task_name,
                               bool is_leaf, bool verbose) {
         if (verbose) {
-            std::cout << "Registering task " << task_name
+            std::cout << "[LegionSolvers] Registering task " << task_name
                       << " with ID " << task_id << "." << std::endl;
         }
-        Legion::TaskVariantRegistrar registrar(task_id, task_name.c_str());
-        registrar.add_constraint(Legion::ProcessorConstraint{
-            Legion::Processor::LOC_PROC});
+        Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+        registrar.add_constraint(
+            Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
+        );
         registrar.set_leaf(is_leaf);
         Legion::Runtime::preregister_task_variant<RETURN_T, TASK_PTR>(
-            registrar, task_name.c_str());
+            registrar, task_name.c_str()
+        );
     }
 
 
-    template <template <typename, int...> typename TASK_CLASS, typename... TS>
+    /*
+     * CartesianProductRegistrar<TaskClass, T, IntList<>, IntList<m, n, ...>>
+     * is used to register a collection of Legion template tasks wrapped up
+     * inside a class template TaskClass.
+     *
+     * CartesianProductRegistrar<TaskA, float,
+                                 IntList<>, IntList<2, 3>>::execute()
+     * registers the following six tasks:
+     *
+     *     TaskA<float, 1, 1>::task
+     *     TaskA<float, 1, 2>::task
+     *     TaskA<float, 1, 3>::task
+     *     TaskA<float, 2, 1>::task
+     *     TaskA<float, 2, 2>::task
+     *     TaskA<float, 2, 3>::task
+     *
+     * CartesianProductRegistrar<TaskB, TypeList<float, double>,
+                                 IntList<>, IntList<1, 1, 2>>::execute()
+     * registers the following four tasks:
+     *
+     *     TaskB<float, 1, 1, 1>::task
+     *     TaskB<float, 1, 1, 2>::task
+     *     TaskB<double, 1, 1, 1>::task
+     *     TaskB<double, 1, 1, 2>::task
+     */
+    template <template <typename, int...> typename TaskClass, typename... TS>
     struct CartesianProductRegistrar;
 
-    template <template <typename, int...> typename TASK_CLASS, typename T, int... MS>
-    struct CartesianProductRegistrar<TASK_CLASS, T, IntList<MS...>, IntList<>> {
+    // Base case: all dimensions instantiated, single type T.
+    template <template <typename, int...> typename TaskClass,
+              typename T, int... MS>
+    struct CartesianProductRegistrar<TaskClass, T,
+                                     IntList<MS...>, IntList<>> {
         static void execute(bool is_leaf, bool verbose) {
-            preregister_cpu_task<TASK_CLASS<T, MS...>::task>(TASK_CLASS<T, MS...>::task_id,
-                                                             TASK_CLASS<T, MS...>::task_name() + std::string{"_"} +
-                                                                 std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
-                                                                 ToString<IntList<MS...>>::value(),
-                                                             is_leaf, verbose);
+            preregister_cpu_task<TaskClass<T, MS...>::task>(
+                TaskClass<T, MS...>::task_id,
+                TaskClass<T, MS...>::task_name() +
+                    std::string{"_"} +
+                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
+                    ToString<IntList<MS...>>::value(),
+                is_leaf, verbose
+            );
         }
     };
 
-    template <template <typename, int...> typename TASK_CLASS, typename T, typename... TS, int... MS>
-    struct CartesianProductRegistrar<TASK_CLASS, TypeList<T, TS...>, IntList<MS...>, IntList<>> {
-        static void execute(bool is_leaf, bool verbose) {
-            preregister_cpu_task<TASK_CLASS<T, MS...>::task>(TASK_CLASS<T, MS...>::task_id,
-                                                             TASK_CLASS<T, MS...>::task_name() + std::string{"_"} +
-                                                                 std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
-                                                                 ToString<IntList<MS...>>::value(),
-                                                             is_leaf, verbose);
-            CartesianProductRegistrar<TASK_CLASS, TypeList<TS...>, IntList<MS...>, IntList<>>::execute(is_leaf, verbose);
-        }
-    };
-
-    template <template <typename, int...> typename TASK_CLASS, int... MS>
-    struct CartesianProductRegistrar<TASK_CLASS, TypeList<>, IntList<MS...>, IntList<>> {
+    // Base case: all dimensions instantiated, empty type list.
+    template <template <typename, int...> typename TaskClass, int... MS>
+    struct CartesianProductRegistrar<TaskClass, TypeList<>,
+                                     IntList<MS...>, IntList<>> {
         static void execute(bool is_leaf, bool verbose) {}
     };
 
-    template <template <typename, int...> typename TASK_CLASS, typename T, int... MS, int... NS>
-    struct CartesianProductRegistrar<TASK_CLASS, T, IntList<MS...>, IntList<0, NS...>> {
+    // Recursive case: all dimensions instantiated, non-empty type list.
+    template <template <typename, int...> typename TaskClass,
+              typename T, typename... TS, int... MS>
+    struct CartesianProductRegistrar<TaskClass, TypeList<T, TS...>,
+                                     IntList<MS...>, IntList<>> {
+        static void execute(bool is_leaf, bool verbose) {
+            // Register first type...
+            preregister_cpu_task<TaskClass<T, MS...>::task>(
+                TaskClass<T, MS...>::task_id,
+                TaskClass<T, MS...>::task_name() +
+                    std::string{"_"} +
+                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
+                    ToString<IntList<MS...>>::value(),
+                is_leaf, verbose
+            );
+            // ...then recurse on remaining types.
+            CartesianProductRegistrar<
+                TaskClass, TypeList<TS...>, IntList<MS...>, IntList<>
+            >::execute(is_leaf, verbose);
+        }
+    };
+
+    // Base case: instantiating dimensions, first dimension exhausted.
+    template <template <typename, int...> typename TaskClass,
+              typename T, int... MS, int... NS>
+    struct CartesianProductRegistrar<TaskClass, T,
+                                     IntList<MS...>, IntList<0, NS...>> {
         static void execute(bool is_leaf, bool verbose) {}
     };
 
-    template <template <typename, int...> typename TASK_CLASS, typename T, int... MS, int N, int... NS>
-    struct CartesianProductRegistrar<TASK_CLASS, T, IntList<MS...>, IntList<N, NS...>> {
+    // Recursive case: instantiating dimensions, recursing on first dimension.
+    template <template <typename, int...> typename TaskClass,
+              typename T, int... MS, int N, int... NS>
+    struct CartesianProductRegistrar<TaskClass, T,
+                                     IntList<MS...>, IntList<N, NS...>> {
         static void execute(bool is_leaf, bool verbose) {
-            CartesianProductRegistrar<TASK_CLASS, T, IntList<MS...>, IntList<N - 1, NS...>>::execute(is_leaf, verbose);
-            CartesianProductRegistrar<TASK_CLASS, T, IntList<MS..., N>, IntList<NS...>>::execute(is_leaf, verbose);
+            // Recurse on smaller values of first dimension...
+            CartesianProductRegistrar<
+                TaskClass, T, IntList<MS...>, IntList<N - 1, NS...>
+            >::execute(is_leaf, verbose);
+            // ...then instantiate current value of first dimension.
+            CartesianProductRegistrar<
+                TaskClass, T, IntList<MS..., N>, IntList<NS...>
+            >::execute(is_leaf, verbose);
         }
     };
 
 
-    template <template <typename, int...> typename TASK_CLASS, typename... TS>
+    /*
+     * CartesianProductRegistrarRT is just like CartesianProductRegistrar
+     * except it registers tasks that return T, rather than void.
+     */
+    template <template <typename, int...> typename TaskClass, typename... TS>
     struct CartesianProductRegistrarRT;
 
-    template <template <typename, int...> typename TASK_CLASS, typename T, int... MS>
-    struct CartesianProductRegistrarRT<TASK_CLASS, T, IntList<MS...>, IntList<>> {
+    // Base case: all dimensions instantiated, single type T.
+    template <template <typename, int...> typename TaskClass,
+              typename T, int... MS>
+    struct CartesianProductRegistrarRT<TaskClass, T,
+                                       IntList<MS...>, IntList<>> {
         static void execute(bool is_leaf, bool verbose) {
-            preregister_cpu_task<T, TASK_CLASS<T, MS...>::task>(TASK_CLASS<T, MS...>::task_id,
-                                                                TASK_CLASS<T, MS...>::task_name() + std::string{"_"} +
-                                                                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
-                                                                    ToString<IntList<MS...>>::value(),
-                                                                is_leaf, verbose);
+            preregister_cpu_task<T, TaskClass<T, MS...>::task>(
+                TaskClass<T, MS...>::task_id,
+                TaskClass<T, MS...>::task_name() +
+                    std::string{"_"} +
+                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
+                    ToString<IntList<MS...>>::value(),
+                is_leaf, verbose
+            );
         }
     };
 
-    template <template <typename, int...> typename TASK_CLASS, typename T, typename... TS, int... MS>
-    struct CartesianProductRegistrarRT<TASK_CLASS, TypeList<T, TS...>, IntList<MS...>, IntList<>> {
+    // Base case: all dimensions instantiated, empty type list.
+    template <template <typename, int...> typename TaskClass, int... MS>
+    struct CartesianProductRegistrarRT<TaskClass, TypeList<>,
+                                       IntList<MS...>, IntList<>> {
+        static void execute(bool is_leaf, bool verbose) {}
+    };
+
+    // Recursive case: all dimensions instantiated, non-empty type list.
+    template <template <typename, int...> typename TaskClass,
+              typename T, typename... TS, int... MS>
+    struct CartesianProductRegistrarRT<TaskClass, TypeList<T, TS...>,
+                                       IntList<MS...>, IntList<>> {
         static void execute(bool is_leaf, bool verbose) {
-            preregister_cpu_task<T, TASK_CLASS<T, MS...>::task>(TASK_CLASS<T, MS...>::task_id,
-                                                                TASK_CLASS<T, MS...>::task_name() + std::string{"_"} +
-                                                                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
-                                                                    ToString<IntList<MS...>>::value(),
-                                                                is_leaf, verbose);
-            CartesianProductRegistrarRT<TASK_CLASS, TypeList<TS...>, IntList<MS...>, IntList<>>::execute(is_leaf, verbose);
+            // Register first type...
+            preregister_cpu_task<T, TaskClass<T, MS...>::task>(
+                TaskClass<T, MS...>::task_id,
+                TaskClass<T, MS...>::task_name() +
+                    std::string{"_"} +
+                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
+                    ToString<IntList<MS...>>::value(),
+                is_leaf, verbose
+            );
+            // ...then recurse on remaining types.
+            CartesianProductRegistrarRT<
+                TaskClass, TypeList<TS...>, IntList<MS...>, IntList<>
+            >::execute(is_leaf, verbose);
         }
     };
 
-    template <template <typename, int...> typename TASK_CLASS, int... MS>
-    struct CartesianProductRegistrarRT<TASK_CLASS, TypeList<>, IntList<MS...>, IntList<>> {
+    // Base case: instantiating dimensions, first dimension exhausted.
+    template <template <typename, int...> typename TaskClass,
+              typename T, int... MS, int... NS>
+    struct CartesianProductRegistrarRT<TaskClass, T,
+                                       IntList<MS...>, IntList<0, NS...>> {
         static void execute(bool is_leaf, bool verbose) {}
     };
 
-    template <template <typename, int...> typename TASK_CLASS, typename T, int... MS, int... NS>
-    struct CartesianProductRegistrarRT<TASK_CLASS, T, IntList<MS...>, IntList<0, NS...>> {
-        static void execute(bool is_leaf, bool verbose) {}
-    };
-
-    template <template <typename, int...> typename TASK_CLASS, typename T, int... MS, int N, int... NS>
-    struct CartesianProductRegistrarRT<TASK_CLASS, T, IntList<MS...>, IntList<N, NS...>> {
+    // Recursive case: instantiating dimensions, recursing on first dimension.
+    template <template <typename, int...> typename TaskClass,
+              typename T, int... MS, int N, int... NS>
+    struct CartesianProductRegistrarRT<TaskClass, T,
+                                       IntList<MS...>, IntList<N, NS...>> {
         static void execute(bool is_leaf, bool verbose) {
-            CartesianProductRegistrarRT<TASK_CLASS, T, IntList<MS...>, IntList<N - 1, NS...>>::execute(is_leaf, verbose);
-            CartesianProductRegistrarRT<TASK_CLASS, T, IntList<MS..., N>, IntList<NS...>>::execute(is_leaf, verbose);
+            // Recurse on smaller values of first dimension...
+            CartesianProductRegistrarRT<
+                TaskClass, T, IntList<MS...>, IntList<N - 1, NS...>
+            >::execute(is_leaf, verbose);
+            // ...then instantiate current value of first dimension.
+            CartesianProductRegistrarRT<
+                TaskClass, T, IntList<MS..., N>, IntList<NS...>
+            >::execute(is_leaf, verbose);
         }
     };
 
@@ -199,52 +292,76 @@ namespace LegionSolvers {
     }; // struct ProjectionTwoLevel
 
 
+    template <template <typename> typename TaskClass>
+    void preregister_scalar_leaf_task(bool verbose) {
+        CartesianProductRegistrarRT<
+            TaskClass,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<>
+        >::execute(true, verbose);
+    }
+
+
+    template <template <typename, int> typename TaskClass>
+    void preregister_vector_leaf_task(bool verbose) {
+        CartesianProductRegistrar<
+            TaskClass,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<LEGION_SOLVERS_MAX_DIM>
+        >::execute(true, verbose);
+    }
+
+
+    template <template <typename, int, int, int> typename TaskClass>
+    void preregister_matrix_leaf_task(bool verbose) {
+        CartesianProductRegistrar<
+            TaskClass,
+            LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<LEGION_SOLVERS_MAX_DIM,
+                               LEGION_SOLVERS_MAX_DIM,
+                               LEGION_SOLVERS_MAX_DIM>
+        >::execute(true, verbose);
+    }
+
+
     void preregister_solver_tasks(bool verbose = false) {
-        CartesianProductRegistrarRT<AdditionTask,
-            LEGION_SOLVERS_SUPPORTED_TYPES,
-            IntList<>, IntList<>>::execute(true, verbose);
-        CartesianProductRegistrarRT<SubtractionTask,
-            LEGION_SOLVERS_SUPPORTED_TYPES,
-            IntList<>, IntList<>>::execute(true, verbose);
-        CartesianProductRegistrarRT<NegationTask,
-            LEGION_SOLVERS_SUPPORTED_TYPES,
-            IntList<>, IntList<>>::execute(true, verbose);
-        CartesianProductRegistrarRT<MultiplicationTask,
-            LEGION_SOLVERS_SUPPORTED_TYPES,
-            IntList<>, IntList<>>::execute(true, verbose);
-        CartesianProductRegistrarRT<DivisionTask,
-            LEGION_SOLVERS_SUPPORTED_TYPES,
-            IntList<>, IntList<>>::execute(true, verbose);
-        CartesianProductRegistrar<DummyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<ConstantFillTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<RandomFillTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<CopyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<AxpyTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<XpayTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrarRT<DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                    IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
+
+        preregister_scalar_leaf_task<AdditionTask      >(verbose);
+        preregister_scalar_leaf_task<SubtractionTask   >(verbose);
+        preregister_scalar_leaf_task<NegationTask      >(verbose);
+        preregister_scalar_leaf_task<MultiplicationTask>(verbose);
+        preregister_scalar_leaf_task<DivisionTask      >(verbose);
+
+        preregister_vector_leaf_task<DummyTask       >(verbose);
+        preregister_vector_leaf_task<ConstantFillTask>(verbose);
+        preregister_vector_leaf_task<RandomFillTask  >(verbose);
+        preregister_vector_leaf_task<CopyTask        >(verbose);
+        preregister_vector_leaf_task<AxpyTask        >(verbose);
+        preregister_vector_leaf_task<XpayTask        >(verbose);
+        preregister_vector_leaf_task<PrintVectorTask >(verbose);
+
+        CartesianProductRegistrarRT<
+            DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES,
+            IntList<>, IntList<LEGION_SOLVERS_MAX_DIM>
+        >::execute(true, verbose);
+
+        preregister_matrix_leaf_task<COOMatvecTask >(verbose);
+        preregister_matrix_leaf_task<COORmatvecTask>(verbose);
+        preregister_matrix_leaf_task<COOPrintTask  >(verbose);
+
         CartesianProductRegistrar<
-            COOMatvecTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-            IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<PrintVectorTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
+            FillCOONegativeLaplacian1DTask,
+            LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>
+        >::execute(true, verbose);
+
         CartesianProductRegistrar<
-            COORmatvecTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-            IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<
-            COOPrintTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-            IntList<LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM, LEGION_SOLVERS_MAX_DIM>>::execute(true, verbose);
-        CartesianProductRegistrar<FillCOONegativeLaplacian1DTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<>>::execute(true, verbose);
-        CartesianProductRegistrar<FillCOONegativeLaplacian2DTask, LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>,
-                                  IntList<>>::execute(true, verbose);
-        Legion::Runtime::add_registration_callback(mapper_registration_callback);
+            FillCOONegativeLaplacian2DTask,
+            LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>
+        >::execute(true, verbose);
+
+        Legion::Runtime::add_registration_callback(
+            mapper_registration_callback);
+
         Legion::Runtime::preregister_projection_functor(
             PFID_IJ_TO_I, new ProjectionOneLevel{0});
         Legion::Runtime::preregister_projection_functor(
