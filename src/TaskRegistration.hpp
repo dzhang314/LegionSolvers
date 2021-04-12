@@ -6,6 +6,8 @@
 
 #include <legion.h>
 
+#include <Kokkos_Core.hpp>
+
 #include "COOMatrixTasks.hpp"
 #include "ExampleSystems.hpp"
 #include "LegionSolversMapper.hpp"
@@ -56,6 +58,136 @@ namespace LegionSolvers {
         Legion::Runtime::preregister_task_variant<RETURN_T, TASK_PTR>(
             registrar, task_name.c_str()
         );
+    }
+
+
+    template <template <typename> typename PORTABLE_KOKKOS_TASK>
+    void preregister_kokkos_task(Legion::TaskID task_id,
+                                 const std::string &task_name,
+                                 bool is_leaf, bool verbose) {
+
+        #ifdef KOKKOS_ENABLE_SERIAL
+        {
+            if (verbose) {
+                std::cout << "[LegionSolvers] Registering CPU task "
+                          << task_name << " with ID "
+                          << task_id << "." << std::endl;
+            }
+            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+            registrar.add_constraint(Legion::ProcessorConstraint{
+                Legion::Processor::LOC_PROC
+            });
+            registrar.set_leaf(is_leaf);
+            Legion::Runtime::preregister_task_variant<
+                PORTABLE_KOKKOS_TASK<Kokkos::Serial>::task_body
+            >(registrar, task_name.c_str());
+        }
+        #endif
+
+        #ifdef KOKKOS_ENABLE_OPENMP
+        {
+            if (verbose) {
+                std::cout << "[LegionSolvers] Registering OpenMP task "
+                          << task_name << " with ID "
+                          << task_id << "." << std::endl;
+            }
+            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+            registrar.add_constraint(Legion::ProcessorConstraint{
+                #ifdef REALM_USE_OPENMP
+                    Legion::Processor::OMP_PROC
+                #else
+                    Legion::Processor::LOC_PROC
+                #endif
+            });
+            registrar.set_leaf(is_leaf);
+            Legion::Runtime::preregister_task_variant<
+                PORTABLE_KOKKOS_TASK<Kokkos::OpenMP>::task_body
+            >(registrar, task_name.c_str());
+        }
+        #endif
+
+        #if defined(KOKKOS_ENABLE_CUDA) and defined(REALM_USE_CUDA)
+        {
+            if (verbose) {
+                std::cout << "[LegionSolvers] Registering GPU task "
+                          << task_name << " with ID "
+                          << task_id << "." << std::endl;
+            }
+            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+            registrar.add_constraint(Legion::ProcessorConstraint{
+                Legion::Processor::TOC_PROC
+            });
+            registrar.set_leaf(is_leaf);
+            Legion::Runtime::preregister_task_variant<
+                PORTABLE_KOKKOS_TASK<Kokkos::Cuda>::task_body
+            >(registrar, task_name.c_str());
+        }
+        #endif
+    }
+
+
+    template <typename RT, template <typename> typename PORTABLE_KOKKOS_TASK>
+    void preregister_kokkos_task(Legion::TaskID task_id,
+                                 const std::string &task_name,
+                                 bool is_leaf, bool verbose) {
+
+        #ifdef KOKKOS_ENABLE_SERIAL
+        {
+            if (verbose) {
+                std::cout << "[LegionSolvers] Registering CPU task "
+                          << task_name << " with ID "
+                          << task_id << "." << std::endl;
+            }
+            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+            registrar.add_constraint(Legion::ProcessorConstraint{
+                Legion::Processor::LOC_PROC
+            });
+            registrar.set_leaf(is_leaf);
+            Legion::Runtime::preregister_task_variant<
+                RT, PORTABLE_KOKKOS_TASK<Kokkos::Serial>::task_body
+            >(registrar, task_name.c_str());
+        }
+        #endif
+
+        #ifdef KOKKOS_ENABLE_OPENMP
+        {
+            if (verbose) {
+                std::cout << "[LegionSolvers] Registering OpenMP task "
+                          << task_name << " with ID "
+                          << task_id << "." << std::endl;
+            }
+            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+            registrar.add_constraint(Legion::ProcessorConstraint{
+                #ifdef REALM_USE_OPENMP
+                    Legion::Processor::OMP_PROC
+                #else
+                    Legion::Processor::LOC_PROC
+                #endif
+            });
+            registrar.set_leaf(is_leaf);
+            Legion::Runtime::preregister_task_variant<
+                RT, PORTABLE_KOKKOS_TASK<Kokkos::OpenMP>::task_body
+            >(registrar, task_name.c_str());
+        }
+        #endif
+
+        #if defined(KOKKOS_ENABLE_CUDA) and defined(REALM_USE_CUDA)
+        {
+            if (verbose) {
+                std::cout << "[LegionSolvers] Registering GPU task "
+                          << task_name << " with ID "
+                          << task_id << "." << std::endl;
+            }
+            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
+            registrar.add_constraint(Legion::ProcessorConstraint{
+                Legion::Processor::TOC_PROC
+            });
+            registrar.set_leaf(is_leaf);
+            Legion::Runtime::preregister_task_variant<
+                RT, PORTABLE_KOKKOS_TASK<Kokkos::Cuda>::task_body
+            >(registrar, task_name.c_str());
+        }
+        #endif
     }
 
 
