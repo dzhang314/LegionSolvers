@@ -196,11 +196,11 @@ namespace LegionSolvers {
                 ctx, w_req.region.get_index_space()
             );
 
-            const Legion::DomainT<N> domain = v_domain.intersection(w_domain);
+            assert(v_domain == w_domain);
 
             T result = static_cast<T>(0);
-            for (Legion::RectInDomainIterator<N> iter{domain}; iter(); ++iter) {
-                const Legion::Rect<N> rect = *iter;
+            for (Legion::RectInDomainIterator<N> it{v_domain}; it(); ++it) {
+                const Legion::Rect<N> rect = *it;
                 T temp = static_cast<T>(0);
                 Kokkos::parallel_reduce(
                     KokkosRangePolicyFactory<KokkosExecutionSpace, N>::create(
