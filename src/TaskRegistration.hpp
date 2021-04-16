@@ -69,7 +69,7 @@ namespace LegionSolvers {
         #ifdef KOKKOS_ENABLE_SERIAL
         {
             if (verbose) {
-                std::cout << "[LegionSolvers] Registering CPU task "
+                std::cout << "[LegionSolvers] Registering Kokkos CPU task "
                           << task_name << " with ID "
                           << task_id << "." << std::endl;
             }
@@ -87,7 +87,7 @@ namespace LegionSolvers {
         #ifdef KOKKOS_ENABLE_OPENMP
         {
             if (verbose) {
-                std::cout << "[LegionSolvers] Registering OpenMP task "
+                std::cout << "[LegionSolvers] Registering Kokkos OpenMP task "
                           << task_name << " with ID "
                           << task_id << "." << std::endl;
             }
@@ -109,7 +109,7 @@ namespace LegionSolvers {
         #if defined(KOKKOS_ENABLE_CUDA) and defined(REALM_USE_CUDA)
         {
             if (verbose) {
-                std::cout << "[LegionSolvers] Registering GPU task "
+                std::cout << "[LegionSolvers] Registering Kokkos GPU task "
                           << task_name << " with ID "
                           << task_id << "." << std::endl;
             }
@@ -126,7 +126,9 @@ namespace LegionSolvers {
     }
 
 
-    template <typename RT, template <typename> typename PORTABLE_KOKKOS_TASK>
+    template <typename ReturnType,
+              template <typename, typename, int...> typename TaskClass,
+              typename T, int... NS>
     void preregister_kokkos_task(Legion::TaskID task_id,
                                  const std::string &task_name,
                                  bool is_leaf, bool verbose) {
@@ -134,7 +136,7 @@ namespace LegionSolvers {
         #ifdef KOKKOS_ENABLE_SERIAL
         {
             if (verbose) {
-                std::cout << "[LegionSolvers] Registering CPU task "
+                std::cout << "[LegionSolvers] Registering Kokkos CPU task "
                           << task_name << " with ID "
                           << task_id << "." << std::endl;
             }
@@ -144,7 +146,7 @@ namespace LegionSolvers {
             });
             registrar.set_leaf(is_leaf);
             Legion::Runtime::preregister_task_variant<
-                RT, PORTABLE_KOKKOS_TASK<Kokkos::Serial>::task_body
+                ReturnType, TaskClass<Kokkos::Serial, T, NS...>::task_body
             >(registrar, task_name.c_str());
         }
         #endif
@@ -152,7 +154,7 @@ namespace LegionSolvers {
         #ifdef KOKKOS_ENABLE_OPENMP
         {
             if (verbose) {
-                std::cout << "[LegionSolvers] Registering OpenMP task "
+                std::cout << "[LegionSolvers] Registering Kokkos OpenMP task "
                           << task_name << " with ID "
                           << task_id << "." << std::endl;
             }
@@ -166,7 +168,7 @@ namespace LegionSolvers {
             });
             registrar.set_leaf(is_leaf);
             Legion::Runtime::preregister_task_variant<
-                RT, PORTABLE_KOKKOS_TASK<Kokkos::OpenMP>::task_body
+                ReturnType, TaskClass<Kokkos::OpenMP, T, NS...>::task_body
             >(registrar, task_name.c_str());
         }
         #endif
@@ -174,7 +176,7 @@ namespace LegionSolvers {
         #if defined(KOKKOS_ENABLE_CUDA) and defined(REALM_USE_CUDA)
         {
             if (verbose) {
-                std::cout << "[LegionSolvers] Registering GPU task "
+                std::cout << "[LegionSolvers] Registering Kokkos GPU task "
                           << task_name << " with ID "
                           << task_id << "." << std::endl;
             }
@@ -184,7 +186,7 @@ namespace LegionSolvers {
             });
             registrar.set_leaf(is_leaf);
             Legion::Runtime::preregister_task_variant<
-                RT, PORTABLE_KOKKOS_TASK<Kokkos::Cuda>::task_body
+                ReturnType, TaskClass<Kokkos::Cuda, T, NS...>::task_body
             >(registrar, task_name.c_str());
         }
         #endif
@@ -291,22 +293,53 @@ namespace LegionSolvers {
     };
 
 
-    /*
-     * CartesianProductRegistrarRT is just like CartesianProductRegistrar
-     * except it registers tasks that return T, rather than void.
-     */
     template <template <typename, int...> typename TaskClass, typename... TS>
-    struct CartesianProductRegistrarRT;
+    struct ScalarTaskRegistrar;
+
+    // Base case: all dimensions instantiated, empty type list.
+    template <template <typename, int...> typename TaskClass>
+    struct ScalarTaskRegistrar<TaskClass, TypeList<>> {
+        static void execute(bool is_leaf, bool verbose) {}
+    };
+
+    // Recursive case: all dimensions instantiated, non-empty type list.
+    template <template <typename, int...> typename TaskClass,
+              typename T, typename... TS>
+    struct ScalarTaskRegistrar<TaskClass, TypeList<T, TS...>> {
+        static void execute(bool is_leaf, bool verbose) {
+            // Register first type...
+            preregister_cpu_task<T, TaskClass<T>::task>(
+                TaskClass<T>::task_id,
+                TaskClass<T>::task_name() +
+                    std::string{"_"} +
+                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()},
+                is_leaf, verbose
+            );
+            // ...then recurse on remaining types.
+            ScalarTaskRegistrar<
+                TaskClass, TypeList<TS...>
+            >::execute(is_leaf, verbose);
+        }
+    };
+
+
+    /*
+     * KokkosTaskRegistrarRT is just like CartesianProductRegistrar
+     * except it registers Kokkos tasks that return T, rather than void.
+     */
+    template <template <typename, typename, int...> typename TaskClass,
+              typename... TS>
+    struct KokkosTaskRegistrarRT;
 
     // Base case: all dimensions instantiated, single type T.
-    template <template <typename, int...> typename TaskClass,
+    template <template <typename, typename, int...> typename TaskClass,
               typename T, int... MS>
-    struct CartesianProductRegistrarRT<TaskClass, T,
-                                       IntList<MS...>, IntList<>> {
+    struct KokkosTaskRegistrarRT<TaskClass, T,
+                                 IntList<MS...>, IntList<>> {
         static void execute(bool is_leaf, bool verbose) {
-            preregister_cpu_task<T, TaskClass<T, MS...>::task>(
-                TaskClass<T, MS...>::task_id,
-                TaskClass<T, MS...>::task_name() +
+            preregister_kokkos_task<T, TaskClass, T, MS...>(
+                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_id,
+                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_name() +
                     std::string{"_"} +
                     std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
                     ToString<IntList<MS...>>::value(),
@@ -316,54 +349,55 @@ namespace LegionSolvers {
     };
 
     // Base case: all dimensions instantiated, empty type list.
-    template <template <typename, int...> typename TaskClass, int... MS>
-    struct CartesianProductRegistrarRT<TaskClass, TypeList<>,
-                                       IntList<MS...>, IntList<>> {
+    template <template <typename, typename, int...> typename TaskClass,
+              int... MS>
+    struct KokkosTaskRegistrarRT<TaskClass, TypeList<>,
+                                 IntList<MS...>, IntList<>> {
         static void execute(bool is_leaf, bool verbose) {}
     };
 
     // Recursive case: all dimensions instantiated, non-empty type list.
-    template <template <typename, int...> typename TaskClass,
+    template <template <typename, typename, int...> typename TaskClass,
               typename T, typename... TS, int... MS>
-    struct CartesianProductRegistrarRT<TaskClass, TypeList<T, TS...>,
-                                       IntList<MS...>, IntList<>> {
+    struct KokkosTaskRegistrarRT<TaskClass, TypeList<T, TS...>,
+                                 IntList<MS...>, IntList<>> {
         static void execute(bool is_leaf, bool verbose) {
             // Register first type...
-            preregister_cpu_task<T, TaskClass<T, MS...>::task>(
-                TaskClass<T, MS...>::task_id,
-                TaskClass<T, MS...>::task_name() +
+            preregister_kokkos_task<T, TaskClass, T, MS...>(
+                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_id,
+                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_name() +
                     std::string{"_"} +
                     std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
                     ToString<IntList<MS...>>::value(),
                 is_leaf, verbose
             );
             // ...then recurse on remaining types.
-            CartesianProductRegistrarRT<
+            KokkosTaskRegistrarRT<
                 TaskClass, TypeList<TS...>, IntList<MS...>, IntList<>
             >::execute(is_leaf, verbose);
         }
     };
 
     // Base case: instantiating dimensions, first dimension exhausted.
-    template <template <typename, int...> typename TaskClass,
+    template <template <typename, typename, int...> typename TaskClass,
               typename T, int... MS, int... NS>
-    struct CartesianProductRegistrarRT<TaskClass, T,
-                                       IntList<MS...>, IntList<0, NS...>> {
+    struct KokkosTaskRegistrarRT<TaskClass, T,
+                                 IntList<MS...>, IntList<0, NS...>> {
         static void execute(bool is_leaf, bool verbose) {}
     };
 
     // Recursive case: instantiating dimensions, recursing on first dimension.
-    template <template <typename, int...> typename TaskClass,
+    template <template <typename, typename, int...> typename TaskClass,
               typename T, int... MS, int N, int... NS>
-    struct CartesianProductRegistrarRT<TaskClass, T,
-                                       IntList<MS...>, IntList<N, NS...>> {
+    struct KokkosTaskRegistrarRT<TaskClass, T,
+                                 IntList<MS...>, IntList<N, NS...>> {
         static void execute(bool is_leaf, bool verbose) {
             // Recurse on smaller values of first dimension...
-            CartesianProductRegistrarRT<
+            KokkosTaskRegistrarRT<
                 TaskClass, T, IntList<MS...>, IntList<N - 1, NS...>
             >::execute(is_leaf, verbose);
             // ...then instantiate current value of first dimension.
-            CartesianProductRegistrarRT<
+            KokkosTaskRegistrarRT<
                 TaskClass, T, IntList<MS..., N>, IntList<NS...>
             >::execute(is_leaf, verbose);
         }
@@ -430,10 +464,8 @@ namespace LegionSolvers {
 
     template <template <typename> typename TaskClass>
     void preregister_scalar_leaf_task(bool verbose) {
-        CartesianProductRegistrarRT<
-            TaskClass,
-            LEGION_SOLVERS_SUPPORTED_TYPES,
-            IntList<>, IntList<>
+        ScalarTaskRegistrar<
+            TaskClass, LEGION_SOLVERS_SUPPORTED_TYPES,
         >::execute(true, verbose);
     }
 
@@ -476,7 +508,7 @@ namespace LegionSolvers {
         preregister_vector_leaf_task<XpayTask        >(verbose);
         preregister_vector_leaf_task<PrintVectorTask >(verbose);
 
-        CartesianProductRegistrarRT<
+        KokkosTaskRegistrarRT<
             DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES,
             IntList<>, IntList<LEGION_SOLVERS_MAX_DIM>
         >::execute(true, verbose);
