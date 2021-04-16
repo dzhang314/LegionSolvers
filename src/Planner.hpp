@@ -175,7 +175,7 @@ namespace LegionSolvers {
             Legion::Future result = Legion::Future::from_value<T>(rt, static_cast<T>(0));
             for (std::size_t i = 0; i < workspace.size(); ++i) {
                 Legion::IndexLauncher launcher{
-                    DotProductTask<Kokkos::DefaultExecutionSpace, T, 0>::task_id(dimensions[i].first.get_dim()),
+                    DotProductTask<T, 0>::task_id(dimensions[i].first.get_dim()),
                     rt->get_index_partition_color_space_name(dimensions[i].second),
                     Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
                 };

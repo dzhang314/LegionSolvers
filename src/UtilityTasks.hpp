@@ -172,9 +172,9 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct DummyTask : TaskTD<DUMMY_TASK_BLOCK_ID, T, DIM> {
+    struct DummyTask : TaskTD<DUMMY_TASK_BLOCK_ID, DummyTask, T, DIM> {
 
-        static std::string task_name() { return "dummy_task"; }
+        static std::string task_base_name() { return "dummy_task"; }
 
         static void task(const Legion::Task *task,
                          const std::vector<Legion::PhysicalRegion> &regions,
@@ -215,9 +215,10 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct ConstantFillTask : TaskTD<CONSTANT_FILL_TASK_BLOCK_ID, T, DIM> {
+    struct ConstantFillTask : TaskTD<CONSTANT_FILL_TASK_BLOCK_ID,
+                                     ConstantFillTask, T, DIM> {
 
-        static std::string task_name() { return "constant_fill"; }
+        static std::string task_base_name() { return "constant_fill"; }
 
         static void task(const Legion::Task *task,
                          const std::vector<Legion::PhysicalRegion> &regions,
@@ -266,9 +267,10 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct RandomFillTask : TaskTD<RANDOM_FILL_TASK_BLOCK_ID, T, DIM> {
+    struct RandomFillTask : TaskTD<RANDOM_FILL_TASK_BLOCK_ID,
+                                   RandomFillTask, T, DIM> {
 
-        static std::string task_name() { return "random_fill"; }
+        static std::string task_base_name() { return "random_fill"; }
 
         static void task(const Legion::Task *task,
                          const std::vector<Legion::PhysicalRegion> &regions,
@@ -323,9 +325,9 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct CopyTask : TaskTD<COPY_TASK_BLOCK_ID, T, DIM> {
+    struct CopyTask : TaskTD<COPY_TASK_BLOCK_ID, CopyTask, T, DIM> {
 
-        static std::string task_name() { return "copy"; }
+        static std::string task_base_name() { return "copy"; }
 
         static void task(const Legion::Task *task,
                          const std::vector<Legion::PhysicalRegion> &regions,
@@ -358,9 +360,10 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct PrintVectorTask : TaskTD<PRINT_VECTOR_TASK_BLOCK_ID, T, DIM> {
+    struct PrintVectorTask : TaskTD<PRINT_VECTOR_TASK_BLOCK_ID,
+                                    PrintVectorTask, T, DIM> {
 
-        static std::string task_name() { return "print_vector"; }
+        static std::string task_base_name() { return "print_vector"; }
 
         static void task(const Legion::Task *task,
                          const std::vector<Legion::PhysicalRegion> &regions,

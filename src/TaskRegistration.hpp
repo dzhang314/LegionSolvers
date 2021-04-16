@@ -126,9 +126,7 @@ namespace LegionSolvers {
     }
 
 
-    template <typename ReturnType,
-              template <typename, typename, int...> typename TaskClass,
-              typename T, int... NS>
+    template <typename ReturnType, template <typename> typename TaskClass>
     void preregister_kokkos_task(Legion::TaskID task_id,
                                  const std::string &task_name,
                                  bool is_leaf, bool verbose) {
@@ -146,7 +144,7 @@ namespace LegionSolvers {
             });
             registrar.set_leaf(is_leaf);
             Legion::Runtime::preregister_task_variant<
-                ReturnType, TaskClass<Kokkos::Serial, T, NS...>::task_body
+                ReturnType, TaskClass<Kokkos::Serial>::body
             >(registrar, task_name.c_str());
         }
         #endif
@@ -168,7 +166,7 @@ namespace LegionSolvers {
             });
             registrar.set_leaf(is_leaf);
             Legion::Runtime::preregister_task_variant<
-                ReturnType, TaskClass<Kokkos::OpenMP, T, NS...>::task_body
+                ReturnType, TaskClass<Kokkos::OpenMP>::body
             >(registrar, task_name.c_str());
         }
         #endif
@@ -186,7 +184,7 @@ namespace LegionSolvers {
             });
             registrar.set_leaf(is_leaf);
             Legion::Runtime::preregister_task_variant<
-                ReturnType, TaskClass<Kokkos::Cuda, T, NS...>::task_body
+                ReturnType, TaskClass<Kokkos::Cuda>::body
             >(registrar, task_name.c_str());
         }
         #endif
@@ -508,10 +506,18 @@ namespace LegionSolvers {
         preregister_vector_leaf_task<XpayTask        >(verbose);
         preregister_vector_leaf_task<PrintVectorTask >(verbose);
 
-        KokkosTaskRegistrarRT<
-            DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES,
-            IntList<>, IntList<LEGION_SOLVERS_MAX_DIM>
-        >::execute(true, verbose);
+        // KokkosTaskRegistrarRT<
+        //     DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES,
+        //     IntList<>, IntList<LEGION_SOLVERS_MAX_DIM>
+        // >::execute(true, verbose);
+
+        preregister_kokkos_task<float, DotProductTask<float, 1>::KokkosTaskBody>(DotProductTask<float, 1>::task_id, "dot_product_float_1", true, true);
+        preregister_kokkos_task<float, DotProductTask<float, 2>::KokkosTaskBody>(DotProductTask<float, 2>::task_id, "dot_product_float_2", true, true);
+        preregister_kokkos_task<float, DotProductTask<float, 3>::KokkosTaskBody>(DotProductTask<float, 3>::task_id, "dot_product_float_3", true, true);
+
+        preregister_kokkos_task<double, DotProductTask<double, 1>::KokkosTaskBody>(DotProductTask<double, 1>::task_id, "dot_product_double_1", true, true);
+        preregister_kokkos_task<double, DotProductTask<double, 2>::KokkosTaskBody>(DotProductTask<double, 2>::task_id, "dot_product_double_2", true, true);
+        preregister_kokkos_task<double, DotProductTask<double, 3>::KokkosTaskBody>(DotProductTask<double, 3>::task_id, "dot_product_double_3", true, true);
 
         preregister_matrix_leaf_task<COOMatvecTask >(verbose);
         preregister_matrix_leaf_task<COORmatvecTask>(verbose);

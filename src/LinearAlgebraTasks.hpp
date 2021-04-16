@@ -1,7 +1,9 @@
 #ifndef LEGION_SOLVERS_LINEAR_ALGEBRA_TASKS_HPP
 #define LEGION_SOLVERS_LINEAR_ALGEBRA_TASKS_HPP
 
+#include <cstdio>
 #include <string>
+#include <typeinfo>
 
 #include <legion.h>
 
@@ -13,7 +15,7 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct AxpyTask : TaskTD<AXPY_TASK_BLOCK_ID, T, DIM> {
+    struct AxpyTask : TaskTD<AXPY_TASK_BLOCK_ID, AxpyTask, T, DIM> {
 
         static std::string task_name() { return "axpy"; }
 
@@ -51,7 +53,7 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct XpayTask : TaskTD<XPAY_TASK_BLOCK_ID, T, DIM> {
+    struct XpayTask : TaskTD<XPAY_TASK_BLOCK_ID, XpayTask, T, DIM> {
 
         static std::string task_name() { return "xpay"; }
 
@@ -157,64 +159,72 @@ namespace LegionSolvers {
     }; // struct KokkosDotProductFunctor
 
 
-    template <typename KokkosExecutionSpace, typename T, int N>
-    struct DotProductTask : TaskTD<DOT_PRODUCT_TASK_BLOCK_ID, T, N> {
+    template <typename T, int N>
+    struct DotProductTask : TaskTD<DOT_PRODUCT_TASK_BLOCK_ID,
+                                   DotProductTask, T, N> {
 
-        static std::string task_name() { return "dot_product"; }
+        static constexpr const char *task_base_name() { return "dot_product"; }
 
-        static T task_body(const Legion::Task *task,
-                           const std::vector<Legion::PhysicalRegion> &regions,
-                           Legion::Context ctx, Legion::Runtime *rt) {
+        template <typename KokkosExecutionSpace>
+        struct KokkosTaskBody {
 
-            assert(regions.size() == 2);
-            const auto &v = regions[0];
-            const auto &w = regions[1];
+            static T body(const Legion::Task *task,
+                          const std::vector<Legion::PhysicalRegion> &regions,
+                          Legion::Context ctx, Legion::Runtime *rt) {
 
-            assert(task->regions.size() == 2);
-            const auto &v_req = task->regions[0];
-            const auto &w_req = task->regions[1];
+                DotProductTask::announce(typeid(KokkosExecutionSpace), ctx, rt);
 
-            assert(v_req.privilege_fields.size() == 1);
-            const Legion::FieldID v_fid = *v_req.privilege_fields.begin();
+                assert(regions.size() == 2);
+                const auto &v = regions[0];
+                const auto &w = regions[1];
 
-            assert(w_req.privilege_fields.size() == 1);
-            const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
+                assert(task->regions.size() == 2);
+                const auto &v_req = task->regions[0];
+                const auto &w_req = task->regions[1];
 
-            Legion::FieldAccessor<
-                LEGION_READ_ONLY, T, N, Legion::coord_t,
-                Realm::AffineAccessor<T, N, Legion::coord_t>
-            > v_reader{v, v_fid}, w_reader{w, w_fid};
+                assert(v_req.privilege_fields.size() == 1);
+                const Legion::FieldID v_fid = *v_req.privilege_fields.begin();
 
-            KokkosOffsetView<KokkosExecutionSpace, T, N>
-            v_view{v_reader.accessor}, w_view{w_reader.accessor};
+                assert(w_req.privilege_fields.size() == 1);
+                const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
 
-            const Legion::Domain v_domain = rt->get_index_space_domain(
-                ctx, v_req.region.get_index_space()
-            );
+                Legion::FieldAccessor<
+                    LEGION_READ_ONLY, T, N, Legion::coord_t,
+                    Realm::AffineAccessor<T, N, Legion::coord_t>
+                > v_reader{v, v_fid}, w_reader{w, w_fid};
 
-            const Legion::Domain w_domain = rt->get_index_space_domain(
-                ctx, w_req.region.get_index_space()
-            );
+                KokkosOffsetView<KokkosExecutionSpace, T, N>
+                v_view{v_reader.accessor}, w_view{w_reader.accessor};
 
-            assert(v_domain == w_domain);
-
-            T result = static_cast<T>(0);
-            for (Legion::RectInDomainIterator<N> it{v_domain}; it(); ++it) {
-                const Legion::Rect<N> rect = *it;
-                T temp = static_cast<T>(0);
-                Kokkos::parallel_reduce(
-                    KokkosRangePolicyFactory<KokkosExecutionSpace, N>::create(
-                        rect, ctx, rt
-                    ),
-                    KokkosDotProductFunctor<KokkosExecutionSpace, T, N>{
-                        v_view, w_view
-                    },
-                    temp
+                const Legion::Domain v_domain = rt->get_index_space_domain(
+                    ctx, v_req.region.get_index_space()
                 );
-                result += temp;
+
+                const Legion::Domain w_domain = rt->get_index_space_domain(
+                    ctx, w_req.region.get_index_space()
+                );
+
+                assert(v_domain == w_domain);
+
+                T result = static_cast<T>(0);
+                for (Legion::RectInDomainIterator<N> it{v_domain}; it(); ++it) {
+                    const Legion::Rect<N> rect = *it;
+                    T temp = static_cast<T>(0);
+                    Kokkos::parallel_reduce(
+                        KokkosRangeFactory<KokkosExecutionSpace, N>::create(
+                            rect, ctx, rt
+                        ),
+                        KokkosDotProductFunctor<KokkosExecutionSpace, T, N>{
+                            v_view, w_view
+                        },
+                        temp
+                    );
+                    result += temp;
+                }
+                return result;
             }
-            return result;
-        }
+
+        }; // struct KokkosTaskBody
 
     }; // struct DotProductTask
 

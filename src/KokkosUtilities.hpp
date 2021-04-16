@@ -19,7 +19,7 @@ namespace LegionSolvers {
 
 
     template <typename KokkosExecutionSpace, int N>
-    struct KokkosRangePolicyFactory {
+    struct KokkosRangeFactory {
 
         using ResultType = Kokkos::Experimental::MDRangePolicy<
             Kokkos::Experimental::Rank<N>,
@@ -40,11 +40,11 @@ namespace LegionSolvers {
             };
         }
 
-    }; // struct KokkosRangePolicyFactory
+    }; // struct KokkosRangeFactory
 
 
     template <typename KokkosExecutionSpace>
-    struct KokkosRangePolicyFactory<KokkosExecutionSpace, 1> {
+    struct KokkosRangeFactory<KokkosExecutionSpace, 1> {
 
         using ResultType = Kokkos::RangePolicy<KokkosExecutionSpace>;
 
@@ -57,7 +57,7 @@ namespace LegionSolvers {
             };
         }
 
-    }; // struct KokkosRangePolicyFactory<KokkosExecutionSpace, 1>
+    }; // struct KokkosRangeFactory<KokkosExecutionSpace, 1>
 
 
 } // namespace LegionSolvers
