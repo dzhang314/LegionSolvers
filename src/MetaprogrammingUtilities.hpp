@@ -69,6 +69,17 @@ namespace LegionSolvers {
     };
 
 
+    template <typename T, int N>
+    struct NestedPointer {
+        typedef typename NestedPointer<T, N - 1>::type *type;
+    };
+
+    template <typename T>
+    struct NestedPointer<T, 0> {
+        typedef T type;
+    };
+
+
 } // namespace LegionSolvers
 
 
