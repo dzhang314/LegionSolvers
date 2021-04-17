@@ -27,7 +27,10 @@ namespace LegionSolvers {
 
     template <int N, int... NS>
     struct ToString<IntList<N, NS...>> {
-        static std::string value() { return std::string{"_"} + std::to_string(N) + ToString<IntList<NS...>>::value(); }
+        static std::string value() {
+            return std::string{"_"} + std::to_string(N) +
+                   ToString<IntList<NS...>>::value();
+        }
     };
 
 

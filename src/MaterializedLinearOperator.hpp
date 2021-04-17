@@ -8,16 +8,19 @@ namespace LegionSolvers {
 
 
     template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
-    class MaterializedLinearOperator : public LinearOperator {
+    struct MaterializedLinearOperator : public LinearOperator {
 
 
-      public:
-        virtual Legion::IndexPartitionT<KERNEL_DIM> kernel_partition_from_domain_partition(
-            Legion::IndexPartitionT<DOMAIN_DIM> domain_partition, Legion::Context ctx, Legion::Runtime *rt) const = 0;
+        virtual Legion::IndexPartitionT<KERNEL_DIM>
+        kernel_partition_from_domain_partition(
+            Legion::IndexPartitionT<DOMAIN_DIM> domain_partition,
+            Legion::Context ctx, Legion::Runtime *rt) const = 0;
 
 
-        virtual Legion::IndexPartitionT<KERNEL_DIM> kernel_partition_from_range_partition(
-            Legion::IndexPartitionT<RANGE_DIM> range_partition, Legion::Context ctx, Legion::Runtime *rt) const = 0;
+        virtual Legion::IndexPartitionT<KERNEL_DIM>
+        kernel_partition_from_range_partition(
+            Legion::IndexPartitionT<RANGE_DIM> range_partition,
+            Legion::Context ctx, Legion::Runtime *rt) const = 0;
 
 
     }; // class MaterializedLinearOperator
