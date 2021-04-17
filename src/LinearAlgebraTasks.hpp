@@ -8,83 +8,301 @@
 #include <legion.h>
 
 #include "KokkosUtilities.hpp"
+#include "TaskBaseClasses.hpp"
 #include "TaskIDs.hpp"
 
 
 namespace LegionSolvers {
 
 
-    template <typename T, int DIM>
-    struct AxpyTask : TaskTD<AXPY_TASK_BLOCK_ID, AxpyTask, T, DIM> {
+    template <typename KokkosExecutionSpace, typename T, int N>
+    struct KokkosAxpyFunctor {
 
-        static std::string task_name() { return "axpy"; }
+        const KokkosMutableOffsetView<KokkosExecutionSpace, T, N> y_view;
+        const T alpha;
+        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> x_view;
 
-        static void task(const Legion::Task *task,
-                         const std::vector<Legion::PhysicalRegion> &regions,
-                         Legion::Context ctx,
-                         Legion::Runtime *rt) {
+        explicit KokkosAxpyFunctor(
+            Realm::AffineAccessor<T, N, Legion::coord_t> y_accessor,
+            T a,
+            Realm::AffineAccessor<T, N, Legion::coord_t> x_accessor
+        ) : y_view{y_accessor}, alpha{a}, x_view{x_accessor} {}
 
-            assert(regions.size() == 2);
-            const auto &y = regions[0];
-            const auto &x = regions[1];
-
-            assert(task->regions.size() == 2);
-            const auto &y_req = task->regions[0];
-            const auto &x_req = task->regions[1];
-
-            assert(y_req.privilege_fields.size() == 1);
-            const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
-
-            assert(x_req.privilege_fields.size() == 1);
-            const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
-
-            assert(task->futures.size() == 1);
-            const T alpha = task->futures[0].get_result<T>();
-
-            const Legion::FieldAccessor<LEGION_READ_WRITE, T, DIM> y_writer{y, y_fid};
-            const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> x_reader{x, x_fid};
-
-            for (Legion::PointInDomainIterator<DIM> iter{y}; iter(); ++iter) {
-                y_writer[*iter] = alpha * x_reader[*iter] + y_writer[*iter];
-            }
+        KOKKOS_INLINE_FUNCTION void operator()(int a) const {
+            y_view(a) += alpha * x_view(a);
         }
+
+        KOKKOS_INLINE_FUNCTION void operator()(int a, int b) const {
+            y_view(a, b) += alpha * x_view(a, b);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(int a, int b, int c) const {
+            y_view(a, b, c) += alpha * x_view(a, b, c);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d
+        ) const {
+            y_view(a, b, c, d) += alpha * x_view(a, b, c, d);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e
+        ) const {
+            y_view(a, b, c, d, e) += alpha * x_view(a, b, c, d, e);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e, int f
+        ) const {
+            y_view(a, b, c, d, e, f) += alpha * x_view(a, b, c, d, e, f);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e, int f, int g
+        ) const {
+            y_view(a, b, c, d, e, f, g) += alpha * x_view(a, b, c, d, e, f, g);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d,
+            int e, int f, int g, int h
+        ) const {
+            y_view(a, b, c, d, e, f, g, h) +=
+                alpha * x_view(a, b, c, d, e, f, g, h);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e,
+            int f, int g, int h, int i
+        ) const {
+            y_view(a, b, c, d, e, f, g, h, i) +=
+                alpha * x_view(a, b, c, d, e, f, g, h, i);
+        }
+
+    }; // struct KokkosAxpyFunctor
+
+
+    template <typename T, int N>
+    struct AxpyTask : TaskTD<AXPY_TASK_BLOCK_ID, AxpyTask, T, N> {
+
+        static constexpr const char *task_base_name() { return "axpy"; }
+
+        static constexpr bool is_leaf = true;
+
+        using ReturnType = void;
+
+        template <typename KokkosExecutionSpace>
+        struct KokkosTaskBody {
+
+            static void body(const Legion::Task *task,
+                             const std::vector<Legion::PhysicalRegion> &regions,
+                             Legion::Context ctx, Legion::Runtime *rt) {
+
+                AxpyTask::announce(typeid(KokkosExecutionSpace), ctx, rt);
+
+                assert(regions.size() == 2);
+                const auto &y = regions[0];
+                const auto &x = regions[1];
+
+                assert(task->regions.size() == 2);
+                const auto &y_req = task->regions[0];
+                const auto &x_req = task->regions[1];
+
+                assert(y_req.privilege_fields.size() == 1);
+                const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
+
+                assert(x_req.privilege_fields.size() == 1);
+                const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+
+                assert(task->futures.size() == 1);
+                const T alpha = task->futures[0].get_result<T>();
+
+                Legion::FieldAccessor<
+                    LEGION_READ_WRITE, T, N, Legion::coord_t,
+                    Realm::AffineAccessor<T, N, Legion::coord_t>
+                > y_writer{y, y_fid};
+
+                Legion::FieldAccessor<
+                    LEGION_READ_ONLY, T, N, Legion::coord_t,
+                    Realm::AffineAccessor<T, N, Legion::coord_t>
+                > x_reader{x, x_fid};
+
+                const Legion::Domain y_domain = rt->get_index_space_domain(
+                    ctx, y_req.region.get_index_space()
+                );
+
+                const Legion::Domain x_domain = rt->get_index_space_domain(
+                    ctx, x_req.region.get_index_space()
+                );
+
+                assert(y_domain == x_domain);
+
+                for (Legion::RectInDomainIterator<N> it{y_domain}; it(); ++it) {
+                    const Legion::Rect<N> rect = *it;
+                    Kokkos::parallel_for(
+                        KokkosRangeFactory<KokkosExecutionSpace, N>::create(
+                            rect, ctx, rt
+                        ),
+                        KokkosAxpyFunctor<KokkosExecutionSpace, T, N>{
+                            y_writer.accessor, alpha, x_reader.accessor
+                        }
+                    );
+                }
+            }
+
+        }; // struct KokkosTaskBody
 
     }; // struct AxpyTask
 
 
-    template <typename T, int DIM>
-    struct XpayTask : TaskTD<XPAY_TASK_BLOCK_ID, XpayTask, T, DIM> {
+    template <typename KokkosExecutionSpace, typename T, int N>
+    struct KokkosXpayFunctor {
 
-        static std::string task_name() { return "xpay"; }
+        const KokkosMutableOffsetView<KokkosExecutionSpace, T, N> y_view;
+        const T alpha;
+        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> x_view;
 
-        static void task(const Legion::Task *task,
-                         const std::vector<Legion::PhysicalRegion> &regions,
-                         Legion::Context ctx,
-                         Legion::Runtime *rt) {
+        explicit KokkosXpayFunctor(
+            Realm::AffineAccessor<T, N, Legion::coord_t> y_accessor,
+            T a,
+            Realm::AffineAccessor<T, N, Legion::coord_t> x_accessor
+        ) : y_view{y_accessor}, alpha{a}, x_view{x_accessor} {}
 
-            assert(regions.size() == 2);
-            const auto &y = regions[0];
-            const auto &x = regions[1];
-
-            assert(task->regions.size() == 2);
-            const auto &y_req = task->regions[0];
-            const auto &x_req = task->regions[1];
-
-            assert(y_req.privilege_fields.size() == 1);
-            const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
-
-            assert(x_req.privilege_fields.size() == 1);
-            const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
-
-            assert(task->futures.size() == 1);
-            const T alpha = task->futures[0].get_result<T>();
-
-            const Legion::FieldAccessor<LEGION_READ_WRITE, T, DIM> y_writer{y, y_fid};
-            const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> x_reader{x, x_fid};
-            for (Legion::PointInDomainIterator<DIM> iter{y}; iter(); ++iter) {
-                y_writer[*iter] = x_reader[*iter] + alpha * y_writer[*iter];
-            }
+        KOKKOS_INLINE_FUNCTION void operator()(int a) const {
+            y_view(a) = x_view(a) + alpha * y_view(a);
         }
+
+        KOKKOS_INLINE_FUNCTION void operator()(int a, int b) const {
+            y_view(a, b) = x_view(a, b) + alpha * y_view(a, b);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(int a, int b, int c) const {
+            y_view(a, b, c) = x_view(a, b, c) + alpha * y_view(a, b, c);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d
+        ) const {
+            y_view(a, b, c, d) =
+                x_view(a, b, c, d) +
+                alpha * y_view(a, b, c, d);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e
+        ) const {
+            y_view(a, b, c, d, e) =
+                x_view(a, b, c, d, e) +
+                alpha * y_view(a, b, c, d, e);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e, int f
+        ) const {
+            y_view(a, b, c, d, e, f) =
+                x_view(a, b, c, d, e, f) +
+                alpha * y_view(a, b, c, d, e, f);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e, int f, int g
+        ) const {
+            y_view(a, b, c, d, e, f, g) =
+                x_view(a, b, c, d, e, f, g) +
+                alpha * y_view(a, b, c, d, e, f, g);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d,
+            int e, int f, int g, int h
+        ) const {
+            y_view(a, b, c, d, e, f, g, h) =
+                x_view(a, b, c, d, e, f, g, h) +
+                alpha * y_view(a, b, c, d, e, f, g, h);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e,
+            int f, int g, int h, int i
+        ) const {
+            y_view(a, b, c, d, e, f, g, h, i) =
+                x_view(a, b, c, d, e, f, g, h, i) +
+                alpha * y_view(a, b, c, d, e, f, g, h, i);
+        }
+
+    }; // struct KokkosXpayFunctor
+
+
+    template <typename T, int N>
+    struct XpayTask : TaskTD<XPAY_TASK_BLOCK_ID, XpayTask, T, N> {
+
+        static constexpr const char *task_base_name() { return "xpay"; }
+
+        static constexpr bool is_leaf = true;
+
+        using ReturnType = void;
+
+        template <typename KokkosExecutionSpace>
+        struct KokkosTaskBody {
+
+            static void body(const Legion::Task *task,
+                             const std::vector<Legion::PhysicalRegion> &regions,
+                             Legion::Context ctx, Legion::Runtime *rt) {
+
+                XpayTask::announce(typeid(KokkosExecutionSpace), ctx, rt);
+
+                assert(regions.size() == 2);
+                const auto &y = regions[0];
+                const auto &x = regions[1];
+
+                assert(task->regions.size() == 2);
+                const auto &y_req = task->regions[0];
+                const auto &x_req = task->regions[1];
+
+                assert(y_req.privilege_fields.size() == 1);
+                const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
+
+                assert(x_req.privilege_fields.size() == 1);
+                const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+
+                assert(task->futures.size() == 1);
+                const T alpha = task->futures[0].get_result<T>();
+
+                Legion::FieldAccessor<
+                    LEGION_READ_WRITE, T, N, Legion::coord_t,
+                    Realm::AffineAccessor<T, N, Legion::coord_t>
+                > y_writer{y, y_fid};
+
+                Legion::FieldAccessor<
+                    LEGION_READ_ONLY, T, N, Legion::coord_t,
+                    Realm::AffineAccessor<T, N, Legion::coord_t>
+                > x_reader{x, x_fid};
+
+                const Legion::Domain y_domain = rt->get_index_space_domain(
+                    ctx, y_req.region.get_index_space()
+                );
+
+                const Legion::Domain x_domain = rt->get_index_space_domain(
+                    ctx, x_req.region.get_index_space()
+                );
+
+                assert(y_domain == x_domain);
+
+                for (Legion::RectInDomainIterator<N> it{y_domain}; it(); ++it) {
+                    const Legion::Rect<N> rect = *it;
+                    Kokkos::parallel_for(
+                        KokkosRangeFactory<KokkosExecutionSpace, N>::create(
+                            rect, ctx, rt
+                        ),
+                        KokkosXpayFunctor<KokkosExecutionSpace, T, N>{
+                            y_writer.accessor, alpha, x_reader.accessor
+                        }
+                    );
+                }
+            }
+
+        }; // struct KokkosTaskBody
 
     }; // struct XpayTask
 
@@ -94,13 +312,13 @@ namespace LegionSolvers {
 
         using value_type = T;
 
-        KokkosOffsetView<KokkosExecutionSpace, T, N> v_view;
-        KokkosOffsetView<KokkosExecutionSpace, T, N> w_view;
+        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> v_view;
+        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> w_view;
 
         explicit KokkosDotProductFunctor(
-            KokkosOffsetView<KokkosExecutionSpace, T, N> v,
-            KokkosOffsetView<KokkosExecutionSpace, T, N> w
-        ) : v_view{v}, w_view{w} {}
+            Realm::AffineAccessor<T, N, Legion::coord_t> v_accessor,
+            Realm::AffineAccessor<T, N, Legion::coord_t> w_accessor
+        ) : v_view{v_accessor}, w_view{w_accessor} {}
 
         KOKKOS_INLINE_FUNCTION void operator()(int a, T &acc) const {
             acc += v_view(a) * w_view(a);
@@ -165,6 +383,10 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name() { return "dot_product"; }
 
+        static constexpr bool is_leaf = true;
+
+        using ReturnType = T;
+
         template <typename KokkosExecutionSpace>
         struct KokkosTaskBody {
 
@@ -193,9 +415,6 @@ namespace LegionSolvers {
                     Realm::AffineAccessor<T, N, Legion::coord_t>
                 > v_reader{v, v_fid}, w_reader{w, w_fid};
 
-                KokkosOffsetView<KokkosExecutionSpace, T, N>
-                v_view{v_reader.accessor}, w_view{w_reader.accessor};
-
                 const Legion::Domain v_domain = rt->get_index_space_domain(
                     ctx, v_req.region.get_index_space()
                 );
@@ -215,7 +434,7 @@ namespace LegionSolvers {
                             rect, ctx, rt
                         ),
                         KokkosDotProductFunctor<KokkosExecutionSpace, T, N>{
-                            v_view, w_view
+                            v_reader.accessor, w_reader.accessor
                         },
                         temp
                     );

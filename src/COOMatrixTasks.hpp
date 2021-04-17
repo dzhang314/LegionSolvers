@@ -5,6 +5,7 @@
 
 #include <legion.h>
 
+#include "TaskBaseClasses.hpp"
 #include "TaskIDs.hpp"
 
 

@@ -87,7 +87,7 @@ namespace LegionSolvers {
         #ifdef KOKKOS_ENABLE_OPENMP
         {
             if (verbose) {
-                std::cout << "[LegionSolvers] Registering Kokkos OpenMP task "
+                std::cout << "[LegionSolvers] Registering Kokkos OMP task "
                           << task_name << " with ID "
                           << task_id << "." << std::endl;
             }
@@ -120,71 +120,6 @@ namespace LegionSolvers {
             registrar.set_leaf(is_leaf);
             Legion::Runtime::preregister_task_variant<
                 PORTABLE_KOKKOS_TASK<Kokkos::Cuda>::task_body
-            >(registrar, task_name.c_str());
-        }
-        #endif
-    }
-
-
-    template <typename ReturnType, template <typename> typename TaskClass>
-    void preregister_kokkos_task(Legion::TaskID task_id,
-                                 const std::string &task_name,
-                                 bool is_leaf, bool verbose) {
-
-        #ifdef KOKKOS_ENABLE_SERIAL
-        {
-            if (verbose) {
-                std::cout << "[LegionSolvers] Registering Kokkos CPU task "
-                          << task_name << " with ID "
-                          << task_id << "." << std::endl;
-            }
-            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
-            registrar.add_constraint(Legion::ProcessorConstraint{
-                Legion::Processor::LOC_PROC
-            });
-            registrar.set_leaf(is_leaf);
-            Legion::Runtime::preregister_task_variant<
-                ReturnType, TaskClass<Kokkos::Serial>::body
-            >(registrar, task_name.c_str());
-        }
-        #endif
-
-        #ifdef KOKKOS_ENABLE_OPENMP
-        {
-            if (verbose) {
-                std::cout << "[LegionSolvers] Registering Kokkos OpenMP task "
-                          << task_name << " with ID "
-                          << task_id << "." << std::endl;
-            }
-            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
-            registrar.add_constraint(Legion::ProcessorConstraint{
-                #ifdef REALM_USE_OPENMP
-                    Legion::Processor::OMP_PROC
-                #else
-                    Legion::Processor::LOC_PROC
-                #endif
-            });
-            registrar.set_leaf(is_leaf);
-            Legion::Runtime::preregister_task_variant<
-                ReturnType, TaskClass<Kokkos::OpenMP>::body
-            >(registrar, task_name.c_str());
-        }
-        #endif
-
-        #if defined(KOKKOS_ENABLE_CUDA) and defined(REALM_USE_CUDA)
-        {
-            if (verbose) {
-                std::cout << "[LegionSolvers] Registering Kokkos GPU task "
-                          << task_name << " with ID "
-                          << task_id << "." << std::endl;
-            }
-            Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
-            registrar.add_constraint(Legion::ProcessorConstraint{
-                Legion::Processor::TOC_PROC
-            });
-            registrar.set_leaf(is_leaf);
-            Legion::Runtime::preregister_task_variant<
-                ReturnType, TaskClass<Kokkos::Cuda>::body
             >(registrar, task_name.c_str());
         }
         #endif
@@ -502,22 +437,28 @@ namespace LegionSolvers {
         preregister_vector_leaf_task<ConstantFillTask>(verbose);
         preregister_vector_leaf_task<RandomFillTask  >(verbose);
         preregister_vector_leaf_task<CopyTask        >(verbose);
-        preregister_vector_leaf_task<AxpyTask        >(verbose);
-        preregister_vector_leaf_task<XpayTask        >(verbose);
         preregister_vector_leaf_task<PrintVectorTask >(verbose);
 
-        // KokkosTaskRegistrarRT<
-        //     DotProductTask, LEGION_SOLVERS_SUPPORTED_TYPES,
-        //     IntList<>, IntList<LEGION_SOLVERS_MAX_DIM>
-        // >::execute(true, verbose);
+        AxpyTask<float, 1>::preregister(true);
+        AxpyTask<float, 2>::preregister(true);
+        AxpyTask<float, 3>::preregister(true);
+        AxpyTask<double, 1>::preregister(true);
+        AxpyTask<double, 2>::preregister(true);
+        AxpyTask<double, 3>::preregister(true);
 
-        preregister_kokkos_task<float, DotProductTask<float, 1>::KokkosTaskBody>(DotProductTask<float, 1>::task_id, "dot_product_float_1", true, true);
-        preregister_kokkos_task<float, DotProductTask<float, 2>::KokkosTaskBody>(DotProductTask<float, 2>::task_id, "dot_product_float_2", true, true);
-        preregister_kokkos_task<float, DotProductTask<float, 3>::KokkosTaskBody>(DotProductTask<float, 3>::task_id, "dot_product_float_3", true, true);
+        XpayTask<float, 1>::preregister(true);
+        XpayTask<float, 2>::preregister(true);
+        XpayTask<float, 3>::preregister(true);
+        XpayTask<double, 1>::preregister(true);
+        XpayTask<double, 2>::preregister(true);
+        XpayTask<double, 3>::preregister(true);
 
-        preregister_kokkos_task<double, DotProductTask<double, 1>::KokkosTaskBody>(DotProductTask<double, 1>::task_id, "dot_product_double_1", true, true);
-        preregister_kokkos_task<double, DotProductTask<double, 2>::KokkosTaskBody>(DotProductTask<double, 2>::task_id, "dot_product_double_2", true, true);
-        preregister_kokkos_task<double, DotProductTask<double, 3>::KokkosTaskBody>(DotProductTask<double, 3>::task_id, "dot_product_double_3", true, true);
+        DotProductTask<float, 1>::preregister(true);
+        DotProductTask<float, 2>::preregister(true);
+        DotProductTask<float, 3>::preregister(true);
+        DotProductTask<double, 1>::preregister(true);
+        DotProductTask<double, 2>::preregister(true);
+        DotProductTask<double, 3>::preregister(true);
 
         preregister_matrix_leaf_task<COOMatvecTask >(verbose);
         preregister_matrix_leaf_task<COORmatvecTask>(verbose);

@@ -11,8 +11,16 @@ namespace LegionSolvers {
 
 
     template <typename KokkosExecutionSpace, typename T, int N>
-    using KokkosOffsetView = Kokkos::Experimental::OffsetView<
+    using KokkosConstOffsetView = Kokkos::Experimental::OffsetView<
         typename NestedPointer<const T, N>::type,
+        Kokkos::LayoutStride,
+        typename KokkosExecutionSpace::memory_space
+    >;
+
+
+    template <typename KokkosExecutionSpace, typename T, int N>
+    using KokkosMutableOffsetView = Kokkos::Experimental::OffsetView<
+        typename NestedPointer<T, N>::type,
         Kokkos::LayoutStride,
         typename KokkosExecutionSpace::memory_space
     >;
