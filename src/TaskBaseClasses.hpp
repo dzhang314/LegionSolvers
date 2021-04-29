@@ -23,6 +23,7 @@ namespace LegionSolvers {
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<long double>() { return "longdouble"    ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__float128 >() { return "float128"      ; }
 
+
     template <typename T>
     constexpr int LEGION_SOLVERS_TYPE_INDEX = ListIndex<LEGION_SOLVERS_SUPPORTED_TYPES, T>::value;
     constexpr int LEGION_SOLVERS_NUM_TYPES = ListLength<LEGION_SOLVERS_SUPPORTED_TYPES>::value;
@@ -30,40 +31,6 @@ namespace LegionSolvers {
     constexpr int LEGION_SOLVERS_MAX_DIM_2 = LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_MAX_DIM_1;
     constexpr int LEGION_SOLVERS_MAX_DIM_3 = LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_MAX_DIM_2;
     constexpr int LEGION_SOLVERS_TASK_BLOCK_SIZE = LEGION_SOLVERS_NUM_TYPES * LEGION_SOLVERS_MAX_DIM_3;
-
-
-    template <Legion::TaskID BLOCK_ID, typename T>
-    struct TaskT {
-
-        static constexpr Legion::TaskID task_id =
-            LEGION_SOLVERS_TASK_ID_ORIGIN +
-            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-            LEGION_SOLVERS_TYPE_INDEX<T>;
-
-    }; // struct TaskT
-
-
-    template <Legion::TaskID BLOCK_ID, int DIM>
-    struct TaskD {
-
-        static constexpr Legion::TaskID task_id =
-            LEGION_SOLVERS_TASK_ID_ORIGIN +
-            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-            (DIM - 1);
-
-    }; // struct TaskD
-
-
-    template <Legion::TaskID BLOCK_ID>
-    struct TaskD<BLOCK_ID, 0> {
-
-        static constexpr Legion::TaskID task_id(int DIM) {
-            return LEGION_SOLVERS_TASK_ID_ORIGIN +
-                   LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-                   (DIM - 1);
-        }
-
-    }; // struct TaskD
 
 
     template <typename ReturnType, template <typename> typename TaskClass>
@@ -201,33 +168,98 @@ namespace LegionSolvers {
     }; // struct TaskTD
 
 
-    template <Legion::TaskID BLOCK_ID, typename T, int DIM1, int DIM2, int DIM3>
+    template <Legion::TaskID BLOCK_ID,
+              template <typename, int, int, int> typename TaskClass,
+              typename T, int N1, int N2, int N3>
     struct TaskTDDD {
 
         static constexpr Legion::TaskID task_id =
             LEGION_SOLVERS_TASK_ID_ORIGIN +
             LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-            LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_TYPES * (DIM1 - 1) +
-            LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_TYPES * (DIM2 - 1) +
-            LEGION_SOLVERS_NUM_TYPES * (DIM3 - 1) +
+            LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_TYPES * (N1 - 1) +
+            LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_TYPES * (N2 - 1) +
+            LEGION_SOLVERS_NUM_TYPES * (N3 - 1) +
             LEGION_SOLVERS_TYPE_INDEX<T>;
+
+        static std::string task_name() {
+            return std::string{TaskClass<T, N1, N2, N3>::task_base_name()} +
+                   std::string{"_"} + LEGION_SOLVERS_TYPE_NAME<T>() +
+                   std::string{"_"} + std::to_string(N1) +
+                   std::string{"_"} + std::to_string(N2) +
+                   std::string{"_"} + std::to_string(N3);
+        }
+
+        static void preregister(bool verbose) {
+            preregister_kokkos_task<
+                typename TaskClass<T, N1, N2, N3>::ReturnType,
+                TaskClass<T, N1, N2, N3>::template KokkosTaskBody
+            >(task_id, task_name(), TaskClass<T, N1, N2, N3>::is_leaf, verbose);
+        }
+
+        static void announce(const std::type_info &kokkos_execution_space_id,
+                             Legion::Context ctx, Legion::Runtime *rt) {
+            const Legion::Processor proc = rt->get_executing_processor(ctx);
+            std::cout << "[LegionSolvers] Running task " << task_name()
+                      << " on processor " << proc
+                      << " (kind " << proc.kind()
+                      << ", " << kokkos_execution_space_id.name()
+                      << ")" << std::endl;
+        }
+
+    }; // struct TaskTDDD
+
+
+    template <Legion::TaskID BLOCK_ID,
+              template <typename, int, int, int> typename TaskClass,
+              typename T>
+    struct TaskTDDD<BLOCK_ID, TaskClass, T, 0, 0, 0> {
+
+        static constexpr Legion::TaskID task_id(int N1, int N2, int N3) {
+            return (
+                LEGION_SOLVERS_TASK_ID_ORIGIN +
+                LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+                LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_TYPES * (N1 - 1) +
+                LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_TYPES * (N2 - 1) +
+                LEGION_SOLVERS_NUM_TYPES * (N3 - 1) +
+                LEGION_SOLVERS_TYPE_INDEX<T>
+            );
+        }
 
     }; // struct TaskTDDD
 
 
     template <Legion::TaskID BLOCK_ID, typename T>
-    struct TaskTDDD<BLOCK_ID, T, 0, 0, 0> {
+    struct TaskT {
 
-        static constexpr Legion::TaskID task_id(int DIM1, int DIM2, int DIM3) {
+        static constexpr Legion::TaskID task_id =
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            LEGION_SOLVERS_TYPE_INDEX<T>;
+
+    }; // struct TaskT
+
+
+    template <Legion::TaskID BLOCK_ID, int DIM>
+    struct TaskD {
+
+        static constexpr Legion::TaskID task_id =
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            (DIM - 1);
+
+    }; // struct TaskD
+
+
+    template <Legion::TaskID BLOCK_ID>
+    struct TaskD<BLOCK_ID, 0> {
+
+        static constexpr Legion::TaskID task_id(int DIM) {
             return LEGION_SOLVERS_TASK_ID_ORIGIN +
                    LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-                   LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_TYPES * (DIM1 - 1) +
-                   LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_TYPES * (DIM2 - 1) +
-                   LEGION_SOLVERS_NUM_TYPES * (DIM3 - 1) +
-                   LEGION_SOLVERS_TYPE_INDEX<T>;
+                   (DIM - 1);
         }
 
-    }; // struct TaskTDDD
+    }; // struct TaskD
 
 
 } // namespace LegionSolvers

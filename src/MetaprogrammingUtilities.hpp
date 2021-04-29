@@ -1,9 +1,7 @@
 #ifndef LEGION_SOLVERS_METAPROGRAMMING_UTILITIES_HPP
 #define LEGION_SOLVERS_METAPROGRAMMING_UTILITIES_HPP
 
-
 #include <string>
-#include <type_traits>
 
 
 namespace LegionSolvers {

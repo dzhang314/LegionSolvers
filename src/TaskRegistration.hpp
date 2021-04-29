@@ -377,9 +377,63 @@ namespace LegionSolvers {
         DotProductTask<double, 2>::preregister(verbose);
         DotProductTask<double, 3>::preregister(verbose);
 
-        preregister_matrix_leaf_task<COOMatvecTask >(verbose);
-        preregister_matrix_leaf_task<COORmatvecTask>(verbose);
-        preregister_matrix_leaf_task<COOPrintTask  >(verbose);
+        COOMatvecTask<float, 1, 1, 1>::preregister(verbose);
+        COOMatvecTask<float, 1, 1, 2>::preregister(verbose);
+        COOMatvecTask<float, 1, 1, 3>::preregister(verbose);
+        COOMatvecTask<float, 1, 2, 1>::preregister(verbose);
+        COOMatvecTask<float, 1, 2, 2>::preregister(verbose);
+        COOMatvecTask<float, 1, 2, 3>::preregister(verbose);
+        COOMatvecTask<float, 1, 3, 1>::preregister(verbose);
+        COOMatvecTask<float, 1, 3, 2>::preregister(verbose);
+        COOMatvecTask<float, 1, 3, 3>::preregister(verbose);
+        COOMatvecTask<float, 2, 1, 1>::preregister(verbose);
+        COOMatvecTask<float, 2, 1, 2>::preregister(verbose);
+        COOMatvecTask<float, 2, 1, 3>::preregister(verbose);
+        COOMatvecTask<float, 2, 2, 1>::preregister(verbose);
+        COOMatvecTask<float, 2, 2, 2>::preregister(verbose);
+        COOMatvecTask<float, 2, 2, 3>::preregister(verbose);
+        COOMatvecTask<float, 2, 3, 1>::preregister(verbose);
+        COOMatvecTask<float, 2, 3, 2>::preregister(verbose);
+        COOMatvecTask<float, 2, 3, 3>::preregister(verbose);
+        COOMatvecTask<float, 3, 1, 1>::preregister(verbose);
+        COOMatvecTask<float, 3, 1, 2>::preregister(verbose);
+        COOMatvecTask<float, 3, 1, 3>::preregister(verbose);
+        COOMatvecTask<float, 3, 2, 1>::preregister(verbose);
+        COOMatvecTask<float, 3, 2, 2>::preregister(verbose);
+        COOMatvecTask<float, 3, 2, 3>::preregister(verbose);
+        COOMatvecTask<float, 3, 3, 1>::preregister(verbose);
+        COOMatvecTask<float, 3, 3, 2>::preregister(verbose);
+        COOMatvecTask<float, 3, 3, 3>::preregister(verbose);
+        COOMatvecTask<double, 1, 1, 1>::preregister(verbose);
+        COOMatvecTask<double, 1, 1, 2>::preregister(verbose);
+        COOMatvecTask<double, 1, 1, 3>::preregister(verbose);
+        COOMatvecTask<double, 1, 2, 1>::preregister(verbose);
+        COOMatvecTask<double, 1, 2, 2>::preregister(verbose);
+        COOMatvecTask<double, 1, 2, 3>::preregister(verbose);
+        COOMatvecTask<double, 1, 3, 1>::preregister(verbose);
+        COOMatvecTask<double, 1, 3, 2>::preregister(verbose);
+        COOMatvecTask<double, 1, 3, 3>::preregister(verbose);
+        COOMatvecTask<double, 2, 1, 1>::preregister(verbose);
+        COOMatvecTask<double, 2, 1, 2>::preregister(verbose);
+        COOMatvecTask<double, 2, 1, 3>::preregister(verbose);
+        COOMatvecTask<double, 2, 2, 1>::preregister(verbose);
+        COOMatvecTask<double, 2, 2, 2>::preregister(verbose);
+        COOMatvecTask<double, 2, 2, 3>::preregister(verbose);
+        COOMatvecTask<double, 2, 3, 1>::preregister(verbose);
+        COOMatvecTask<double, 2, 3, 2>::preregister(verbose);
+        COOMatvecTask<double, 2, 3, 3>::preregister(verbose);
+        COOMatvecTask<double, 3, 1, 1>::preregister(verbose);
+        COOMatvecTask<double, 3, 1, 2>::preregister(verbose);
+        COOMatvecTask<double, 3, 1, 3>::preregister(verbose);
+        COOMatvecTask<double, 3, 2, 1>::preregister(verbose);
+        COOMatvecTask<double, 3, 2, 2>::preregister(verbose);
+        COOMatvecTask<double, 3, 2, 3>::preregister(verbose);
+        COOMatvecTask<double, 3, 3, 1>::preregister(verbose);
+        COOMatvecTask<double, 3, 3, 2>::preregister(verbose);
+        COOMatvecTask<double, 3, 3, 3>::preregister(verbose);
+
+        // preregister_matrix_leaf_task<COORmatvecTask>(verbose);
+        // preregister_matrix_leaf_task<COOPrintTask  >(verbose);
 
         CartesianProductRegistrar<
             FillCOONegativeLaplacian1DTask,

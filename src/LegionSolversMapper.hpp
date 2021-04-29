@@ -112,9 +112,12 @@ namespace LegionSolvers {
                 std::set<Legion::Processor> all_procs{};
                 Legion::Machine::get_machine().get_all_processors(all_procs);
                 Legion::Processor cpus[num_address_spaces];
+                Legion::Processor gpus[num_address_spaces];
                 for (const Legion::Processor &proc : all_procs) {
                     if (proc.kind() == Legion::Processor::LOC_PROC) {
                         cpus[proc.address_space()] = proc;
+                    } else if (proc.kind() == Legion::Processor::TOC_PROC) {
+                        gpus[proc.address_space()] = proc;
                     }
                 }
 

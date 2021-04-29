@@ -1,8 +1,6 @@
 #ifndef LEGION_SOLVERS_LINEAR_ALGEBRA_TASKS_HPP
 #define LEGION_SOLVERS_LINEAR_ALGEBRA_TASKS_HPP
 
-#include <cstdio>
-#include <string>
 #include <typeinfo>
 
 #include <legion.h>
