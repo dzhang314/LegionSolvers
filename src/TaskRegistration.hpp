@@ -226,17 +226,17 @@ namespace LegionSolvers {
     };
 
 
-    template <template <typename, int...> typename TaskClass, typename... TS>
+    template <template <typename> typename TaskClass, typename... TS>
     struct ScalarTaskRegistrar;
 
-    // Base case: all dimensions instantiated, empty type list.
-    template <template <typename, int...> typename TaskClass>
+    // Base case: empty type list.
+    template <template <typename> typename TaskClass>
     struct ScalarTaskRegistrar<TaskClass, TypeList<>> {
         static void execute(bool is_leaf, bool verbose) {}
     };
 
-    // Recursive case: all dimensions instantiated, non-empty type list.
-    template <template <typename, int...> typename TaskClass,
+    // Recursive case: non-empty type list.
+    template <template <typename> typename TaskClass,
               typename T, typename... TS>
     struct ScalarTaskRegistrar<TaskClass, TypeList<T, TS...>> {
         static void execute(bool is_leaf, bool verbose) {
@@ -251,87 +251,6 @@ namespace LegionSolvers {
             // ...then recurse on remaining types.
             ScalarTaskRegistrar<
                 TaskClass, TypeList<TS...>
-            >::execute(is_leaf, verbose);
-        }
-    };
-
-
-    /*
-     * KokkosTaskRegistrarRT is just like CartesianProductRegistrar
-     * except it registers Kokkos tasks that return T, rather than void.
-     */
-    template <template <typename, typename, int...> typename TaskClass,
-              typename... TS>
-    struct KokkosTaskRegistrarRT;
-
-    // Base case: all dimensions instantiated, single type T.
-    template <template <typename, typename, int...> typename TaskClass,
-              typename T, int... MS>
-    struct KokkosTaskRegistrarRT<TaskClass, T,
-                                 IntList<MS...>, IntList<>> {
-        static void execute(bool is_leaf, bool verbose) {
-            preregister_kokkos_task<T, TaskClass, T, MS...>(
-                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_id,
-                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_name() +
-                    std::string{"_"} +
-                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
-                    ToString<IntList<MS...>>::value(),
-                is_leaf, verbose
-            );
-        }
-    };
-
-    // Base case: all dimensions instantiated, empty type list.
-    template <template <typename, typename, int...> typename TaskClass,
-              int... MS>
-    struct KokkosTaskRegistrarRT<TaskClass, TypeList<>,
-                                 IntList<MS...>, IntList<>> {
-        static void execute(bool is_leaf, bool verbose) {}
-    };
-
-    // Recursive case: all dimensions instantiated, non-empty type list.
-    template <template <typename, typename, int...> typename TaskClass,
-              typename T, typename... TS, int... MS>
-    struct KokkosTaskRegistrarRT<TaskClass, TypeList<T, TS...>,
-                                 IntList<MS...>, IntList<>> {
-        static void execute(bool is_leaf, bool verbose) {
-            // Register first type...
-            preregister_kokkos_task<T, TaskClass, T, MS...>(
-                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_id,
-                TaskClass<Kokkos::DefaultExecutionSpace, T, MS...>::task_name() +
-                    std::string{"_"} +
-                    std::string{LEGION_SOLVERS_TYPE_NAME<T>()} +
-                    ToString<IntList<MS...>>::value(),
-                is_leaf, verbose
-            );
-            // ...then recurse on remaining types.
-            KokkosTaskRegistrarRT<
-                TaskClass, TypeList<TS...>, IntList<MS...>, IntList<>
-            >::execute(is_leaf, verbose);
-        }
-    };
-
-    // Base case: instantiating dimensions, first dimension exhausted.
-    template <template <typename, typename, int...> typename TaskClass,
-              typename T, int... MS, int... NS>
-    struct KokkosTaskRegistrarRT<TaskClass, T,
-                                 IntList<MS...>, IntList<0, NS...>> {
-        static void execute(bool is_leaf, bool verbose) {}
-    };
-
-    // Recursive case: instantiating dimensions, recursing on first dimension.
-    template <template <typename, typename, int...> typename TaskClass,
-              typename T, int... MS, int N, int... NS>
-    struct KokkosTaskRegistrarRT<TaskClass, T,
-                                 IntList<MS...>, IntList<N, NS...>> {
-        static void execute(bool is_leaf, bool verbose) {
-            // Recurse on smaller values of first dimension...
-            KokkosTaskRegistrarRT<
-                TaskClass, T, IntList<MS...>, IntList<N - 1, NS...>
-            >::execute(is_leaf, verbose);
-            // ...then instantiate current value of first dimension.
-            KokkosTaskRegistrarRT<
-                TaskClass, T, IntList<MS..., N>, IntList<NS...>
             >::execute(is_leaf, verbose);
         }
     };
@@ -437,26 +356,26 @@ namespace LegionSolvers {
         preregister_vector_leaf_task<RandomFillTask  >(verbose);
         preregister_vector_leaf_task<PrintVectorTask >(verbose);
 
-        AxpyTask<float, 1>::preregister(true);
-        AxpyTask<float, 2>::preregister(true);
-        AxpyTask<float, 3>::preregister(true);
-        AxpyTask<double, 1>::preregister(true);
-        AxpyTask<double, 2>::preregister(true);
-        AxpyTask<double, 3>::preregister(true);
+        AxpyTask<float, 1>::preregister(verbose);
+        AxpyTask<float, 2>::preregister(verbose);
+        AxpyTask<float, 3>::preregister(verbose);
+        AxpyTask<double, 1>::preregister(verbose);
+        AxpyTask<double, 2>::preregister(verbose);
+        AxpyTask<double, 3>::preregister(verbose);
 
-        XpayTask<float, 1>::preregister(true);
-        XpayTask<float, 2>::preregister(true);
-        XpayTask<float, 3>::preregister(true);
-        XpayTask<double, 1>::preregister(true);
-        XpayTask<double, 2>::preregister(true);
-        XpayTask<double, 3>::preregister(true);
+        XpayTask<float, 1>::preregister(verbose);
+        XpayTask<float, 2>::preregister(verbose);
+        XpayTask<float, 3>::preregister(verbose);
+        XpayTask<double, 1>::preregister(verbose);
+        XpayTask<double, 2>::preregister(verbose);
+        XpayTask<double, 3>::preregister(verbose);
 
-        DotProductTask<float, 1>::preregister(true);
-        DotProductTask<float, 2>::preregister(true);
-        DotProductTask<float, 3>::preregister(true);
-        DotProductTask<double, 1>::preregister(true);
-        DotProductTask<double, 2>::preregister(true);
-        DotProductTask<double, 3>::preregister(true);
+        DotProductTask<float, 1>::preregister(verbose);
+        DotProductTask<float, 2>::preregister(verbose);
+        DotProductTask<float, 3>::preregister(verbose);
+        DotProductTask<double, 1>::preregister(verbose);
+        DotProductTask<double, 2>::preregister(verbose);
+        DotProductTask<double, 3>::preregister(verbose);
 
         preregister_matrix_leaf_task<COOMatvecTask >(verbose);
         preregister_matrix_leaf_task<COORmatvecTask>(verbose);
@@ -473,16 +392,21 @@ namespace LegionSolvers {
         >::execute(true, verbose);
 
         Legion::Runtime::add_registration_callback(
-            mapper_registration_callback);
+            mapper_registration_callback
+        );
 
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_I, new ProjectionOneLevel{0});
+            PFID_IJ_TO_I, new ProjectionOneLevel{0}
+        );
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_J, new ProjectionOneLevel{1});
+            PFID_IJ_TO_J, new ProjectionOneLevel{1}
+        );
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_IJ, new ProjectionTwoLevel{0, 1});
+            PFID_IJ_TO_IJ, new ProjectionTwoLevel{0, 1}
+        );
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_JI, new ProjectionTwoLevel{1, 0});
+            PFID_IJ_TO_JI, new ProjectionTwoLevel{1, 0}
+        );
     }
 
 
