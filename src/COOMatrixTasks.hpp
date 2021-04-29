@@ -17,29 +17,32 @@ namespace LegionSolvers {
               int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
     struct KokkosCOOMatvecFunctor {
 
-        Realm::AffineAccessor<
+        const Realm::AffineAccessor<
             Legion::Point<RANGE_DIM>, KERNEL_DIM, Legion::coord_t
         > i_reader;
 
-        Realm::AffineAccessor<
+        const Realm::AffineAccessor<
             Legion::Point<DOMAIN_DIM>, KERNEL_DIM, Legion::coord_t
         > j_reader;
 
-        Realm::AffineAccessor<ENTRY_T, KERNEL_DIM, Legion::coord_t>
+        const Realm::AffineAccessor<ENTRY_T, KERNEL_DIM, Legion::coord_t>
         entry_reader;
 
-        Realm::AffineAccessor<ENTRY_T, DOMAIN_DIM, Legion::coord_t>
+        const Realm::AffineAccessor<ENTRY_T, DOMAIN_DIM, Legion::coord_t>
         input_reader;
 
-        Realm::AffineAccessor<ENTRY_T, RANGE_DIM, Legion::coord_t>
-        output_writer;
+        const Legion::ReductionAccessor<
+            Legion::SumReduction<ENTRY_T>, false,
+            RANGE_DIM, Legion::coord_t,
+            Realm::AffineAccessor<ENTRY_T, RANGE_DIM, Legion::coord_t>
+        > output_writer;
 
         KOKKOS_INLINE_FUNCTION void operator()(int a) const {
             const Legion::Point<1> index{a};
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(int a, int b) const {
@@ -47,7 +50,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(int a, int b, int c) const {
@@ -55,7 +58,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -65,7 +68,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -75,7 +78,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -85,7 +88,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -95,7 +98,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -106,7 +109,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -117,7 +120,7 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] += entry * input_reader[j];
+            output_writer[i] <<= entry * input_reader[j];
         }
 
     }; // struct KokkosCOOMatvecFunctor
@@ -196,7 +199,7 @@ namespace LegionSolvers {
                 > input_reader{input_vec, input_fid};
 
                 const Legion::ReductionAccessor<
-                    Legion::SumReduction<ENTRY_T>, true,
+                    Legion::SumReduction<ENTRY_T>, false,
                     RANGE_DIM, Legion::coord_t,
                     Realm::AffineAccessor<ENTRY_T, RANGE_DIM, Legion::coord_t>
                 > output_writer{
@@ -216,7 +219,7 @@ namespace LegionSolvers {
                         >{
                             i_reader.accessor, j_reader.accessor,
                             entry_reader.accessor,
-                            input_reader.accessor, output_writer.accessor
+                            input_reader.accessor, output_writer
                         }
                     );
                 }

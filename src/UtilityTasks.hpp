@@ -197,11 +197,9 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    void dummy_task(Legion::LogicalRegion region,
-                    Legion::FieldID fid,
+    void dummy_task(Legion::LogicalRegion region, Legion::FieldID fid,
                     Legion::IndexPartition partition,
-                    Legion::Context ctx,
-                    Legion::Runtime *rt) {
+                    Legion::Context ctx, Legion::Runtime *rt) {
         Legion::IndexLauncher launcher{
             DummyTask<T, 0>::task_id(region.get_dim()),
             rt->get_index_partition_color_space_name(partition),

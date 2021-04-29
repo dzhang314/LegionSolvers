@@ -131,7 +131,7 @@ namespace LegionSolvers {
                     };
                     output.slices.emplace_back(
                         input.domain.intersection(Legion::Domain{rect}),
-                        cpus[rank], false, true
+                        gpus[rank], false, true
                     );
                 }
 
