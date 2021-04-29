@@ -124,23 +124,23 @@ namespace LegionSolvers {
             assert(workspace.size() == rhs_vectors.size());
 
             for (std::size_t i = 0; i < workspace.size(); ++i) {
-                Legion::IndexLauncher launcher{
-                    CopyTask<T, 0>::task_id(dimensions[i].first.get_dim()),
-                    rt->get_index_partition_color_space_name(dimensions[i].second),
-                    Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
+                Legion::IndexCopyLauncher launcher{
+                    rt->get_index_partition_color_space_name(dimensions[i].second)
                 };
                 launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-                launcher.add_region_requirement(Legion::RegionRequirement{
-                    rt->get_logical_partition(ctx, workspace[i], dimensions[i].second),
-                    0, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, workspace[i]
-                });
-                launcher.add_field(0, fid_dst);
-                launcher.add_region_requirement(Legion::RegionRequirement{
-                    rt->get_logical_partition(ctx, rhs_vectors[i].first, dimensions[i].second),
-                    0, LEGION_READ_ONLY, LEGION_EXCLUSIVE, rhs_vectors[i].first
-                });
-                launcher.add_field(1, rhs_vectors[i].second);
-                rt->execute_index_space(ctx, launcher);
+                launcher.add_copy_requirements(
+                    Legion::RegionRequirement{
+                        rt->get_logical_partition(ctx, rhs_vectors[i].first, dimensions[i].second),
+                        0, LEGION_READ_ONLY, LEGION_EXCLUSIVE, rhs_vectors[i].first
+                    },
+                    Legion::RegionRequirement{
+                        rt->get_logical_partition(ctx, workspace[i], dimensions[i].second),
+                        0, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, workspace[i]
+                    }
+                );
+                launcher.add_src_field(0, rhs_vectors[i].second);
+                launcher.add_dst_field(0, fid_dst);
+                rt->issue_copy_operation(ctx, launcher);
             }
         }
 

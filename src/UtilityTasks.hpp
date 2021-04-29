@@ -215,55 +215,18 @@ namespace LegionSolvers {
     }
 
 
-    template <typename T, int DIM>
-    struct ConstantFillTask : TaskTD<CONSTANT_FILL_TASK_BLOCK_ID,
-                                     ConstantFillTask, T, DIM> {
-
-        static std::string task_base_name() { return "constant_fill"; }
-
-        static void task(const Legion::Task *task,
-                         const std::vector<Legion::PhysicalRegion> &regions,
-                         Legion::Context ctx,
-                         Legion::Runtime *rt) {
-
-            assert(regions.size() == 1);
-            const auto &region = regions[0];
-
-            assert(task->regions.size() == 1);
-            const auto &region_req = task->regions[0];
-
-            assert(region_req.privilege_fields.size() == 1);
-            const Legion::FieldID fid = *region_req.privilege_fields.begin();
-
-            assert(task->arglen == sizeof(T));
-            const T fill_value = *reinterpret_cast<const T *>(task->args);
-
-            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, DIM> entry_writer{region, fid};
-            for (Legion::PointInDomainIterator<DIM> iter{region}; iter(); ++iter) {
-                entry_writer[*iter] = fill_value;
-            }
-        }
-
-    }; // struct ConstantFillTask
-
-
     template <typename T>
-    void zero_fill(Legion::LogicalRegion region,
-                   Legion::FieldID fid,
+    void zero_fill(Legion::LogicalRegion region, Legion::FieldID fid,
                    Legion::IndexPartition partition,
-                   Legion::Context ctx,
-                   Legion::Runtime *rt) {
+                   Legion::Context ctx, Legion::Runtime *rt) {
         const T zero = static_cast<T>(0);
-        Legion::IndexLauncher launcher{
-            ConstantFillTask<T, 0>::task_id(region.get_dim()),
+        Legion::IndexFillLauncher launcher{
             rt->get_index_partition_color_space_name(partition),
-            Legion::TaskArgument{&zero, sizeof(T)}, Legion::ArgumentMap{}};
+            rt->get_logical_partition(ctx, region, partition),
+            region, Legion::TaskArgument{&zero, sizeof(T)}};
         launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            rt->get_logical_partition(region, partition),
-            0, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, region});
-        launcher.add_field(0, fid);
-        rt->execute_index_space(ctx, launcher);
+        launcher.add_field(fid);
+        rt->fill_fields(ctx, launcher);
     }
 
 
@@ -304,13 +267,10 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    void random_fill(Legion::LogicalRegion region,
-                     Legion::FieldID fid,
+    void random_fill(Legion::LogicalRegion region, Legion::FieldID fid,
                      Legion::IndexPartition partition,
-                     Legion::Context ctx,
-                     Legion::Runtime *rt,
-                     T low = static_cast<T>(0),
-                     T high = static_cast<T>(1)) {
+                     Legion::Context ctx, Legion::Runtime *rt,
+                     T low = static_cast<T>(0), T high = static_cast<T>(1)) {
         const T args[2] = {low, high};
         Legion::IndexLauncher launcher{
             RandomFillTask<T, 0>::task_id(region.get_dim()),
@@ -323,41 +283,6 @@ namespace LegionSolvers {
         launcher.add_field(0, fid);
         rt->execute_index_space(ctx, launcher);
     }
-
-
-    template <typename T, int DIM>
-    struct CopyTask : TaskTD<COPY_TASK_BLOCK_ID, CopyTask, T, DIM> {
-
-        static std::string task_base_name() { return "copy"; }
-
-        static void task(const Legion::Task *task,
-                         const std::vector<Legion::PhysicalRegion> &regions,
-                         Legion::Context ctx,
-                         Legion::Runtime *rt) {
-
-            assert(regions.size() == 2);
-            const auto &dst = regions[0];
-            const auto &src = regions[1];
-
-            assert(task->regions.size() == 2);
-            const auto &dst_req = task->regions[0];
-            const auto &src_req = task->regions[1];
-
-            assert(dst_req.privilege_fields.size() == 1);
-            const Legion::FieldID dst_fid = *dst_req.privilege_fields.begin();
-
-            assert(src_req.privilege_fields.size() == 1);
-            const Legion::FieldID src_fid = *src_req.privilege_fields.begin();
-
-            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, DIM> dst_writer{dst, dst_fid};
-            const Legion::FieldAccessor<LEGION_READ_ONLY, T, DIM> src_reader{src, src_fid};
-
-            for (Legion::PointInDomainIterator<DIM> iter{dst}; iter(); ++iter) {
-                dst_writer[*iter] = src_reader[*iter];
-            }
-        }
-
-    }; // struct CopyTask
 
 
     template <typename T, int DIM>
@@ -407,7 +332,7 @@ namespace LegionSolvers {
                       Legion::Context ctx,
                       Legion::Runtime *rt) {
         Legion::TaskLauncher launcher{
-            LegionSolvers::PrintVectorTask<T, 0>::task_id(region.get_dim()),
+            PrintVectorTask<T, 0>::task_id(region.get_dim()),
             Legion::TaskArgument{name.c_str(), name.length() + 1}};
         launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(Legion::RegionRequirement{

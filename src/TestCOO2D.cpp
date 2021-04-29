@@ -7,8 +7,8 @@
 #include "TaskRegistration.hpp"
 
 
-constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
-constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
+constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 16;
+constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 16;
 constexpr Legion::coord_t GRID_HEIGHT = 2000;
 constexpr Legion::coord_t GRID_WIDTH = 1000;
 

@@ -149,12 +149,12 @@ namespace LegionSolvers {
 
             if (is_task(task.task_id, DUMMY_TASK_BLOCK_ID)) {
 
-                assert(input.valid_instances.size() == 1);
-                assert(input.valid_instances[0].size() == 1);
-                assert(task.is_index_space);
+                // assert(input.valid_instances.size() == 1);
+                // assert(input.valid_instances[0].size() == 1);
+                // assert(task.is_index_space);
 
-                Legion::Mapping::PhysicalInstance instance = *input.valid_instances[0].begin();
-                memory_map[task.index_point] = instance.get_location();
+                // Legion::Mapping::PhysicalInstance instance = *input.valid_instances[0].begin();
+                // memory_map[task.index_point] = instance.get_location();
 
                 Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
 

@@ -434,9 +434,7 @@ namespace LegionSolvers {
         preregister_scalar_leaf_task<DivisionTask      >(verbose);
 
         preregister_vector_leaf_task<DummyTask       >(verbose);
-        preregister_vector_leaf_task<ConstantFillTask>(verbose);
         preregister_vector_leaf_task<RandomFillTask  >(verbose);
-        preregister_vector_leaf_task<CopyTask        >(verbose);
         preregister_vector_leaf_task<PrintVectorTask >(verbose);
 
         AxpyTask<float, 1>::preregister(true);

@@ -12,7 +12,7 @@
 
 constexpr Legion::coord_t MATRIX_SIZE = 16;
 constexpr Legion::coord_t NUM_NONZERO_ENTRIES = 3 * MATRIX_SIZE - 2;
-constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
+// constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 4;
 constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
 
 enum TaskIDs : Legion::TaskID {

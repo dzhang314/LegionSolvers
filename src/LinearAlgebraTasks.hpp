@@ -15,16 +15,16 @@
 namespace LegionSolvers {
 
 
-    template <typename KokkosExecutionSpace, typename T, int N>
+    template <typename ExecutionSpace, typename T, int N>
     struct KokkosAxpyFunctor {
 
-        const KokkosMutableOffsetView<KokkosExecutionSpace, T, N> y_view;
+        const KokkosMutableOffsetView<ExecutionSpace, T, N> y_view;
         const T alpha;
-        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> x_view;
+        const KokkosConstOffsetView<ExecutionSpace, T, N> x_view;
 
         explicit KokkosAxpyFunctor(
             Realm::AffineAccessor<T, N, Legion::coord_t> y_accessor,
-            T a,
+            const T &a,
             Realm::AffineAccessor<T, N, Legion::coord_t> x_accessor
         ) : y_view{y_accessor}, alpha{a}, x_view{x_accessor} {}
 
@@ -92,14 +92,14 @@ namespace LegionSolvers {
 
         using ReturnType = void;
 
-        template <typename KokkosExecutionSpace>
+        template <typename ExecutionSpace>
         struct KokkosTaskBody {
 
             static void body(const Legion::Task *task,
                              const std::vector<Legion::PhysicalRegion> &regions,
                              Legion::Context ctx, Legion::Runtime *rt) {
 
-                AxpyTask::announce(typeid(KokkosExecutionSpace), ctx, rt);
+                // AxpyTask::announce(typeid(ExecutionSpace), ctx, rt);
 
                 assert(regions.size() == 2);
                 const auto &y = regions[0];
@@ -141,10 +141,10 @@ namespace LegionSolvers {
                 for (Legion::RectInDomainIterator<N> it{y_domain}; it(); ++it) {
                     const Legion::Rect<N> rect = *it;
                     Kokkos::parallel_for(
-                        KokkosRangeFactory<KokkosExecutionSpace, N>::create(
+                        KokkosRangeFactory<ExecutionSpace, N>::create(
                             rect, ctx, rt
                         ),
-                        KokkosAxpyFunctor<KokkosExecutionSpace, T, N>{
+                        KokkosAxpyFunctor<ExecutionSpace, T, N>{
                             y_writer.accessor, alpha, x_reader.accessor
                         }
                     );
@@ -156,16 +156,16 @@ namespace LegionSolvers {
     }; // struct AxpyTask
 
 
-    template <typename KokkosExecutionSpace, typename T, int N>
+    template <typename ExecutionSpace, typename T, int N>
     struct KokkosXpayFunctor {
 
-        const KokkosMutableOffsetView<KokkosExecutionSpace, T, N> y_view;
+        const KokkosMutableOffsetView<ExecutionSpace, T, N> y_view;
         const T alpha;
-        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> x_view;
+        const KokkosConstOffsetView<ExecutionSpace, T, N> x_view;
 
         explicit KokkosXpayFunctor(
             Realm::AffineAccessor<T, N, Legion::coord_t> y_accessor,
-            T a,
+            const T &a,
             Realm::AffineAccessor<T, N, Legion::coord_t> x_accessor
         ) : y_view{y_accessor}, alpha{a}, x_view{x_accessor} {}
 
@@ -243,14 +243,14 @@ namespace LegionSolvers {
 
         using ReturnType = void;
 
-        template <typename KokkosExecutionSpace>
+        template <typename ExecutionSpace>
         struct KokkosTaskBody {
 
             static void body(const Legion::Task *task,
                              const std::vector<Legion::PhysicalRegion> &regions,
                              Legion::Context ctx, Legion::Runtime *rt) {
 
-                XpayTask::announce(typeid(KokkosExecutionSpace), ctx, rt);
+                // XpayTask::announce(typeid(ExecutionSpace), ctx, rt);
 
                 assert(regions.size() == 2);
                 const auto &y = regions[0];
@@ -292,10 +292,10 @@ namespace LegionSolvers {
                 for (Legion::RectInDomainIterator<N> it{y_domain}; it(); ++it) {
                     const Legion::Rect<N> rect = *it;
                     Kokkos::parallel_for(
-                        KokkosRangeFactory<KokkosExecutionSpace, N>::create(
+                        KokkosRangeFactory<ExecutionSpace, N>::create(
                             rect, ctx, rt
                         ),
-                        KokkosXpayFunctor<KokkosExecutionSpace, T, N>{
+                        KokkosXpayFunctor<ExecutionSpace, T, N>{
                             y_writer.accessor, alpha, x_reader.accessor
                         }
                     );
@@ -307,13 +307,13 @@ namespace LegionSolvers {
     }; // struct XpayTask
 
 
-    template <typename KokkosExecutionSpace, typename T, int N>
+    template <typename ExecutionSpace, typename T, int N>
     struct KokkosDotProductFunctor {
 
         using value_type = T;
 
-        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> v_view;
-        const KokkosConstOffsetView<KokkosExecutionSpace, T, N> w_view;
+        const KokkosConstOffsetView<ExecutionSpace, T, N> v_view;
+        const KokkosConstOffsetView<ExecutionSpace, T, N> w_view;
 
         explicit KokkosDotProductFunctor(
             Realm::AffineAccessor<T, N, Legion::coord_t> v_accessor,
@@ -387,14 +387,14 @@ namespace LegionSolvers {
 
         using ReturnType = T;
 
-        template <typename KokkosExecutionSpace>
+        template <typename ExecutionSpace>
         struct KokkosTaskBody {
 
             static T body(const Legion::Task *task,
                           const std::vector<Legion::PhysicalRegion> &regions,
                           Legion::Context ctx, Legion::Runtime *rt) {
 
-                DotProductTask::announce(typeid(KokkosExecutionSpace), ctx, rt);
+                // DotProductTask::announce(typeid(ExecutionSpace), ctx, rt);
 
                 assert(regions.size() == 2);
                 const auto &v = regions[0];
@@ -430,10 +430,10 @@ namespace LegionSolvers {
                     const Legion::Rect<N> rect = *it;
                     T temp = static_cast<T>(0);
                     Kokkos::parallel_reduce(
-                        KokkosRangeFactory<KokkosExecutionSpace, N>::create(
+                        KokkosRangeFactory<ExecutionSpace, N>::create(
                             rect, ctx, rt
                         ),
-                        KokkosDotProductFunctor<KokkosExecutionSpace, T, N>{
+                        KokkosDotProductFunctor<ExecutionSpace, T, N>{
                             v_reader.accessor, w_reader.accessor
                         },
                         temp
