@@ -1,16 +1,11 @@
 #include <legion.h>
+#include <realm/cmdline.h>
 
 #include "COOMatrix.hpp"
 #include "ConjugateGradientSolver.hpp"
 #include "ExampleSystems.hpp"
 #include "Planner.hpp"
 #include "TaskRegistration.hpp"
-
-
-constexpr Legion::coord_t NUM_INPUT_PARTITIONS = 16;
-constexpr Legion::coord_t NUM_OUTPUT_PARTITIONS = 16;
-constexpr Legion::coord_t GRID_HEIGHT = 1000;
-constexpr Legion::coord_t GRID_WIDTH = 1000;
 
 
 enum TaskIDs : Legion::TaskID {
@@ -30,6 +25,24 @@ void top_level_task(const Legion::Task *,
                     const std::vector<Legion::PhysicalRegion> &,
                     Legion::Context ctx,
                     Legion::Runtime *rt) {
+
+    Legion::coord_t NUM_INPUT_PARTITIONS = 4;
+    Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
+    Legion::coord_t GRID_HEIGHT = 1000;
+    Legion::coord_t GRID_WIDTH = 1000;
+    int MAX_ITERATIONS = 10;
+
+    const Legion::InputArgs &args = Legion::Runtime::get_input_args();
+
+    bool ok = Realm::CommandLineParser()
+        .add_option_int("-ip", NUM_INPUT_PARTITIONS)
+        .add_option_int("-op", NUM_OUTPUT_PARTITIONS)
+        .add_option_int("-h", GRID_HEIGHT)
+        .add_option_int("-w", GRID_WIDTH)
+        .add_option_int("-it", MAX_ITERATIONS)
+        .parse_command_line(args.argc, (const char **) args.argv);
+
+    assert(ok);
 
     // Create index space and two vector regions (input and output).
     const Legion::IndexSpaceT<2> index_space =
@@ -79,7 +92,7 @@ void top_level_task(const Legion::Task *,
     planner.add_solution_vector(solution_vector, FID_ENTRY, output_partition);
 
     LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
-    solver.set_max_iterations(100);
+    solver.set_max_iterations(MAX_ITERATIONS);
     solver.solve(ctx, rt, true);
 }
 

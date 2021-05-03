@@ -299,9 +299,10 @@ namespace LegionSolvers {
         using Legion::ProjectionFunctor::project;
 
         virtual Legion::LogicalRegion project(
-                Legion::LogicalPartition upper_bound,
-                const Legion::DomainPoint &point,
-                const Legion::Domain &launch_domain) override {
+            Legion::LogicalPartition upper_bound,
+            const Legion::DomainPoint &point,
+            const Legion::Domain &launch_domain
+        ) override {
             const auto column = runtime->get_logical_subregion_by_color(
                 upper_bound, point[i]
             );

@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_EXAMPLE_SYSTEMS_HPP
 #define LEGION_SOLVERS_EXAMPLE_SYSTEMS_HPP
 
+#include <iostream>
+
 #include <legion.h>
 
 #include "TaskIDs.hpp"
@@ -124,6 +126,8 @@ namespace LegionSolvers {
                          Legion::Context ctx,
                          Legion::Runtime *rt) {
 
+            std::cout << "Constructing 2D Laplacian matrix..." << std::endl;
+
             assert(regions.size() == 1);
             const auto &matrix = regions[0];
 
@@ -172,6 +176,8 @@ namespace LegionSolvers {
                     }
                 }
             }
+
+            std::cout << "Finished constructing 2D Laplacian." << std::endl;
         }
 
     }; // struct FillCOONegativeLaplacian2DTask
