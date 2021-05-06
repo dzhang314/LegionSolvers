@@ -1,6 +1,7 @@
 #ifndef LEGION_SOLVERS_COO_MATRIX_TASKS_HPP
 #define LEGION_SOLVERS_COO_MATRIX_TASKS_HPP
 
+#include <map>
 #include <string>
 
 #include <legion.h>
@@ -16,6 +17,10 @@ namespace LegionSolvers {
     template <typename ExecutionSpace, typename ENTRY_T,
               int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
     struct KokkosCOOMatvecFunctor {
+
+        const Legion::Rect<DOMAIN_DIM> domain_rect;
+
+        const Legion::Rect<RANGE_DIM> range_rect;
 
         const Realm::AffineAccessor<
             Legion::Point<RANGE_DIM>, KERNEL_DIM, Legion::coord_t
@@ -42,7 +47,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(int a, int b) const {
@@ -50,7 +57,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(int a, int b, int c) const {
@@ -58,7 +67,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -68,7 +79,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -78,7 +91,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -88,7 +103,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -98,7 +115,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -109,7 +128,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
@@ -120,7 +141,9 @@ namespace LegionSolvers {
             const Legion::Point<RANGE_DIM> i = i_reader[index];
             const Legion::Point<DOMAIN_DIM> j = j_reader[index];
             const ENTRY_T entry = entry_reader[index];
-            output_writer[i] <<= entry * input_reader[j];
+            if (range_rect.contains(i) && domain_rect.contains(j)) {
+                output_writer[i] <<= entry * input_reader[j];
+            }
         }
 
     }; // struct KokkosCOOMatvecFunctor
@@ -206,23 +229,39 @@ namespace LegionSolvers {
                     output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>
                 };
 
-                for (Legion::RectInDomainIterator<KERNEL_DIM> it{coo_matrix};
-                     it(); ++it) {
-                    const Legion::Rect<KERNEL_DIM> rect = *it;
-                    Kokkos::parallel_for(
-                        KokkosRangeFactory<ExecutionSpace, KERNEL_DIM>::create(
-                            rect, ctx, rt
-                        ),
-                        KokkosCOOMatvecFunctor<
-                            ExecutionSpace, ENTRY_T,
-                            KERNEL_DIM, DOMAIN_DIM, RANGE_DIM
-                        >{
-                            i_reader.accessor, j_reader.accessor,
-                            entry_reader.accessor,
-                            input_reader.accessor, output_writer
+                // int rect_count = 0;
+                // std::map<size_t, int> size_count{};
+                for (Legion::RectInDomainIterator<KERNEL_DIM> kernel_iter{coo_matrix}; kernel_iter(); ++kernel_iter) {
+                    const Legion::Rect<KERNEL_DIM> kernel_rect = *kernel_iter;
+                    // ++rect_count;
+                    // ++size_count[kernel_rect.volume()];
+                    for (Legion::RectInDomainIterator<DOMAIN_DIM> domain_iter{input_vec}; domain_iter(); ++domain_iter) {
+                        const Legion::Rect<DOMAIN_DIM> domain_rect = *domain_iter;
+                        for (Legion::RectInDomainIterator<RANGE_DIM> range_iter{output_vec}; range_iter(); ++range_iter) {
+                            const Legion::Rect<RANGE_DIM> range_rect = *range_iter;
+                            Kokkos::parallel_for(
+                                KokkosRangeFactory<ExecutionSpace, KERNEL_DIM>::create(
+                                    kernel_rect, ctx, rt
+                                ),
+                                KokkosCOOMatvecFunctor<
+                                    ExecutionSpace, ENTRY_T,
+                                    KERNEL_DIM, DOMAIN_DIM, RANGE_DIM
+                                >{
+                                    domain_rect, range_rect,
+                                    i_reader.accessor, j_reader.accessor,
+                                    entry_reader.accessor,
+                                    input_reader.accessor, output_writer
+                                }
+                            );
                         }
-                    );
+                    }
                 }
+                // std::cout << "Completed matrix multiplication with "
+                //           << rect_count << " rectangles." << std::endl;
+                // for (const auto &p : size_count) {
+                //     std::cout << "    " << p.second << " rectangles of size "
+                //               << p.first << "." << std::endl;
+                // }
             }
 
         }; // struct KokkosTaskBody

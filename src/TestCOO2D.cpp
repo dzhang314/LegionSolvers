@@ -26,6 +26,7 @@ void top_level_task(const Legion::Task *,
                     Legion::Context ctx,
                     Legion::Runtime *rt) {
 
+    Legion::coord_t NUM_KERNEL_PARTITIONS = 16;
     Legion::coord_t NUM_INPUT_PARTITIONS = 4;
     Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
     Legion::coord_t GRID_HEIGHT = 1000;
@@ -35,6 +36,7 @@ void top_level_task(const Legion::Task *,
     const Legion::InputArgs &args = Legion::Runtime::get_input_args();
 
     bool ok = Realm::CommandLineParser()
+        .add_option_int("-kp", NUM_KERNEL_PARTITIONS)
         .add_option_int("-ip", NUM_INPUT_PARTITIONS)
         .add_option_int("-op", NUM_OUTPUT_PARTITIONS)
         .add_option_int("-h", GRID_HEIGHT)
@@ -72,11 +74,20 @@ void top_level_task(const Legion::Task *,
 
     // Create 2D Laplacian matrix.
     const Legion::LogicalRegionT<1> negative_laplacian =
-        LegionSolvers::coo_negative_laplacian_2d<double>(FID_I, FID_J, FID_ENTRY, GRID_HEIGHT, GRID_WIDTH, ctx, rt);
+        LegionSolvers::coo_negative_laplacian_2d<double>(
+            FID_I, FID_J, FID_ENTRY, GRID_HEIGHT, GRID_WIDTH, ctx, rt);
+    const Legion::IndexSpaceT<1> kernel_color_space =
+        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_KERNEL_PARTITIONS - 1});
+    const Legion::IndexPartitionT<1> kernel_partition{
+        rt->create_equal_partition(
+            ctx, negative_laplacian.get_index_space(), kernel_color_space)};
 
     // Call COOMatrix constructor, which computes map of nonzero tiles.
-    LegionSolvers::COOMatrix<double, 1, 2, 2> matrix_obj{negative_laplacian, FID_I, FID_J, FID_ENTRY, input_partition,
-                                                         output_partition,   ctx,   rt};
+    LegionSolvers::COOMatrix<double, 1, 2, 2> matrix_obj{
+        negative_laplacian, FID_I, FID_J, FID_ENTRY,
+        kernel_partition, input_partition, output_partition,
+        ctx, rt
+    };
 
     // Construct a linear system by computing output_vector = negative_laplacian * input_vector...
     matrix_obj.matvec(output_vector, FID_ENTRY, input_vector, FID_ENTRY, ctx, rt);
@@ -84,7 +95,7 @@ void top_level_task(const Legion::Task *,
     // ...then, discard the input_vector, and ask for the solution of negative_laplacian * x == output_vector.
     LegionSolvers::Planner<double> planner{};
     planner.add_rhs_vector(output_vector, FID_ENTRY, output_partition);
-    planner.add_coo_matrix<1, 2, 2>(0, 0, negative_laplacian, FID_I, FID_J, FID_ENTRY, ctx, rt);
+    planner.add_coo_matrix<1, 2, 2>(0, 0, negative_laplacian, kernel_partition, FID_I, FID_J, FID_ENTRY, ctx, rt);
 
     const Legion::LogicalRegionT<2> solution_vector =
         LegionSolvers::create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);

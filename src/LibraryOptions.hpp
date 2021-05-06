@@ -17,6 +17,11 @@ namespace LegionSolvers {
     #endif
 
 
+    #ifndef LEGION_SOLVERS_PROJECTION_ID_ORIGIN
+    constexpr Legion::ProjectionID LEGION_SOLVERS_PROJECTION_ID_ORIGIN = 10'000;
+    #endif
+
+
     #ifndef LEGION_SOLVERS_MAX_DIM
     constexpr int LEGION_SOLVERS_MAX_DIM = 3;
     #endif

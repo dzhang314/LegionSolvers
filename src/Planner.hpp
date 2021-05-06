@@ -55,12 +55,13 @@ namespace LegionSolvers {
 
 
         template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
-        void add_coo_matrix(int rhs_index, int sol_index,
-                            Legion::LogicalRegionT<KERNEL_DIM> matrix_region,
-                            Legion::FieldID fid_i, Legion::FieldID fid_j,
-                            Legion::FieldID fid_entry,
-                            Legion::Context ctx, Legion::Runtime *rt) {
-
+        void add_coo_matrix(
+            int rhs_index, int sol_index,
+            Legion::LogicalRegionT<KERNEL_DIM> matrix_region,
+            Legion::IndexPartitionT<KERNEL_DIM> matrix_partition,
+            Legion::FieldID fid_i, Legion::FieldID fid_j, Legion::FieldID fid_entry,
+            Legion::Context ctx, Legion::Runtime *rt
+        ) {
             const Legion::IndexPartition domain_partition = dimensions[sol_index].second;
             assert(domain_partition.get_dim() == DOMAIN_DIM);
 
@@ -70,7 +71,7 @@ namespace LegionSolvers {
             operators.emplace_back(
                 rhs_index, sol_index,
                 std::make_unique<COOMatrix<T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>>(
-                    matrix_region, fid_i, fid_j, fid_entry,
+                    matrix_region, fid_i, fid_j, fid_entry, matrix_partition,
                     Legion::IndexPartitionT<DOMAIN_DIM>{domain_partition},
                     Legion::IndexPartitionT<RANGE_DIM>{range_partition},
                     ctx, rt

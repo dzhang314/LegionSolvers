@@ -3,6 +3,8 @@
 
 #include <legion.h>
 
+#include "LibraryOptions.hpp"
+
 
 namespace LegionSolvers {
 
@@ -28,10 +30,10 @@ namespace LegionSolvers {
 
 
     enum ProjectionFunctorID : Legion::ProjectionID {
-        PFID_IJ_TO_I = 10'000,
-        PFID_IJ_TO_J,
-        PFID_IJ_TO_IJ,
-        PFID_IJ_TO_JI,
+        PFID_KDR_TO_K = LEGION_SOLVERS_PROJECTION_ID_ORIGIN,
+        PFID_KDR_TO_D,
+        PFID_KDR_TO_R,
+        PFID_KDR_TO_DR,
     };
 
     template <typename T> constexpr Legion::ReductionOpID LEGION_REDOP_SUM = -1;

@@ -12,6 +12,7 @@
 #include "ExampleSystems.hpp"
 #include "LegionSolversMapper.hpp"
 #include "LinearAlgebraTasks.hpp"
+#include "TaskIDs.hpp"
 #include "UtilityTasks.hpp"
 
 
@@ -333,6 +334,17 @@ namespace LegionSolvers {
     }
 
 
+    template <template <typename, int> typename TaskClass>
+    void preregister_vector_kokkos_task(bool verbose) {
+        TaskClass<float, 1>::preregister(verbose);
+        TaskClass<float, 2>::preregister(verbose);
+        TaskClass<float, 3>::preregister(verbose);
+        TaskClass<double, 1>::preregister(verbose);
+        TaskClass<double, 2>::preregister(verbose);
+        TaskClass<double, 3>::preregister(verbose);
+    }
+
+
     template <template <typename, int, int, int> typename TaskClass>
     void preregister_matrix_leaf_task(bool verbose) {
         CartesianProductRegistrar<
@@ -451,16 +463,16 @@ namespace LegionSolvers {
         );
 
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_I, new ProjectionOneLevel{0}
+            PFID_KDR_TO_K, new ProjectionOneLevel{0}
         );
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_J, new ProjectionOneLevel{1}
+            PFID_KDR_TO_D, new ProjectionOneLevel{1}
         );
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_IJ, new ProjectionTwoLevel{0, 1}
+            PFID_KDR_TO_R, new ProjectionOneLevel{2}
         );
         Legion::Runtime::preregister_projection_functor(
-            PFID_IJ_TO_JI, new ProjectionTwoLevel{1, 0}
+            PFID_KDR_TO_DR, new ProjectionTwoLevel{1, 2}
         );
     }
 

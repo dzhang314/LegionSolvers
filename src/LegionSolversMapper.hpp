@@ -104,11 +104,7 @@ namespace LegionSolvers {
                                 const Legion::Task &task,
                                 const SliceTaskInput& input,
                                 SliceTaskOutput& output) override {
-            Legion::Mapping::DefaultMapper::slice_task(ctx, task, input, output);
             if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
-
-                output.slices.clear();
-
                 std::set<Legion::Processor> all_procs{};
                 Legion::Machine::get_machine().get_all_processors(all_procs);
                 Legion::Processor cpus[num_address_spaces];
@@ -120,27 +116,26 @@ namespace LegionSolvers {
                         gpus[proc.address_space()] = proc;
                     }
                 }
-
                 const Legion::DomainPoint lo = input.domain.lo();
                 const Legion::DomainPoint hi = input.domain.hi();
-                for (Legion::coord_t tile_index = lo[1]; tile_index <= hi[1]; tile_index++) {
-                    const Legion::coord_t rank = tile_index % num_address_spaces;
-                    const Legion::Rect<2> rect{
-                        Legion::Point<2>{input.domain.lo()[0], tile_index},
-                        Legion::Point<2>{input.domain.hi()[0], tile_index}
+                for (Legion::coord_t range_index = lo[2]; range_index <= hi[2]; range_index++) {
+                    const Legion::coord_t rank = range_index % num_address_spaces;
+                    const Legion::Rect<3> rect{
+                        Legion::Point<3>{lo[0], lo[1], range_index},
+                        Legion::Point<3>{hi[0], hi[1], range_index}
                     };
                     output.slices.emplace_back(
                         input.domain.intersection(Legion::Domain{rect}),
                         gpus[rank], false, true
                     );
                 }
-
                 // for (auto &slice : output.slices) {
                 //     std::cout << "Assigning " << slice.domain << " to rank "
                 //               << slice.proc.address_space() << std::endl;
                 // }
                 // output.verify_correctness = true;
-
+            } else {
+                Legion::Mapping::DefaultMapper::slice_task(ctx, task, input, output);
             }
         }
 
