@@ -18,8 +18,7 @@ namespace LegionSolvers {
 
 
         const Planner<T> &planner;
-        Legion::Future residual_norm_squared;
-        Legion::Future last_residual_norm_squared;
+        Legion::Future residual_norm_squared[3];
         int max_iterations = 1'000;
         T residual_threshold = 1.0e-16;
 
@@ -57,21 +56,24 @@ namespace LegionSolvers {
         void setup(Legion::Context ctx, Legion::Runtime *rt) {
             planner.copy_rhs(FID_CG_P, workspace, ctx, rt);
             planner.copy_rhs(FID_CG_R, workspace, ctx, rt);
-            residual_norm_squared = last_residual_norm_squared =
+            residual_norm_squared[0] =
                 planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
+            residual_norm_squared[1] = residual_norm_squared[0];
+            residual_norm_squared[2] = residual_norm_squared[0];
         }
 
 
         void step(Legion::Context ctx, Legion::Runtime *rt) {
             planner.matvec(FID_CG_Q, FID_CG_P, workspace, ctx, rt);
             Legion::Future p_norm = planner.dot_product(FID_CG_P, FID_CG_Q, workspace, ctx, rt);
-            Legion::Future alpha = divide<T>(residual_norm_squared, p_norm, ctx, rt);
+            Legion::Future alpha = divide<T>(residual_norm_squared[0], p_norm, ctx, rt);
             planner.axpy_sol(alpha, FID_CG_P, workspace, ctx, rt);
             planner.axpy(FID_CG_R, negate<T>(alpha, ctx, rt), FID_CG_Q, workspace, ctx, rt);
             Legion::Future r_norm2_new = planner.dot_product(FID_CG_R, FID_CG_R, workspace, ctx, rt);
-            Legion::Future beta = divide<T>(r_norm2_new, residual_norm_squared, ctx, rt);
-            last_residual_norm_squared = residual_norm_squared;
-            residual_norm_squared = r_norm2_new;
+            Legion::Future beta = divide<T>(r_norm2_new, residual_norm_squared[0], ctx, rt);
+            residual_norm_squared[2] = residual_norm_squared[1];
+            residual_norm_squared[1] = residual_norm_squared[0];
+            residual_norm_squared[0] = r_norm2_new;
             planner.xpay(FID_CG_P, beta, FID_CG_R, workspace, ctx, rt);
         }
 
@@ -79,14 +81,16 @@ namespace LegionSolvers {
         void solve(Legion::Context ctx, Legion::Runtime *rt, bool print_residual = false) {
             setup(ctx, rt);
             step(ctx, rt);
+            step(ctx, rt);
             for (int i = 0; i < max_iterations; ++i) {
                 rt->begin_trace(ctx, 101);
-                if (print_residual) {
-                    std::cout << "residual: " << std::sqrt(last_residual_norm_squared.get_result<T>()) << std::endl;
-                }
-                if (last_residual_norm_squared.get_result<T>() <= residual_threshold * residual_threshold) { break; }
                 step(ctx, rt);
                 rt->end_trace(ctx, 101);
+                const T r2 = residual_norm_squared[2].get_result<T>();
+                if (print_residual) {
+                    std::cout << "residual: " << std::sqrt(r2) << std::endl;
+                }
+                if (r2 <= residual_threshold * residual_threshold) { break; }
             }
         }
 
