@@ -1,7 +1,11 @@
 #ifndef LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP
 #define LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP
 
+#include <algorithm>
+#include <cassert>
 #include <map>
+#include <set>
+#include <vector>
 
 #include <legion.h>
 #include <mappers/default_mapper.h>
@@ -13,36 +17,45 @@
 namespace LegionSolvers {
 
 
-    class LegionSolversMapper : public Legion::Mapping::DefaultMapper {
+    struct LegionSolversMapper : public Legion::Mapping::DefaultMapper {
 
 
-        std::map<Legion::DomainPoint, Legion::Memory> memory_map;
-        const Legion::AddressSpace num_address_spaces;
+        std::vector<Legion::AddressSpace> address_spaces;
+        std::map<Legion::AddressSpace, Legion::Processor> cpus;
+        std::map<Legion::AddressSpace, Legion::Processor> gpus;
 
 
-        static Legion::AddressSpace get_num_address_spaces() {
+        LegionSolversMapper(
+            Legion::Mapping::MapperRuntime *rt,
+            Legion::Machine machine,
+            Legion::Processor local
+        ) : Legion::Mapping::DefaultMapper(rt, machine, local) {
             std::set<Legion::Processor> all_procs{};
             Legion::Machine::get_machine().get_all_processors(all_procs);
-            Legion::AddressSpace result = 0;
             for (const Legion::Processor &proc : all_procs) {
-                result = std::max(result, proc.address_space());
+                const Legion::AddressSpace addr = proc.address_space();
+                const Legion::Processor::Kind kind = proc.kind();
+                address_spaces.push_back(addr);
+                if (kind == Legion::Processor::LOC_PROC) {
+                    assert(cpus.find(addr) == cpus.end());
+                    cpus[addr] = proc;
+                } else if (kind == Legion::Processor::TOC_PROC) {
+                    assert(gpus.find(addr) == gpus.end());
+                    gpus[addr] = proc;
+                }
             }
-            return result + 1;
+            std::sort(address_spaces.begin(), address_spaces.end());
+            const auto last = std::unique(address_spaces.begin(),
+                                          address_spaces.end());
+            address_spaces.erase(last, address_spaces.end());
+            assert(address_spaces.size() == cpus.size());
+            assert(address_spaces.size() == gpus.size());
         }
-
-
-      public:
-        LegionSolversMapper(Legion::Mapping::MapperRuntime *rt,
-                            Legion::Machine machine,
-                            Legion::Processor local)
-            : Legion::Mapping::DefaultMapper(rt, machine, local),
-              memory_map(),
-              num_address_spaces(get_num_address_spaces()) {}
 
 
         virtual Legion::Mapping::Mapper::MapperSyncModel
         get_mapper_sync_model(void) const override {
-            return CONCURRENT_MAPPER_MODEL;
+            return SERIALIZED_NON_REENTRANT_MAPPER_MODEL;
         }
 
 
@@ -79,14 +92,14 @@ namespace LegionSolvers {
         //   };
 
 
-        virtual void select_task_options(
-            const Legion::Mapping::MapperContext ctx,
-            const Legion::Task &task,
-            TaskOptions &output
-        ) override {
-            Legion::Mapping::DefaultMapper::select_task_options(ctx, task, output);
-            output.valid_instances = true;
-        }
+        // virtual void select_task_options(
+        //     const Legion::Mapping::MapperContext ctx,
+        //     const Legion::Task &task,
+        //     TaskOptions &output
+        // ) override {
+        //     Legion::Mapping::DefaultMapper::select_task_options(ctx, task, output);
+        //     output.valid_instances = true;
+        // }
 
 
         virtual void memoize_operation(
@@ -115,28 +128,18 @@ namespace LegionSolvers {
                                 const SliceTaskInput& input,
                                 SliceTaskOutput& output) override {
             if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
-                std::set<Legion::Processor> all_procs{};
-                Legion::Machine::get_machine().get_all_processors(all_procs);
-                Legion::Processor cpus[num_address_spaces];
-                Legion::Processor gpus[num_address_spaces];
-                for (const Legion::Processor &proc : all_procs) {
-                    if (proc.kind() == Legion::Processor::LOC_PROC) {
-                        cpus[proc.address_space()] = proc;
-                    } else if (proc.kind() == Legion::Processor::TOC_PROC) {
-                        gpus[proc.address_space()] = proc;
-                    }
-                }
                 const Legion::DomainPoint lo = input.domain.lo();
                 const Legion::DomainPoint hi = input.domain.hi();
-                for (Legion::coord_t range_index = lo[2]; range_index <= hi[2]; range_index++) {
-                    const Legion::coord_t rank = range_index % num_address_spaces;
+                for (Legion::coord_t i = lo[2]; i <= hi[2]; i++) {
                     const Legion::Rect<3> rect{
-                        Legion::Point<3>{lo[0], lo[1], range_index},
-                        Legion::Point<3>{hi[0], hi[1], range_index}
+                        Legion::Point<3>{lo[0], lo[1], i},
+                        Legion::Point<3>{hi[0], hi[1], i}
                     };
                     output.slices.emplace_back(
                         input.domain.intersection(Legion::Domain{rect}),
-                        gpus[rank], false, true
+                        gpus[address_spaces[i % address_spaces.size()]],
+                        false, // do not recursively call slice_task
+                        false // TODO: should this be stealable?
                     );
                 }
                 // for (auto &slice : output.slices) {
@@ -150,25 +153,25 @@ namespace LegionSolvers {
         }
 
 
-        virtual void map_task(const Legion::Mapping::MapperContext ctx,
-                              const Legion::Task &task,
-                              const MapTaskInput &input,
-                              MapTaskOutput &output) override {
+        // virtual void map_task(const Legion::Mapping::MapperContext ctx,
+        //                       const Legion::Task &task,
+        //                       const MapTaskInput &input,
+        //                       MapTaskOutput &output) override {
 
-            if (is_task(task.task_id, DUMMY_TASK_BLOCK_ID)) {
+        //     if (is_task(task.task_id, DUMMY_TASK_BLOCK_ID)) {
 
-                Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
+        //         Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
 
-            } else if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
+        //     } else if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
 
-                assert(input.valid_instances.size() == 3);
-                assert(task.is_index_space);
-                Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
+        //         assert(input.valid_instances.size() == 3);
+        //         assert(task.is_index_space);
+        //         Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
 
-            } else {
-                Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
-            }
-        }
+        //     } else {
+        //         Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
+        //     }
+        // }
 
 
     }; // class LegionSolversMapper

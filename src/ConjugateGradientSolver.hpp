@@ -82,6 +82,8 @@ namespace LegionSolvers {
             setup(ctx, rt);
             step(ctx, rt);
             step(ctx, rt);
+            step(ctx, rt);
+            step(ctx, rt);
             for (int i = 0; i < max_iterations; ++i) {
                 rt->begin_trace(ctx, 101);
                 step(ctx, rt);
