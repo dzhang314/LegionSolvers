@@ -14,6 +14,7 @@ namespace LegionSolvers {
         ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM
     > {
 
+
         Legion::LogicalRegionT<KERNEL_DIM> matrix_region;
         Legion::IndexPartitionT<KERNEL_DIM> kernel_partition;
         Legion::IndexPartitionT<DOMAIN_DIM> domain_partition;
@@ -23,6 +24,7 @@ namespace LegionSolvers {
         Legion::Color tile_partition;
         // TODO: Handle multi-dimensional color spaces
         Legion::IndexSpaceT<3> tile_index_space;
+
 
         explicit SparseMatrix(
             Legion::LogicalRegionT<KERNEL_DIM> matrix_region,

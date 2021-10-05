@@ -12,10 +12,11 @@ namespace LegionSolvers {
 
 
     template <int DIM>
-    Legion::LogicalRegionT<DIM> create_region(Legion::IndexSpaceT<DIM> index_space,
-                                              const std::vector<std::pair<std::size_t, Legion::FieldID>> &fields,
-                                              Legion::Context ctx,
-                                              Legion::Runtime *rt) {
+    Legion::LogicalRegionT<DIM> create_region(
+        Legion::IndexSpaceT<DIM> index_space,
+        const std::vector<std::pair<std::size_t, Legion::FieldID>> &fields,
+        Legion::Context ctx, Legion::Runtime *rt
+    ) {
         Legion::FieldSpace field_space = rt->create_field_space(ctx);
         Legion::FieldAllocator allocator = rt->create_field_allocator(ctx, field_space);
         for (const auto [field_size, field_id] : fields) { allocator.allocate_field(field_size, field_id); }
