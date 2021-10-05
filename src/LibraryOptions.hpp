@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_LIBRARY_OPTIONS_HPP
 #define LEGION_SOLVERS_LIBRARY_OPTIONS_HPP
 
+#include <legion.h>
+
 #include "MetaprogrammingUtilities.hpp"
 
 

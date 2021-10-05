@@ -3,6 +3,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_OffsetView.hpp>
+#include <legion.h>
 
 #include "MetaprogrammingUtilities.hpp"
 
