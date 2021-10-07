@@ -18,7 +18,7 @@ namespace LegionSolvers {
 
         static std::string task_base_name() { return "random_fill"; }
 
-        static constexpr bool is_leaf() { return true; }
+        static constexpr bool is_leaf = true;
 
         static void task(const Legion::Task *task,
                          const std::vector<Legion::PhysicalRegion> &regions,
@@ -33,7 +33,7 @@ namespace LegionSolvers {
 
         static std::string task_base_name() { return "print_vector"; }
 
-        static constexpr bool is_leaf() { return true; }
+        static constexpr bool is_leaf = true;
 
         static void task(const Legion::Task *task,
                          const std::vector<Legion::PhysicalRegion> &regions,

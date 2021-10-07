@@ -51,7 +51,7 @@ namespace LegionSolvers {
 
         static void preregister_cpu(bool verbose) {
             preregister_cpu_task<TaskClass<T, N>::task>(
-                task_id, task_name(), TaskClass<T, N>::is_leaf(), verbose
+                task_id, task_name(), TaskClass<T, N>::is_leaf, verbose
             );
         }
 
