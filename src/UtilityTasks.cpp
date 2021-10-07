@@ -6,11 +6,13 @@
 
 
 template <typename T, int DIM>
-void LegionSolvers::RandomFillTask<T, DIM>::task(
+void LegionSolvers::RandomFillTask<T, DIM>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
+    RandomFillTask::announce_cpu(task->index_point, ctx, rt);
+
     assert(regions.size() == 1);
     const auto &region = regions[0];
 
@@ -38,11 +40,13 @@ void LegionSolvers::RandomFillTask<T, DIM>::task(
 
 
 template <typename T, int DIM>
-void LegionSolvers::PrintVectorTask<T, DIM>::task(
+void LegionSolvers::PrintVectorTask<T, DIM>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
+    PrintVectorTask::announce_cpu(task->index_point, ctx, rt);
+
     assert(regions.size() == 1);
     const auto &vector = regions[0];
 
@@ -74,16 +78,16 @@ void LegionSolvers::PrintVectorTask<T, DIM>::task(
 
 [[maybe_unused]]
 static constexpr auto instantiations = std::make_tuple(
-    LegionSolvers::RandomFillTask<float, 1>::task,
-    LegionSolvers::RandomFillTask<float, 2>::task,
-    LegionSolvers::RandomFillTask<float, 3>::task,
-    LegionSolvers::RandomFillTask<double, 1>::task,
-    LegionSolvers::RandomFillTask<double, 2>::task,
-    LegionSolvers::RandomFillTask<double, 3>::task,
-    LegionSolvers::PrintVectorTask<float, 1>::task,
-    LegionSolvers::PrintVectorTask<float, 2>::task,
-    LegionSolvers::PrintVectorTask<float, 3>::task,
-    LegionSolvers::PrintVectorTask<double, 1>::task,
-    LegionSolvers::PrintVectorTask<double, 2>::task,
-    LegionSolvers::PrintVectorTask<double, 3>::task
+    LegionSolvers::RandomFillTask<float, 1>::task_body,
+    LegionSolvers::RandomFillTask<float, 2>::task_body,
+    LegionSolvers::RandomFillTask<float, 3>::task_body,
+    LegionSolvers::RandomFillTask<double, 1>::task_body,
+    LegionSolvers::RandomFillTask<double, 2>::task_body,
+    LegionSolvers::RandomFillTask<double, 3>::task_body,
+    LegionSolvers::PrintVectorTask<float, 1>::task_body,
+    LegionSolvers::PrintVectorTask<float, 2>::task_body,
+    LegionSolvers::PrintVectorTask<float, 3>::task_body,
+    LegionSolvers::PrintVectorTask<double, 1>::task_body,
+    LegionSolvers::PrintVectorTask<double, 2>::task_body,
+    LegionSolvers::PrintVectorTask<double, 3>::task_body
 );

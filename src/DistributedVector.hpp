@@ -4,6 +4,7 @@
 #include <legion.h>
 
 #include "LegionUtilities.hpp"
+#include "LinearAlgebraTasks.hpp"
 #include "UtilityTasks.hpp"
 
 
@@ -36,6 +37,7 @@ namespace LegionSolvers {
 
         Legion::Context ctx;
         Legion::Runtime *rt;
+        std::string name;
         Legion::IndexSpaceT<DIM, COORD_T> index_space;
         Legion::LogicalRegionT<DIM, COORD_T> logical_region;
         Legion::FieldID fid;
@@ -49,11 +51,13 @@ namespace LegionSolvers {
         DistributedVectorT &operator=(const DistributedVectorT &) = delete;
         DistributedVectorT &operator=(DistributedVectorT &&) = delete;
 
-        DistributedVectorT(Legion::IndexSpaceT<DIM, COORD_T> index_space,
+        DistributedVectorT(const std::string &name,
+                           Legion::IndexSpaceT<DIM, COORD_T> index_space,
                            Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space,
                            Legion::Context ctx, Legion::Runtime *rt) :
             ctx(ctx),
             rt(rt),
+            name(name),
             index_space(index_space),
             logical_region(LegionSolvers::create_region(
                 index_space, {{sizeof(ENTRY_T), DEFAULT_FID}}, ctx, rt
@@ -98,7 +102,6 @@ namespace LegionSolvers {
         }
 
         virtual void print() override {
-            static const std::string name{"hello"};
             Legion::IndexTaskLauncher launcher{
                 PrintVectorTask<ENTRY_T, DIM>::task_id, color_space,
                 Legion::TaskArgument{name.c_str(), name.length() + 1},
@@ -113,7 +116,29 @@ namespace LegionSolvers {
             rt->execute_index_space(ctx, launcher);
         }
 
-    }; // class DistributedVector
+        void axpy(Legion::Future alpha, const DistributedVectorT &x) {
+            assert(index_space == x.index_space);
+            assert(color_space == x.color_space);
+            Legion::IndexLauncher launcher{
+                AxpyTask<ENTRY_T, DIM>::task_id, color_space,
+                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
+            };
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                logical_partition, 0,
+                LEGION_READ_WRITE, LEGION_EXCLUSIVE, logical_region
+            });
+            launcher.add_field(0, fid);
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                x.logical_partition, 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, x.logical_region
+            });
+            launcher.add_field(1, x.fid);
+            launcher.add_future(alpha);
+            rt->execute_index_space(ctx, launcher);
+        }
+
+    }; // class DistributedVectorT
 
 
 } // namespace LegionSolvers

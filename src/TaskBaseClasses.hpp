@@ -44,33 +44,49 @@ namespace LegionSolvers {
             LEGION_SOLVERS_TYPE_INDEX<T>;
 
         static std::string task_name() {
-            return std::string{TaskClass<T, N>::task_base_name()} +
-                   std::string{"_"} + LEGION_SOLVERS_TYPE_NAME<T>() +
-                   std::string{"_"} + std::to_string(N);
+            return std::string{TaskClass<T, N>::task_base_name} +
+                   '_' + LEGION_SOLVERS_TYPE_NAME<T>() +
+                   '_' + std::to_string(N);
         }
 
         static void preregister_cpu(bool verbose) {
-            preregister_cpu_task<TaskClass<T, N>::task>(
-                task_id, task_name(), TaskClass<T, N>::is_leaf, verbose
-            );
+            preregister_cpu_task<
+                typename TaskClass<T, N>::return_type,
+                TaskClass<T, N>::task_body
+            >(task_id, task_name(), TaskClass<T, N>::is_leaf, verbose);
         }
 
-        // static void preregister(bool verbose) {
-        //     preregister_kokkos_task<
-        //         typename TaskClass<T, N>::ReturnType,
-        //         TaskClass<T, N>::template KokkosTaskBody
-        //     >(task_id, task_name(), TaskClass<T, N>::is_leaf, verbose);
-        // }
+        static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
+            const Legion::Processor proc = rt->get_executing_processor(ctx);
+            std::cout << "[LegionSolvers] Running CPU task " << task_name()
+                      << " on processor " << proc << '.' << std::endl;
+        }
 
-        // static void announce(const std::type_info &kokkos_execution_space_id,
-        //                      Legion::Context ctx, Legion::Runtime *rt) {
-        //     const Legion::Processor proc = rt->get_executing_processor(ctx);
-        //     std::cout << "[LegionSolvers] Running task " << task_name()
-        //               << " on processor " << proc
-        //               << " (kind " << proc.kind()
-        //               << ", " << kokkos_execution_space_id.name()
-        //               << ")" << std::endl;
-        // }
+        static void announce_cpu(Legion::DomainPoint index_point,
+                                 Legion::Context ctx, Legion::Runtime *rt) {
+            const Legion::Processor proc = rt->get_executing_processor(ctx);
+            std::cout << "[LegionSolvers] Running CPU task " << task_name()
+                      << ", index point " << index_point
+                      << ", on processor " << proc << '.' << std::endl;
+        }
+
+        static void preregister_kokkos(bool verbose) {
+            preregister_kokkos_task<
+                typename TaskClass<T, N>::return_type,
+                TaskClass<T, N>::template KokkosTaskTemplate
+            >(task_id, task_name(), TaskClass<T, N>::is_leaf, verbose);
+        }
+
+        static void announce_kokkos(Legion::DomainPoint index_point,
+                                    const std::type_info &execution_space,
+                                    Legion::Context ctx, Legion::Runtime *rt) {
+            const Legion::Processor proc = rt->get_executing_processor(ctx);
+            std::cout << "[LegionSolvers] Running Kokkos task " << task_name()
+                      << ", index point " << index_point
+                      << ", on processor " << proc
+                      << " (kind " << proc.kind()
+                      << ", " << execution_space.name() << ")." << std::endl;
+        }
 
     }; // struct TaskTD
 
