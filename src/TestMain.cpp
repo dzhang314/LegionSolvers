@@ -18,7 +18,7 @@ void top_level_task(const Legion::Task *,
     const Legion::IndexSpaceT<1> color_space = rt->create_index_space(ctx, Legion::Rect<1>{0, 10});
 
     LegionSolvers::DistributedVectorT<double, 1, Legion::coord_t, 1, Legion::coord_t> v{"v", index_space, color_space, ctx, rt};
-    LegionSolvers::DistributedVectorT<double, 1, Legion::coord_t, 1, Legion::coord_t> w{"w", index_space, color_space, ctx, rt};
+    LegionSolvers::DistributedVectorT<double, 1, Legion::coord_t, 1, Legion::coord_t> w{"w", v.index_partition, ctx, rt};
     v.zero_fill();
     w.random_fill();
     Legion::Future alpha = Legion::Future::from_value<double>(rt, 1.0);

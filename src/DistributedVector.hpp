@@ -71,6 +71,25 @@ namespace LegionSolvers {
                 rt->get_logical_partition(logical_region, index_partition)
             ) {}
 
+        DistributedVectorT(const std::string &name,
+                           Legion::IndexPartitionT<DIM, COORD_T> index_partition,
+                           Legion::Context ctx, Legion::Runtime *rt) :
+            ctx(ctx),
+            rt(rt),
+            name(name),
+            index_space(rt->get_parent_index_space(index_partition)),
+            logical_region(LegionSolvers::create_region(
+                index_space, {{sizeof(ENTRY_T), DEFAULT_FID}}, ctx, rt
+            )),
+            fid(DEFAULT_FID),
+            color_space(rt->get_index_partition_color_space_name(
+                index_partition
+            )),
+            index_partition(index_partition),
+            logical_partition(
+                rt->get_logical_partition(logical_region, index_partition)
+            ) {}
+
         virtual void zero_fill() override {
             static constexpr ENTRY_T zero = static_cast<ENTRY_T>(0);
             Legion::IndexFillLauncher launcher{
@@ -119,6 +138,7 @@ namespace LegionSolvers {
         void axpy(Legion::Future alpha, const DistributedVectorT &x) {
             assert(index_space == x.index_space);
             assert(color_space == x.color_space);
+            assert(index_partition == x.index_partition);
             Legion::IndexLauncher launcher{
                 AxpyTask<ENTRY_T, DIM>::task_id, color_space,
                 Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
