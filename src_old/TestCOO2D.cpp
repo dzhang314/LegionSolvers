@@ -1,8 +1,11 @@
+#include <iostream>
+
 #include <legion.h>
 #include <realm/cmdline.h>
 
 #include "COOMatrix.hpp"
 #include "ConjugateGradientSolver.hpp"
+#include "DistributedVector.hpp"
 #include "ExampleSystems.hpp"
 #include "Planner.hpp"
 #include "TaskRegistration.hpp"
@@ -26,6 +29,8 @@ void top_level_task(const Legion::Task *,
                     Legion::Context ctx,
                     Legion::Runtime *rt) {
 
+    std::cout << "Hello, world!" << std::endl;
+
     Legion::coord_t NUM_KERNEL_PARTITIONS = 16;
     Legion::coord_t NUM_INPUT_PARTITIONS = 4;
     Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
@@ -47,12 +52,12 @@ void top_level_task(const Legion::Task *,
     assert(ok);
 
     // Create index space and two vector regions (input and output).
-    const Legion::IndexSpaceT<2> index_space =
-        rt->create_index_space(ctx, Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
-    const Legion::LogicalRegionT<2> input_vector =
-        LegionSolvers::create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
-    const Legion::LogicalRegionT<2> output_vector =
-        LegionSolvers::create_region(index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
+    const Legion::IndexSpaceT<2> index_space = rt->create_index_space(ctx,
+        Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
+    const auto input_vector = LegionSolvers::create_region(
+        index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
+    const auto output_vector = LegionSolvers::create_region(
+        index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
 
     // Partition input and output vectors.
     const Legion::IndexSpaceT<1> input_color_space =
@@ -105,6 +110,7 @@ void top_level_task(const Legion::Task *,
     LegionSolvers::ConjugateGradientSolver<double> solver{planner, ctx, rt};
     solver.set_max_iterations(MAX_ITERATIONS);
     solver.solve(ctx, rt, true);
+
 }
 
 
@@ -128,8 +134,10 @@ void fill_2d_plane_task(const Legion::Task *task,
 int main(int argc, char **argv) {
     LegionSolvers::preregister_solver_tasks();
 
-    LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level", false, false);
-    LegionSolvers::preregister_cpu_task<fill_2d_plane_task>(FILL_2D_PLANE_TASK_ID, "fill_2d_plane", true, false);
+    LegionSolvers::preregister_cpu_task<top_level_task>(
+        TOP_LEVEL_TASK_ID, "top_level", false, false);
+    LegionSolvers::preregister_cpu_task<fill_2d_plane_task>(
+        FILL_2D_PLANE_TASK_ID, "fill_2d_plane", true, false);
 
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     return Legion::Runtime::start(argc, argv);
