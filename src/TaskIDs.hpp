@@ -17,6 +17,7 @@ namespace LegionSolvers {
         DIVISION_TASK_BLOCK_ID,
         DUMMY_TASK_BLOCK_ID,
         RANDOM_FILL_TASK_BLOCK_ID,
+        SCAL_TASK_BLOCK_ID,
         AXPY_TASK_BLOCK_ID,
         XPAY_TASK_BLOCK_ID,
         PRINT_VECTOR_TASK_BLOCK_ID,

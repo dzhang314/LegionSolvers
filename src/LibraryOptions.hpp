@@ -33,6 +33,17 @@ namespace LegionSolvers {
     #endif
 
 
+    static_assert(LEGION_SOLVERS_MAX_DIM <= LEGION_MAX_DIM,
+                  "Legion was not compiled with LEGION_MAX_DIM large enough "
+                  "to support specified value for LEGION_SOLVERS_MAX_DIM");
+
+
+    #ifndef LEGION_SOLVERS_DEFAULT_VECTOR_FID
+    constexpr Legion::FieldID
+    LEGION_SOLVERS_DEFAULT_VECTOR_FID = 101;
+    #endif
+
+
     using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
 
 

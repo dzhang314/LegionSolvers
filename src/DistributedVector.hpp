@@ -4,6 +4,7 @@
 #include <legion.h>
 
 #include "LegionUtilities.hpp"
+#include "LibraryOptions.hpp"
 #include "LinearAlgebraTasks.hpp"
 #include "UtilityTasks.hpp"
 
@@ -18,12 +19,30 @@ namespace LegionSolvers {
 
         virtual void zero_fill() = 0;
 
+        virtual void constant_fill(ENTRY_T) = 0;
+
+        virtual void operator=(ENTRY_T) = 0;
+
+        virtual void constant_fill(Legion::Future) = 0;
+
+        virtual void operator=(Legion::Future) = 0;
+
         virtual void random_fill(
             ENTRY_T low = static_cast<ENTRY_T>(0),
             ENTRY_T high = static_cast<ENTRY_T>(1)
         ) = 0;
 
         virtual void print() = 0;
+
+        virtual void operator=(const DistributedVector &) = 0;
+
+        virtual void axpy(Legion::Future, const DistributedVector &) = 0;
+
+        virtual void axpy(ENTRY_T, const DistributedVector &) = 0;
+
+        virtual void xpay(Legion::Future, const DistributedVector &) = 0;
+
+        virtual void xpay(ENTRY_T, const DistributedVector &) = 0;
 
     }; // class DistributedVector
 
@@ -32,8 +51,6 @@ namespace LegionSolvers {
               int DIM = 1, typename COORD_T = Legion::coord_t,
               int COLOR_DIM = 1, typename COLOR_COORD_T = Legion::coord_t>
     class DistributedVectorT: public DistributedVector<ENTRY_T> {
-
-        static constexpr Legion::FieldID DEFAULT_FID = 101;
 
     public:
 
@@ -50,7 +67,6 @@ namespace LegionSolvers {
         DistributedVectorT() = delete;
         DistributedVectorT(const DistributedVectorT &) = delete;
         DistributedVectorT(DistributedVectorT &&) = delete;
-        DistributedVectorT &operator=(const DistributedVectorT &) = delete;
         DistributedVectorT &operator=(DistributedVectorT &&) = delete;
 
         explicit DistributedVectorT(
@@ -63,9 +79,11 @@ namespace LegionSolvers {
             name(name),
             index_space(index_space),
             logical_region(LegionSolvers::create_region(
-                index_space, {{sizeof(ENTRY_T), DEFAULT_FID}}, ctx, rt
+                index_space,
+                {{sizeof(ENTRY_T), LEGION_SOLVERS_DEFAULT_VECTOR_FID}},
+                ctx, rt
             )),
-            fid(DEFAULT_FID),
+            fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
             color_space(color_space),
             index_partition(
                 rt->create_equal_partition(ctx, index_space, color_space)
@@ -83,9 +101,11 @@ namespace LegionSolvers {
             name(name),
             index_space(rt->get_parent_index_space(index_partition)),
             logical_region(LegionSolvers::create_region(
-                index_space, {{sizeof(ENTRY_T), DEFAULT_FID}}, ctx, rt
+                index_space,
+                {{sizeof(ENTRY_T), LEGION_SOLVERS_DEFAULT_VECTOR_FID}},
+                ctx, rt
             )),
-            fid(DEFAULT_FID),
+            fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
             color_space(rt->get_index_partition_color_space_name(
                 index_partition
             )),
@@ -103,6 +123,33 @@ namespace LegionSolvers {
             // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_field(fid);
             rt->fill_fields(ctx, launcher);
+        }
+
+        virtual void constant_fill(ENTRY_T value) override {
+            Legion::IndexFillLauncher launcher{
+                color_space, logical_partition, logical_region,
+                Legion::TaskArgument{&value, sizeof(ENTRY_T)}
+            };
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_field(fid);
+            rt->fill_fields(ctx, launcher);
+        }
+
+        virtual void operator=(ENTRY_T value) override {
+            constant_fill(value);
+        }
+
+        virtual void constant_fill(Legion::Future value) override {
+            Legion::IndexFillLauncher launcher{
+                color_space, logical_partition, logical_region, value
+            };
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_field(fid);
+            rt->fill_fields(ctx, launcher);
+        }
+
+        virtual void operator=(Legion::Future value) override {
+            constant_fill(value);
         }
 
         virtual void random_fill(
@@ -139,10 +186,38 @@ namespace LegionSolvers {
             rt->execute_index_space(ctx, launcher);
         }
 
-        void axpy(Legion::Future alpha, const DistributedVectorT &x) {
+        void operator=(const DistributedVectorT &x) {
             assert(index_space == x.index_space);
             assert(color_space == x.color_space);
             assert(index_partition == x.index_partition);
+            Legion::IndexCopyLauncher launcher{color_space};
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_copy_requirements(
+                Legion::RegionRequirement{
+                    x.logical_partition, 0,
+                    LEGION_READ_ONLY, LEGION_EXCLUSIVE, x.logical_region
+                },
+                Legion::RegionRequirement{
+                    logical_partition, 0,
+                    LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, logical_region
+                }
+            );
+            launcher.add_src_field(0, x.fid);
+            launcher.add_dst_field(0, fid);
+            rt->issue_copy_operation(ctx, launcher);
+        }
+
+        virtual void operator=(const DistributedVector<ENTRY_T> &x) override {
+            this->operator=(dynamic_cast<const DistributedVectorT &>(x));
+        }
+
+        virtual void axpy(Legion::Future alpha,
+                          const DistributedVector<ENTRY_T> &x) override {
+            const DistributedVectorT &x_ref =
+                dynamic_cast<const DistributedVectorT &>(x);
+            assert(index_space == x_ref.index_space);
+            assert(color_space == x_ref.color_space);
+            assert(index_partition == x_ref.index_partition);
             Legion::IndexLauncher launcher{
                 AxpyTask<ENTRY_T, DIM>::task_id, color_space,
                 Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
@@ -154,12 +229,48 @@ namespace LegionSolvers {
             });
             launcher.add_field(0, fid);
             launcher.add_region_requirement(Legion::RegionRequirement{
-                x.logical_partition, 0,
-                LEGION_READ_ONLY, LEGION_EXCLUSIVE, x.logical_region
+                x_ref.logical_partition, 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, x_ref.logical_region
             });
-            launcher.add_field(1, x.fid);
+            launcher.add_field(1, x_ref.fid);
             launcher.add_future(alpha);
             rt->execute_index_space(ctx, launcher);
+        }
+
+        virtual void axpy(ENTRY_T alpha,
+                          const DistributedVector<ENTRY_T> &x) override {
+            axpy(Legion::Future::from_value<ENTRY_T>(rt, alpha), x);
+        }
+
+        virtual void xpay(Legion::Future alpha,
+                          const DistributedVector<ENTRY_T> &x) override {
+            const DistributedVectorT &x_ref =
+                dynamic_cast<const DistributedVectorT &>(x);
+            assert(index_space == x_ref.index_space);
+            assert(color_space == x_ref.color_space);
+            assert(index_partition == x_ref.index_partition);
+            Legion::IndexLauncher launcher{
+                XpayTask<ENTRY_T, DIM>::task_id, color_space,
+                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
+            };
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                logical_partition, 0,
+                LEGION_READ_WRITE, LEGION_EXCLUSIVE, logical_region
+            });
+            launcher.add_field(0, fid);
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                x_ref.logical_partition, 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, x_ref.logical_region
+            });
+            launcher.add_field(1, x_ref.fid);
+            launcher.add_future(alpha);
+            rt->execute_index_space(ctx, launcher);
+        }
+
+        virtual void xpay(ENTRY_T alpha,
+                          const DistributedVector<ENTRY_T> &x) override {
+            xpay(Legion::Future::from_value<ENTRY_T>(rt, alpha), x);
         }
 
     }; // class DistributedVectorT
