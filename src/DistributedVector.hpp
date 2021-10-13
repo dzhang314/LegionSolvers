@@ -14,6 +14,8 @@ namespace LegionSolvers {
     template <typename ENTRY_T>
     class DistributedVector {
 
+    public:
+
         virtual void zero_fill() = 0;
 
         virtual void random_fill(
@@ -51,11 +53,12 @@ namespace LegionSolvers {
         DistributedVectorT &operator=(const DistributedVectorT &) = delete;
         DistributedVectorT &operator=(DistributedVectorT &&) = delete;
 
-        DistributedVectorT(const std::string &name,
-                           Legion::IndexSpaceT<DIM, COORD_T> index_space,
-                           Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space,
-                           Legion::Context ctx, Legion::Runtime *rt) :
-            ctx(ctx),
+        explicit DistributedVectorT(
+            const std::string &name,
+            Legion::IndexSpaceT<DIM, COORD_T> index_space,
+            Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space,
+            Legion::Context ctx, Legion::Runtime *rt
+        ) : ctx(ctx),
             rt(rt),
             name(name),
             index_space(index_space),
@@ -71,10 +74,11 @@ namespace LegionSolvers {
                 rt->get_logical_partition(logical_region, index_partition)
             ) {}
 
-        DistributedVectorT(const std::string &name,
-                           Legion::IndexPartitionT<DIM, COORD_T> index_partition,
-                           Legion::Context ctx, Legion::Runtime *rt) :
-            ctx(ctx),
+        explicit DistributedVectorT(
+            const std::string &name,
+            Legion::IndexPartitionT<DIM, COORD_T> index_partition,
+            Legion::Context ctx, Legion::Runtime *rt
+        ) : ctx(ctx),
             rt(rt),
             name(name),
             index_space(rt->get_parent_index_space(index_partition)),

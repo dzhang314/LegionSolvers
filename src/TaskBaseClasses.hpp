@@ -91,19 +91,19 @@ namespace LegionSolvers {
     }; // struct TaskTD
 
 
-    template <Legion::TaskID BLOCK_ID,
-              template <typename, int> typename TaskClass,
-              typename T>
-    struct TaskTD<BLOCK_ID, TaskClass, T, 0> {
+    // template <Legion::TaskID BLOCK_ID,
+    //           template <typename, int> typename TaskClass,
+    //           typename T>
+    // struct TaskTD<BLOCK_ID, TaskClass, T, 0> {
 
-        static constexpr Legion::TaskID task_id(int N) {
-            return LEGION_SOLVERS_TASK_ID_ORIGIN +
-                   LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-                   LEGION_SOLVERS_NUM_TYPES * (N - 1) +
-                   LEGION_SOLVERS_TYPE_INDEX<T>;
-        }
+    //     static constexpr Legion::TaskID task_id(int N) {
+    //         return LEGION_SOLVERS_TASK_ID_ORIGIN +
+    //                LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+    //                LEGION_SOLVERS_NUM_TYPES * (N - 1) +
+    //                LEGION_SOLVERS_TYPE_INDEX<T>;
+    //     }
 
-    }; // struct TaskTD
+    // }; // struct TaskTD
 
 
 } // namespace LegionSolvers

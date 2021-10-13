@@ -10,10 +10,9 @@ namespace LegionSolvers {
 
 
     template <typename ENTRY_T>
-    struct LinearOperator {
+    class LinearOperator {
 
-        Legion::Context ctx;
-        Legion::Runtime *rt;
+    public:
 
         virtual void matvec(
             DistributedVector<ENTRY_T> &output_vector,

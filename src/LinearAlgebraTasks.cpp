@@ -11,7 +11,9 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    AxpyTask::announce_kokkos(task->index_point, typeid(KokkosExecutionSpace), ctx, rt);
+    AxpyTask::announce_kokkos(
+        task->index_point, typeid(KokkosExecutionSpace), ctx, rt
+    );
 
     assert(regions.size() == 2);
     const auto &y = regions[0];

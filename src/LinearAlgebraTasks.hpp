@@ -98,7 +98,7 @@ namespace LegionSolvers {
                 Legion::Context ctx, Legion::Runtime *rt
             );
 
-        }; // struct KokkosTaskBody
+        }; // struct KokkosTaskTemplate
 
     }; // struct AxpyTask
 
