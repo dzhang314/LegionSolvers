@@ -295,18 +295,6 @@ namespace LegionSolvers {
             mapper_registration_callback
         );
 
-        Legion::Runtime::preregister_projection_functor(
-            PFID_KDR_TO_K, new ProjectionOneLevel{0}
-        );
-        Legion::Runtime::preregister_projection_functor(
-            PFID_KDR_TO_D, new ProjectionOneLevel{1}
-        );
-        Legion::Runtime::preregister_projection_functor(
-            PFID_KDR_TO_R, new ProjectionOneLevel{2}
-        );
-        Legion::Runtime::preregister_projection_functor(
-            PFID_KDR_TO_DR, new ProjectionTwoLevel{1, 2}
-        );
     }
 
 

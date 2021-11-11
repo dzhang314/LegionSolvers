@@ -9,7 +9,7 @@
 #include "DistributedVector.hpp"
 #include "LegionUtilities.hpp"
 #include "LibraryOptions.hpp"
-#include "LinearOperator.hpp"
+#include "MaterializedLinearOperator.hpp"
 
 
 namespace LegionSolvers {
@@ -22,7 +22,10 @@ namespace LegionSolvers {
               typename DOMAIN_COORD_T = Legion::coord_t,
               typename RANGE_COORD_T = Legion::coord_t,
               typename COLOR_COORD_T = Legion::coord_t>
-    class DistributedCOOMatrixT : public LinearOperator<ENTRY_T> {
+    class DistributedCOOMatrixT : public MaterializedLinearOperatorT<
+        ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM,
+        KERNEL_COORD_T, DOMAIN_COORD_T, RANGE_COORD_T
+    > {
 
     public:
 
@@ -79,6 +82,12 @@ namespace LegionSolvers {
                 rt->get_logical_partition(kernel_region, kernel_index_partition)
             ) {}
 
+        virtual Legion::LogicalRegionT<KERNEL_DIM, KERNEL_COORD_T>
+        get_kernel_region() const override { return kernel_region; }
+
+        virtual Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T>
+        get_kernel_partition() const override { return kernel_index_partition; }
+
         Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T>
         kernel_partition_from_domain_partition(
             Legion::IndexPartitionT<DOMAIN_DIM, DOMAIN_COORD_T> domain_partition
@@ -93,6 +102,14 @@ namespace LegionSolvers {
             };
         }
 
+        virtual Legion::IndexPartition kernel_partition_from_domain_partition(
+            Legion::IndexPartition domain_partition
+        ) const override {
+            return kernel_partition_from_domain_partition(
+                Legion::IndexPartitionT<DOMAIN_DIM, DOMAIN_COORD_T>{domain_partition}
+            );
+        }
+
         Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T>
         kernel_partition_from_range_partition(
             Legion::IndexPartitionT<RANGE_DIM, RANGE_COORD_T> range_partition
@@ -105,6 +122,14 @@ namespace LegionSolvers {
                     fid_i, color_space, LEGION_DISJOINT_COMPLETE_KIND
                 )
             };
+        }
+
+        virtual Legion::IndexPartition kernel_partition_from_range_partition(
+            Legion::IndexPartition range_partition
+        ) const override {
+            return kernel_partition_from_range_partition(
+                Legion::IndexPartitionT<RANGE_DIM, RANGE_COORD_T>{range_partition}
+            );
         }
 
         void matvec(

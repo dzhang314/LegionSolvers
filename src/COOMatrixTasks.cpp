@@ -11,9 +11,6 @@ KokkosTaskTemplate<ExecutionSpace>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-
-    // COOMatvecTask::announce(typeid(ExecutionSpace), ctx, rt);
-
     assert(regions.size() == 3);
     const auto &output_vec = regions[0];
     const auto &coo_matrix = regions[1];

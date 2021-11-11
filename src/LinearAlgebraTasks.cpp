@@ -1,6 +1,7 @@
 #include "LinearAlgebraTasks.hpp"
 
 #include <tuple>
+#include <typeinfo>
 
 
 template <typename T, int N>
@@ -11,9 +12,9 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    ScalTask::announce_kokkos(
-        task->index_point, typeid(KokkosExecutionSpace), ctx, rt
-    );
+    // ScalTask::announce_kokkos(
+    //     task->index_point, typeid(KokkosExecutionSpace), ctx, rt
+    // );
 
     assert(regions.size() == 1);
     const auto &x = regions[0];
@@ -58,9 +59,9 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    AxpyTask::announce_kokkos(
-        task->index_point, typeid(KokkosExecutionSpace), ctx, rt
-    );
+    // AxpyTask::announce_kokkos(
+    //     task->index_point, typeid(KokkosExecutionSpace), ctx, rt
+    // );
 
     assert(regions.size() == 2);
     const auto &y = regions[0];
@@ -121,9 +122,9 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    XpayTask::announce_kokkos(
-        task->index_point, typeid(KokkosExecutionSpace), ctx, rt
-    );
+    // XpayTask::announce_kokkos(
+    //     task->index_point, typeid(KokkosExecutionSpace), ctx, rt
+    // );
 
     assert(regions.size() == 2);
     const auto &y = regions[0];
@@ -173,6 +174,65 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
             }
         );
     }
+}
+
+template <typename T, int N>
+template <typename KokkosExecutionSpace>
+T LegionSolvers::DotTask<T, N>::
+KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
+    const Legion::Task *task,
+    const std::vector<Legion::PhysicalRegion> &regions,
+    Legion::Context ctx, Legion::Runtime *rt
+) {
+    // DotTask::announce_kokkos(
+    //     task->index_point, typeid(KokkosExecutionSpace), ctx, rt
+    // );
+
+    assert(regions.size() == 2);
+    const auto &v = regions[0];
+    const auto &w = regions[1];
+
+    assert(task->regions.size() == 2);
+    const auto &v_req = task->regions[0];
+    const auto &w_req = task->regions[1];
+
+    assert(v_req.privilege_fields.size() == 1);
+    const Legion::FieldID v_fid = *v_req.privilege_fields.begin();
+
+    assert(w_req.privilege_fields.size() == 1);
+    const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
+
+    Legion::FieldAccessor<
+        LEGION_READ_ONLY, T, N, Legion::coord_t,
+        Realm::AffineAccessor<T, N, Legion::coord_t>
+    > v_reader{v, v_fid}, w_reader{w, w_fid};
+
+    const Legion::Domain v_domain = rt->get_index_space_domain(
+        ctx, v_req.region.get_index_space()
+    );
+
+    const Legion::Domain w_domain = rt->get_index_space_domain(
+        ctx, w_req.region.get_index_space()
+    );
+
+    assert(v_domain == w_domain);
+
+    T result = static_cast<T>(0);
+    for (Legion::RectInDomainIterator<N> it{v_domain}; it(); ++it) {
+        const Legion::Rect<N> rect = *it;
+        T temp = static_cast<T>(0);
+        Kokkos::parallel_reduce(
+            KokkosRangeFactory<KokkosExecutionSpace, N>::create(
+                rect, ctx, rt
+            ),
+            KokkosDotFunctor<KokkosExecutionSpace, T, N>{
+                v_reader.accessor, w_reader.accessor
+            },
+            temp
+        );
+        result += temp;
+    }
+    return result;
 }
 
 
@@ -231,5 +291,23 @@ static constexpr auto instantiations = std::make_tuple(
     LegionSolvers::XpayTask<double, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body,
     LegionSolvers::XpayTask<double, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body,
     LegionSolvers::XpayTask<double, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body,
-    LegionSolvers::XpayTask<double, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body
+    LegionSolvers::XpayTask<double, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body,
+    LegionSolvers::DotTask<float, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body,
+    LegionSolvers::DotTask<float, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body,
+    LegionSolvers::DotTask<float, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body,
+    LegionSolvers::DotTask<float, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body,
+    LegionSolvers::DotTask<float, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body,
+    LegionSolvers::DotTask<float, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body,
+    LegionSolvers::DotTask<float, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body,
+    LegionSolvers::DotTask<float, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body,
+    LegionSolvers::DotTask<float, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body,
+    LegionSolvers::DotTask<double, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body,
+    LegionSolvers::DotTask<double, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body,
+    LegionSolvers::DotTask<double, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body,
+    LegionSolvers::DotTask<double, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body,
+    LegionSolvers::DotTask<double, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body,
+    LegionSolvers::DotTask<double, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body,
+    LegionSolvers::DotTask<double, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body,
+    LegionSolvers::DotTask<double, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body,
+    LegionSolvers::DotTask<double, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body
 );

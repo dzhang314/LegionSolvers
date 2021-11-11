@@ -11,7 +11,7 @@ void LegionSolvers::RandomFillTask<T, DIM>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    RandomFillTask::announce_cpu(task->index_point, ctx, rt);
+    // RandomFillTask::announce_cpu(task->index_point, ctx, rt);
 
     assert(regions.size() == 1);
     const auto &region = regions[0];
@@ -45,7 +45,7 @@ void LegionSolvers::PrintVectorTask<T, DIM>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    PrintVectorTask::announce_cpu(task->index_point, ctx, rt);
+    // PrintVectorTask::announce_cpu(task->index_point, ctx, rt);
 
     assert(regions.size() == 1);
     const auto &vector = regions[0];

@@ -279,6 +279,77 @@ namespace LegionSolvers {
     }; // struct XpayTask
 
 
+    template <typename ExecutionSpace, typename T, int N>
+    struct KokkosDotFunctor {
+
+        using value_type = T;
+
+        const KokkosConstOffsetView<ExecutionSpace, T, N> v_view;
+        const KokkosConstOffsetView<ExecutionSpace, T, N> w_view;
+
+        explicit KokkosDotFunctor(
+            Realm::AffineAccessor<T, N, Legion::coord_t> v_accessor,
+            Realm::AffineAccessor<T, N, Legion::coord_t> w_accessor
+        ) : v_view{v_accessor}, w_view{w_accessor} {}
+
+        KOKKOS_INLINE_FUNCTION void operator()(int a, T &acc) const {
+            acc += v_view(a) * w_view(a);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(int a, int b, T &acc) const {
+            acc += v_view(a, b) * w_view(a, b);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, T &acc
+        ) const {
+            acc += v_view(a, b, c) * w_view(a, b, c);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, T &acc
+        ) const {
+            acc += v_view(a, b, c, d) * w_view(a, b, c, d);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e, T &acc
+        ) const {
+            acc += v_view(a, b, c, d, e) * w_view(a, b, c, d, e);
+        }
+
+        KOKKOS_INLINE_FUNCTION void operator()(
+            int a, int b, int c, int d, int e, int f, T &acc
+        ) const {
+            acc += v_view(a, b, c, d, e, f) * w_view(a, b, c, d, e, f);
+        }
+
+    }; // struct KokkosDotFunctor
+
+
+    template <typename T, int N>
+    struct DotTask : TaskTD<DOT_TASK_BLOCK_ID, DotTask, T, N> {
+
+        static constexpr const char *task_base_name = "dot_product";
+
+        static constexpr bool is_leaf = true;
+
+        using return_type = T;
+
+        template <typename KokkosExecutionSpace>
+        struct KokkosTaskTemplate {
+
+            static T task_body(
+                const Legion::Task *task,
+                const std::vector<Legion::PhysicalRegion> &regions,
+                Legion::Context ctx, Legion::Runtime *rt
+            );
+
+        }; // struct KokkosTaskTemplate
+
+    }; // struct DotTask
+
+
 } // namespace LegionSolvers
 
 

@@ -39,6 +39,12 @@ void LegionSolvers::preregister_solver_tasks(bool verbose) {
     LegionSolvers::XpayTask<double, 1>::preregister_kokkos(verbose);
     LegionSolvers::XpayTask<double, 2>::preregister_kokkos(verbose);
     LegionSolvers::XpayTask<double, 3>::preregister_kokkos(verbose);
+    LegionSolvers::DotTask<float, 1>::preregister_kokkos(verbose);
+    LegionSolvers::DotTask<float, 2>::preregister_kokkos(verbose);
+    LegionSolvers::DotTask<float, 3>::preregister_kokkos(verbose);
+    LegionSolvers::DotTask<double, 1>::preregister_kokkos(verbose);
+    LegionSolvers::DotTask<double, 2>::preregister_kokkos(verbose);
+    LegionSolvers::DotTask<double, 3>::preregister_kokkos(verbose);
 
     LegionSolvers::COOMatvecTask<float, 1, 1, 1>::preregister_kokkos(verbose);
     LegionSolvers::COOMatvecTask<float, 1, 1, 2>::preregister_kokkos(verbose);

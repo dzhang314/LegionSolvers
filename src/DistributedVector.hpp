@@ -46,6 +46,8 @@ namespace LegionSolvers {
 
         virtual void xpay(ENTRY_T, const DistributedVector &) = 0;
 
+        virtual Legion::Future dot(const DistributedVector &) = 0;
+
     }; // class DistributedVector
 
 
@@ -271,6 +273,34 @@ namespace LegionSolvers {
         virtual void xpay(ENTRY_T alpha,
                           const DistributedVector<ENTRY_T> &x) override {
             xpay(Legion::Future::from_value<ENTRY_T>(rt, alpha), x);
+        }
+
+        virtual Legion::Future dot(
+            const DistributedVector<ENTRY_T> &w
+        ) override {
+            const DistributedVectorT &w_ref =
+                dynamic_cast<const DistributedVectorT &>(w);
+            assert(index_space == w_ref.index_space);
+            assert(color_space == w_ref.color_space);
+            assert(index_partition == w_ref.index_partition);
+            Legion::IndexLauncher launcher{
+                DotTask<ENTRY_T, DIM>::task_id, color_space,
+                Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
+            };
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                logical_partition, 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, logical_region
+            });
+            launcher.add_field(0, fid);
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                w_ref.logical_partition, 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, w_ref.logical_region
+            });
+            launcher.add_field(1, w_ref.fid);
+            return rt->execute_index_space(
+                ctx, launcher, LEGION_REDOP_SUM<ENTRY_T>
+            );
         }
 
     }; // class DistributedVectorT
