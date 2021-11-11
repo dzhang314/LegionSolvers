@@ -32,48 +32,7 @@ namespace LegionSolvers {
 
         static std::string task_name() { return "fill_coo_negative_laplacian_1d"; }
 
-        struct Args {
-            Legion::FieldID fid_i;
-            Legion::FieldID fid_j;
-            Legion::FieldID fid_entry;
-            Legion::coord_t grid_length;
-        };
 
-        static void task(const Legion::Task *task,
-                         const std::vector<Legion::PhysicalRegion> &regions,
-                         Legion::Context ctx,
-                         Legion::Runtime *rt) {
-
-            assert(regions.size() == 1);
-            const auto &matrix = regions[0];
-
-            assert(task->arglen == sizeof(Args));
-            const Args args = *reinterpret_cast<const Args *>(task->args);
-
-            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<1>, 1> i_writer{matrix, args.fid_i};
-            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<1>, 1> j_writer{matrix, args.fid_j};
-            const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, 1> entry_writer{matrix, args.fid_entry};
-
-
-            Legion::PointInDomainIterator<1> iter{matrix};
-            for (Legion::coord_t i = 0; i < args.grid_length; ++i) {
-                i_writer[*iter] = Legion::Point<1>{i};
-                j_writer[*iter] = Legion::Point<1>{i};
-                entry_writer[*iter] = static_cast<T>(2.0);
-                ++iter;
-            }
-
-            for (Legion::coord_t i = 0; i < args.grid_length - 1; ++i) {
-                i_writer[*iter] = Legion::Point<1>{i + 1};
-                j_writer[*iter] = Legion::Point<1>{i};
-                entry_writer[*iter] = static_cast<T>(-1.0);
-                ++iter;
-                i_writer[*iter] = Legion::Point<1>{i};
-                j_writer[*iter] = Legion::Point<1>{i + 1};
-                entry_writer[*iter] = static_cast<T>(-1.0);
-                ++iter;
-            }
-        }
 
     }; // struct FillCOONegativeLaplacian1DTask
 

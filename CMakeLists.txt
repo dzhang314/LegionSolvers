@@ -12,6 +12,7 @@ add_executable(TestExecutable
     src/COOMatrixTasks.cpp
     src/LegionUtilities.cpp
     src/LinearAlgebraTasks.cpp
+    src/TaskRegistration.cpp
     src/UtilityTasks.cpp
 )
 

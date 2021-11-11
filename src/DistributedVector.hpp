@@ -48,8 +48,9 @@ namespace LegionSolvers {
 
 
     template <typename ENTRY_T,
-              int DIM = 1, typename COORD_T = Legion::coord_t,
-              int COLOR_DIM = 1, typename COLOR_COORD_T = Legion::coord_t>
+              int DIM = 1, int COLOR_DIM = 1,
+              typename COORD_T = Legion::coord_t,
+              typename COLOR_COORD_T = Legion::coord_t>
     class DistributedVectorT: public DistributedVector<ENTRY_T> {
 
     public:
@@ -58,9 +59,10 @@ namespace LegionSolvers {
         Legion::Runtime *rt;
         std::string name;
         Legion::IndexSpaceT<DIM, COORD_T> index_space;
-        Legion::LogicalRegionT<DIM, COORD_T> logical_region;
         Legion::FieldID fid;
+        Legion::LogicalRegionT<DIM, COORD_T> logical_region;
         Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;
+        // TODO: COORD_T or COLOR_COORD_T here?
         Legion::IndexPartitionT<DIM> index_partition;
         Legion::LogicalPartitionT<DIM, COORD_T> logical_partition;
 
@@ -78,12 +80,10 @@ namespace LegionSolvers {
             rt(rt),
             name(name),
             index_space(index_space),
-            logical_region(LegionSolvers::create_region(
-                index_space,
-                {{sizeof(ENTRY_T), LEGION_SOLVERS_DEFAULT_VECTOR_FID}},
-                ctx, rt
-            )),
             fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
+            logical_region(create_region(
+                index_space, {{sizeof(ENTRY_T), fid}}, ctx, rt
+            )),
             color_space(color_space),
             index_partition(
                 rt->create_equal_partition(ctx, index_space, color_space)
@@ -100,12 +100,10 @@ namespace LegionSolvers {
             rt(rt),
             name(name),
             index_space(rt->get_parent_index_space(index_partition)),
-            logical_region(LegionSolvers::create_region(
-                index_space,
-                {{sizeof(ENTRY_T), LEGION_SOLVERS_DEFAULT_VECTOR_FID}},
-                ctx, rt
-            )),
             fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
+            logical_region(create_region(
+                index_space, {{sizeof(ENTRY_T), fid}}, ctx, rt
+            )),
             color_space(rt->get_index_partition_color_space_name(
                 index_partition
             )),

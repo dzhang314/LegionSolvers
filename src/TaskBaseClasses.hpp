@@ -16,6 +16,7 @@ namespace LegionSolvers {
 
 
     template <typename T> constexpr const char *LEGION_SOLVERS_TYPE_NAME   () { return typeid(T).name(); }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__half     >() { return "half"          ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<float      >() { return "float"         ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<double     >() { return "double"        ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<long double>() { return "longdouble"    ; }
