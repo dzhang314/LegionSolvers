@@ -1,6 +1,9 @@
+#include <map>
+
 #include <legion.h>
 
 #include "COOMatrixTasks.hpp"
+#include "DistributedCOOMatrix.hpp"
 #include "DistributedVector.hpp"
 #include "LegionUtilities.hpp"
 #include "TaskRegistration.hpp"
@@ -66,70 +69,82 @@ namespace LegionSolvers {
 
 
     template <typename ENTRY_T,
-              int KERNEL_DIM = 1, int DOMAIN_DIM = 1,
-              int RANGE_DIM = 1, int COLOR_DIM = 1,
-              typename KERNEL_COORD_T = Legion::coord_t,
-              typename DOMAIN_COORD_T = Legion::coord_t,
-              typename RANGE_COORD_T = Legion::coord_t,
-              typename COLOR_COORD_T = Legion::coord_t>
-    class DistributedCOOMatrixT {
+              int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, int COLOR_DIM,
+              typename KERNEL_COORD_T, typename DOMAIN_COORD_T,
+              typename RANGE_COORD_T, typename COLOR_COORD_T>
+    Legion::IndexSpaceT<3> compute_nonempty_tiles(
+        const LegionSolvers::DistributedCOOMatrixT<
+            ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, COLOR_DIM,
+            KERNEL_COORD_T, DOMAIN_COORD_T, RANGE_COORD_T, COLOR_COORD_T
+        > &matrix,
+        Legion::IndexPartitionT<DOMAIN_DIM, DOMAIN_COORD_T> domain_partition,
+        Legion::IndexPartitionT<RANGE_DIM, RANGE_COORD_T> range_partition
+    ) {
 
-    public:
+        const Legion::Context &ctx = matrix.ctx;
+        Legion::Runtime *const rt = matrix.rt;
 
-        Legion::Context ctx;
-        Legion::Runtime *rt;
-        std::string name;
-        Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> kernel_space;
-        Legion::IndexSpaceT<DOMAIN_DIM, DOMAIN_COORD_T> domain_space;
-        Legion::IndexSpaceT<RANGE_DIM, RANGE_COORD_T> range_space;
-        Legion::FieldID fid_i;     // Legion::Rect<RANGE_DIM>
-        Legion::FieldID fid_j;     // Legion::Rect<DOMAIN_DIM>
-        Legion::FieldID fid_entry; // ENTRY_T
-        Legion::LogicalRegionT<KERNEL_DIM, KERNEL_COORD_T> kernel_region;
-        Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;
-        Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_index_partition;
-        Legion::LogicalPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_logical_partition;
+        const Legion::Domain kernel_color_space =
+            rt->get_index_space_domain(matrix.color_space);
+        const Legion::Domain domain_color_space =
+            rt->get_index_partition_color_space(domain_partition);
+        const Legion::Domain range_color_space =
+            rt->get_index_partition_color_space(range_partition);
 
-        DistributedCOOMatrixT() = delete;
-        DistributedCOOMatrixT(const DistributedCOOMatrixT &) = delete;
-        DistributedCOOMatrixT(DistributedCOOMatrixT &&) = delete;
-        DistributedCOOMatrixT &operator=(const DistributedCOOMatrixT &) = delete;
-        DistributedCOOMatrixT &operator=(DistributedCOOMatrixT &&) = delete;
+        const Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_domain_partition =
+            matrix.kernel_partition_from_domain_partition(domain_partition);
+        const Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_range_partition =
+            matrix.kernel_partition_from_range_partition(range_partition);
 
-        explicit DistributedCOOMatrixT(
-            const std::string &name,
-            Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> kernel_space,
-            Legion::IndexSpaceT<DOMAIN_DIM, DOMAIN_COORD_T> domain_space,
-            Legion::IndexSpaceT<RANGE_DIM, RANGE_COORD_T> range_space,
-            Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space,
-            Legion::Context ctx, Legion::Runtime *rt
-        ) : ctx(ctx),
-            rt(rt),
-            name(name),
-            kernel_space(kernel_space),
-            domain_space(domain_space),
-            range_space(range_space),
-            fid_i(LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_I),
-            fid_j(LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_J),
-            fid_entry(LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_ENTRY),
-            kernel_region(create_region(
-                kernel_space,
-                {
-                    {sizeof(Legion::Point<RANGE_DIM, RANGE_COORD_T>), fid_i},
-                    {sizeof(Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>), fid_j},
-                    {sizeof(ENTRY_T), fid_entry},
-                },
-                ctx, rt
-            )),
-            color_space(color_space),
-            kernel_index_partition(
-                rt->create_equal_partition(ctx, kernel_space, color_space)
-            ),
-            kernel_logical_partition(
-                rt->get_logical_partition(kernel_region, kernel_index_partition)
-            ) {}
+        const Legion::LogicalPartitionT<KERNEL_DIM, KERNEL_COORD_T> column_logical_partition =
+            rt->get_logical_partition(matrix.kernel_region, kernel_domain_partition);
 
-    }; // class DistributedCOOMatrixT
+        std::map<Legion::IndexSpace, Legion::IndexPartition> map{};
+        const Legion::Color tile_partition = rt->create_cross_product_partitions(
+            ctx,
+            kernel_domain_partition,
+            kernel_range_partition,
+            map,
+            LEGION_DISJOINT_COMPLETE_KIND,
+            LEGION_SOLVERS_DEFAULT_TILE_PARTITION_COLOR
+        );
+
+        // TODO: Handle multi-dimensional color spaces
+        // TODO: DomainPoint isn't templated on coordinate type
+        // TODO: Once it is, how do we promote three coordinate types to a common type?
+        using iter_t = Legion::PointInDomainIterator<1>;
+        std::vector<Legion::Point<3>> tile_points{};
+        for (iter_t domain_iter{domain_color_space}; domain_iter(); ++domain_iter) {
+            const Legion::DomainPoint domain_color = *domain_iter;
+            const Legion::LogicalRegion column =
+                rt->get_logical_subregion_by_color(column_logical_partition, domain_color);
+            const auto column_partition =
+                rt->get_logical_partition_by_color(column, tile_partition);
+            for (iter_t range_iter{range_color_space}; range_iter(); ++range_iter) {
+                const Legion::DomainPoint range_color = *range_iter;
+                const Legion::LogicalRegion tile =
+                    rt->get_logical_subregion_by_color(column_partition, range_color);
+                const Legion::Domain tile_domain =
+                    rt->get_index_space_domain(tile.get_index_space());
+                for (iter_t kernel_iter{kernel_color_space}; kernel_iter(); ++kernel_iter) {
+                    const Legion::DomainPoint kernel_color = *kernel_iter;
+                    const Legion::LogicalRegion kernel_piece =
+                        rt->get_logical_subregion_by_color(matrix.kernel_logical_partition, kernel_color);
+                    const Legion::Domain kernel_piece_domain =
+                        rt->get_index_space_domain(kernel_piece.get_index_space());
+                    const Legion::Domain intersection_domain =
+                        tile_domain.intersection(kernel_piece_domain);
+                    const Legion::PointInDomainIterator<KERNEL_DIM, KERNEL_COORD_T>
+                    intersection_iter{intersection_domain};
+                    if (intersection_iter()) {
+                        tile_points.emplace_back(kernel_color[0], domain_color[0], range_color[0]);
+                        std::cout << kernel_color[0] << " : " << domain_color[0] << " : " << range_color[0] << std::endl;
+                    }
+                }
+            }
+        }
+        return rt->create_index_space(ctx, tile_points);
+    }
 
 
 } // namespace LegionSolvers
@@ -140,7 +155,7 @@ void top_level_task(const Legion::Task *,
                     Legion::Context ctx, Legion::Runtime *rt) {
 
     const Legion::IndexSpaceT<1> index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, 99});
-    const Legion::IndexSpaceT<1> color_space = rt->create_index_space(ctx, Legion::Rect<1>{0, 0});
+    const Legion::IndexSpaceT<1> color_space = rt->create_index_space(ctx, Legion::Rect<1>{0, 10});
 
     LegionSolvers::DistributedVectorT<double, 1, 1> u{"u", index_space, color_space, ctx, rt};
     LegionSolvers::DistributedVectorT<double, 1, 1> v{"v", u.index_partition, ctx, rt};
@@ -167,12 +182,14 @@ void top_level_task(const Legion::Task *,
         index_space, index_space, matrix_color_space, ctx, rt
     };
 
+    LegionSolvers::LinearOperator<double> &matrix = coo_matrix;
+
     {
         // launch fill task
         const Args args{coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry, 100};
         Legion::TaskLauncher launcher{FILL_TASK_ID, Legion::TaskArgument{&args, sizeof(args)}};
         launcher.add_region_requirement(Legion::RegionRequirement{
-            Legion::RegionRequirement{coo_matrix.kernel_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix.kernel_region}
+            coo_matrix.kernel_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix.kernel_region
         });
         launcher.add_field(0, coo_matrix.fid_i);
         launcher.add_field(0, coo_matrix.fid_j);
@@ -180,23 +197,12 @@ void top_level_task(const Legion::Task *,
         rt->execute_task(ctx, launcher);
     }
 
-    const Legion::FieldID fids[3] = {coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry};
-    Legion::TaskLauncher launcher{LegionSolvers::COOMatvecTask<double, 1, 1, 1>::task_id, Legion::TaskArgument{&fids, sizeof(fids)}};
-    launcher.add_region_requirement(Legion::RegionRequirement{
-        u.logical_region, LEGION_READ_WRITE, LEGION_EXCLUSIVE, u.logical_region
-    });
-    launcher.add_field(0, u.fid);
-    launcher.add_region_requirement(Legion::RegionRequirement{
-        coo_matrix.kernel_region, LEGION_READ_ONLY, LEGION_EXCLUSIVE, coo_matrix.kernel_region
-    });
-    launcher.add_field(1, coo_matrix.fid_i);
-    launcher.add_field(1, coo_matrix.fid_j);
-    launcher.add_field(1, coo_matrix.fid_entry);
-    launcher.add_region_requirement(Legion::RegionRequirement{
-        x.logical_region, LEGION_READ_WRITE, LEGION_EXCLUSIVE, x.logical_region
-    });
-    launcher.add_field(2, x.fid);
-    rt->execute_task(ctx, launcher);
+    const auto result = LegionSolvers::compute_nonempty_tiles<
+        double, 1, 1, 1, 1,
+        Legion::coord_t, Legion::coord_t, Legion::coord_t, Legion::coord_t
+    >(coo_matrix, x.index_partition, u.index_partition);
+
+    matrix.matvec(u, x, result);
 
     x.print();
     u.print();

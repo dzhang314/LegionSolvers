@@ -149,65 +149,6 @@ namespace LegionSolvers {
     };
 
 
-    struct ProjectionOneLevel final : public Legion::ProjectionFunctor {
-
-        Legion::coord_t index;
-
-        explicit ProjectionOneLevel(Legion::coord_t index) noexcept :
-            index(index) {}
-
-        virtual bool is_functional(void) const noexcept { return true; }
-
-        virtual unsigned get_depth(void) const noexcept { return 0; }
-
-        using Legion::ProjectionFunctor::project;
-
-        virtual Legion::LogicalRegion project(
-                Legion::LogicalPartition upper_bound,
-                const Legion::DomainPoint &point,
-                const Legion::Domain &launch_domain) override {
-            return runtime->get_logical_subregion_by_color(
-                upper_bound, point[index]
-            );
-        }
-
-    }; // struct ProjectionOneLevel
-
-
-    Legion::Color GLOBAL_TILE_PARTITION_COLOR = 500;
-
-
-    struct ProjectionTwoLevel final : public Legion::ProjectionFunctor {
-
-        Legion::coord_t i;
-        Legion::coord_t j;
-
-        explicit ProjectionTwoLevel(Legion::coord_t i, Legion::coord_t j)
-            noexcept : i(i), j(j) {}
-
-        virtual bool is_functional(void) const noexcept { return true; }
-
-        virtual unsigned get_depth(void) const noexcept { return 1; }
-
-        using Legion::ProjectionFunctor::project;
-
-        virtual Legion::LogicalRegion project(
-            Legion::LogicalPartition upper_bound,
-            const Legion::DomainPoint &point,
-            const Legion::Domain &launch_domain
-        ) override {
-            const auto column = runtime->get_logical_subregion_by_color(
-                upper_bound, point[i]
-            );
-            const auto partition = runtime->get_logical_partition_by_color(
-                column, GLOBAL_TILE_PARTITION_COLOR
-            );
-            return runtime->get_logical_subregion_by_color(partition, point[j]);
-        }
-
-    }; // struct ProjectionTwoLevel
-
-
     template <template <typename> typename TaskClass>
     void preregister_scalar_leaf_task(bool verbose) {
         ScalarTaskRegistrar<

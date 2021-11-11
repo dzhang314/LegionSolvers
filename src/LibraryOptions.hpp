@@ -62,6 +62,12 @@ namespace LegionSolvers {
     #endif
 
 
+    #ifndef LEGION_SOLVERS_DEFAULT_TILE_PARTITION_COLOR
+    constexpr Legion::Color
+    LEGION_SOLVERS_DEFAULT_TILE_PARTITION_COLOR = 777;
+    #endif
+
+
     using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
 
 

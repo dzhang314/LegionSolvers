@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_DISTRIBUTED_VECTOR_HPP
 #define LEGION_SOLVERS_DISTRIBUTED_VECTOR_HPP
 
+#include <string>
+
 #include <legion.h>
 
 #include "LegionUtilities.hpp"

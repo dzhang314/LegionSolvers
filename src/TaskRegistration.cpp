@@ -1,5 +1,6 @@
 #include "TaskRegistration.hpp"
 
+#include "LegionUtilities.hpp"
 #include "UtilityTasks.hpp"
 #include "LinearAlgebraTasks.hpp"
 #include "COOMatrixTasks.hpp"
@@ -93,5 +94,18 @@ void LegionSolvers::preregister_solver_tasks(bool verbose) {
     LegionSolvers::COOMatvecTask<double, 3, 3, 1>::preregister_kokkos(verbose);
     LegionSolvers::COOMatvecTask<double, 3, 3, 2>::preregister_kokkos(verbose);
     LegionSolvers::COOMatvecTask<double, 3, 3, 3>::preregister_kokkos(verbose);
+
+    Legion::Runtime::preregister_projection_functor(
+        PFID_KDR_TO_K, new ProjectionOneLevel{0}
+    );
+    Legion::Runtime::preregister_projection_functor(
+        PFID_KDR_TO_D, new ProjectionOneLevel{1}
+    );
+    Legion::Runtime::preregister_projection_functor(
+        PFID_KDR_TO_R, new ProjectionOneLevel{2}
+    );
+    Legion::Runtime::preregister_projection_functor(
+        PFID_KDR_TO_DR, new ProjectionTwoLevel{1, 2}
+    );
 
 }
