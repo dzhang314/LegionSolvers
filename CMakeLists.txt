@@ -9,6 +9,7 @@ find_package(Kokkos REQUIRED)
 
 add_executable(TestExecutable
     src/TestMain.cpp
+    src/COOMatrixTasks.cpp
     src/LegionUtilities.cpp
     src/LinearAlgebraTasks.cpp
     src/UtilityTasks.cpp

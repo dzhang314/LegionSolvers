@@ -1,5 +1,6 @@
 #include <legion.h>
 
+#include "COOMatrixTasks.hpp"
 #include "DistributedVector.hpp"
 #include "LegionUtilities.hpp"
 
@@ -14,6 +15,7 @@ enum FieldIDs : Legion::FieldID {
 void top_level_task(const Legion::Task *,
                     const std::vector<Legion::PhysicalRegion> &,
                     Legion::Context ctx, Legion::Runtime *rt) {
+
     const Legion::IndexSpaceT<1> index_space = rt->create_index_space(ctx, Legion::Rect<1>{0, 99});
     const Legion::IndexSpaceT<1> color_space = rt->create_index_space(ctx, Legion::Rect<1>{0, 10});
 
@@ -73,6 +75,60 @@ int main(int argc, char **argv) {
     LegionSolvers::PrintVectorTask<double, 1>::preregister_cpu(true);
     LegionSolvers::PrintVectorTask<double, 2>::preregister_cpu(true);
     LegionSolvers::PrintVectorTask<double, 3>::preregister_cpu(true);
+    LegionSolvers::COOMatvecTask<float, 1, 1, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 1, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 1, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 2, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 2, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 2, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 3, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 3, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 1, 3, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 1, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 1, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 1, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 2, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 2, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 2, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 3, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 3, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 2, 3, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 1, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 1, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 1, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 2, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 2, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 2, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 3, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 3, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<float, 3, 3, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 1, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 1, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 1, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 2, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 2, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 2, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 3, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 3, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 1, 3, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 1, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 1, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 1, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 2, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 2, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 2, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 3, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 3, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 2, 3, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 1, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 1, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 1, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 2, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 2, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 2, 3>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 3, 1>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 3, 2>::preregister_kokkos(true);
+    LegionSolvers::COOMatvecTask<double, 3, 3, 3>::preregister_kokkos(true);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     return Legion::Runtime::start(argc, argv);
 }
