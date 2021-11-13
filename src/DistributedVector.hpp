@@ -8,6 +8,7 @@
 #include "LegionUtilities.hpp"
 #include "LibraryOptions.hpp"
 #include "LinearAlgebraTasks.hpp"
+#include "Scalar.hpp"
 #include "UtilityTasks.hpp"
 
 
@@ -27,9 +28,9 @@ namespace LegionSolvers {
 
         virtual void operator=(ENTRY_T) = 0;
 
-        virtual void constant_fill(Legion::Future) = 0;
+        virtual void constant_fill(const Scalar<ENTRY_T> &) = 0;
 
-        virtual void operator=(Legion::Future) = 0;
+        virtual void operator=(const Scalar<ENTRY_T> &) = 0;
 
         virtual void random_fill(
             ENTRY_T low = static_cast<ENTRY_T>(0),
@@ -40,15 +41,17 @@ namespace LegionSolvers {
 
         virtual void operator=(const DistributedVector &) = 0;
 
-        virtual void axpy(Legion::Future, const DistributedVector &) = 0;
+        virtual void axpy(const Scalar<ENTRY_T> &,
+                          const DistributedVector &) = 0;
 
         virtual void axpy(ENTRY_T, const DistributedVector &) = 0;
 
-        virtual void xpay(Legion::Future, const DistributedVector &) = 0;
+        virtual void xpay(const Scalar<ENTRY_T> &,
+                          const DistributedVector &) = 0;
 
         virtual void xpay(ENTRY_T, const DistributedVector &) = 0;
 
-        virtual Legion::Future dot(const DistributedVector &) = 0;
+        virtual Scalar<ENTRY_T> dot(const DistributedVector &) = 0;
 
     }; // class DistributedVector
 
@@ -147,16 +150,17 @@ namespace LegionSolvers {
             constant_fill(value);
         }
 
-        virtual void constant_fill(Legion::Future value) override {
+        virtual void constant_fill(const Scalar<ENTRY_T> &value) override {
             Legion::IndexFillLauncher launcher{
-                color_space, logical_partition, logical_region, value
+                color_space, logical_partition,
+                logical_region, value.get_future()
             };
             // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_field(fid);
             rt->fill_fields(ctx, launcher);
         }
 
-        virtual void operator=(Legion::Future value) override {
+        virtual void operator=(const Scalar<ENTRY_T> &value) override {
             constant_fill(value);
         }
 
@@ -219,7 +223,7 @@ namespace LegionSolvers {
             this->operator=(dynamic_cast<const DistributedVectorT &>(x));
         }
 
-        virtual void axpy(Legion::Future alpha,
+        virtual void axpy(const Scalar<ENTRY_T> &alpha,
                           const DistributedVector<ENTRY_T> &x) override {
             const DistributedVectorT &x_ref =
                 dynamic_cast<const DistributedVectorT &>(x);
@@ -241,16 +245,16 @@ namespace LegionSolvers {
                 LEGION_READ_ONLY, LEGION_EXCLUSIVE, x_ref.logical_region
             });
             launcher.add_field(1, x_ref.fid);
-            launcher.add_future(alpha);
+            launcher.add_future(alpha.get_future());
             rt->execute_index_space(ctx, launcher);
         }
 
         virtual void axpy(ENTRY_T alpha,
                           const DistributedVector<ENTRY_T> &x) override {
-            axpy(Legion::Future::from_value<ENTRY_T>(rt, alpha), x);
+            axpy(Scalar<ENTRY_T>{alpha, ctx, rt}, x);
         }
 
-        virtual void xpay(Legion::Future alpha,
+        virtual void xpay(const Scalar<ENTRY_T> &alpha,
                           const DistributedVector<ENTRY_T> &x) override {
             const DistributedVectorT &x_ref =
                 dynamic_cast<const DistributedVectorT &>(x);
@@ -272,16 +276,16 @@ namespace LegionSolvers {
                 LEGION_READ_ONLY, LEGION_EXCLUSIVE, x_ref.logical_region
             });
             launcher.add_field(1, x_ref.fid);
-            launcher.add_future(alpha);
+            launcher.add_future(alpha.get_future());
             rt->execute_index_space(ctx, launcher);
         }
 
         virtual void xpay(ENTRY_T alpha,
                           const DistributedVector<ENTRY_T> &x) override {
-            xpay(Legion::Future::from_value<ENTRY_T>(rt, alpha), x);
+            xpay(Scalar<ENTRY_T>{alpha, ctx, rt}, x);
         }
 
-        virtual Legion::Future dot(
+        virtual Scalar<ENTRY_T> dot(
             const DistributedVector<ENTRY_T> &w
         ) override {
             const DistributedVectorT &w_ref =
@@ -304,9 +308,12 @@ namespace LegionSolvers {
                 LEGION_READ_ONLY, LEGION_EXCLUSIVE, w_ref.logical_region
             });
             launcher.add_field(1, w_ref.fid);
-            return rt->execute_index_space(
-                ctx, launcher, LEGION_REDOP_SUM_FLOAT64 // TODO
-            );
+            return Scalar<ENTRY_T>{
+                rt->execute_index_space(
+                    ctx, launcher, LEGION_REDOP_SUM_FLOAT64 // TODO
+                ),
+                ctx, rt
+            };
         }
 
     }; // class DistributedVectorT

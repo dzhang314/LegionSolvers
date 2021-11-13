@@ -35,8 +35,8 @@ namespace LegionSolvers {
         Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> kernel_space;
         Legion::IndexSpaceT<DOMAIN_DIM, DOMAIN_COORD_T> domain_space;
         Legion::IndexSpaceT<RANGE_DIM, RANGE_COORD_T> range_space;
-        Legion::FieldID fid_i;     // Legion::Rect<RANGE_DIM>
-        Legion::FieldID fid_j;     // Legion::Rect<DOMAIN_DIM>
+        Legion::FieldID fid_i;     // Legion::Rect<RANGE_DIM, RANGE_COORD_T>
+        Legion::FieldID fid_j;     // Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T>
         Legion::FieldID fid_entry; // ENTRY_T
         Legion::LogicalRegionT<KERNEL_DIM, KERNEL_COORD_T> kernel_region;
         Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;

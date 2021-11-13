@@ -34,6 +34,37 @@ namespace LegionSolvers {
 
 
     template <Legion::TaskID BLOCK_ID,
+              template <typename> typename TaskClass,
+              typename T>
+    struct TaskT {
+
+        static constexpr Legion::TaskID task_id =
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            LEGION_SOLVERS_TYPE_INDEX<T>;
+
+        static std::string task_name() {
+            return std::string{TaskClass<T>::task_base_name} +
+                   '_' + LEGION_SOLVERS_TYPE_NAME<T>();
+        }
+
+        static void preregister_cpu(bool verbose) {
+            preregister_cpu_task<
+                typename TaskClass<T>::return_type,
+                TaskClass<T>::task_body
+            >(task_id, task_name(), TaskClass<T>::is_leaf, verbose);
+        }
+
+        static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
+            const Legion::Processor proc = rt->get_executing_processor(ctx);
+            std::cout << "[LegionSolvers] Running CPU task " << task_name()
+                      << " on processor " << proc << '.' << std::endl;
+        }
+
+    }; // struct TaskT
+
+
+    template <Legion::TaskID BLOCK_ID,
               template <typename, int> typename TaskClass,
               typename T, int N>
     struct TaskTD {
@@ -153,21 +184,6 @@ namespace LegionSolvers {
         }
 
     }; // struct TaskTDDD
-
-
-    // template <Legion::TaskID BLOCK_ID,
-    //           template <typename, int> typename TaskClass,
-    //           typename T>
-    // struct TaskTD<BLOCK_ID, TaskClass, T, 0> {
-
-    //     static constexpr Legion::TaskID task_id(int N) {
-    //         return LEGION_SOLVERS_TASK_ID_ORIGIN +
-    //                LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-    //                LEGION_SOLVERS_NUM_TYPES * (N - 1) +
-    //                LEGION_SOLVERS_TYPE_INDEX<T>;
-    //     }
-
-    // }; // struct TaskTD
 
 
 } // namespace LegionSolvers

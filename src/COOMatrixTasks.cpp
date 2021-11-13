@@ -3,6 +3,69 @@
 #include "COOMatrixTasks.hpp"
 
 
+class RectIteratorSentinel {};
+
+
+template <int DIM, typename COORD_T>
+class RectIterator {
+
+    Legion::RectInDomainIterator<DIM, COORD_T> iterator;
+
+public:
+
+    explicit RectIterator(
+        const Legion::PhysicalRegion &region
+    ) : iterator(region) {}
+
+    Legion::Rect<DIM, COORD_T> operator*() {
+        return *iterator;
+    }
+
+    RectIterator &operator++() {
+        ++iterator;
+        return *this;
+    }
+
+    bool operator!=(RectIteratorSentinel) {
+        return iterator();
+    }
+
+};
+
+
+template <int DIM, typename COORD_T>
+class Rects {
+
+    const Legion::PhysicalRegion &region;
+
+public:
+
+    explicit constexpr Rects(
+        const Legion::PhysicalRegion &region
+    ) noexcept : region(region) {}
+
+    RectIterator<DIM, COORD_T> begin() {
+        return RectIterator<DIM, COORD_T>{region};
+    }
+
+    constexpr RectIteratorSentinel end() noexcept {
+        return RectIteratorSentinel{};
+    }
+
+};
+
+
+constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = true;
+
+
+template <typename FIELD_TYPE, int DIM, typename COORD_T>
+using AffineReader = Legion::FieldAccessor<
+    LEGION_READ_ONLY, FIELD_TYPE, DIM, COORD_T,
+    Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
+    LEGION_SOLVERS_CHECK_BOUNDS
+>;
+
+
 template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
 template <typename ExecutionSpace>
 void LegionSolvers::COOMatvecTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::
@@ -37,30 +100,24 @@ KokkosTaskTemplate<ExecutionSpace>::task_body(
     const Legion::FieldID fid_j = argptr[1];
     const Legion::FieldID fid_entry = argptr[2];
 
-    const Legion::FieldAccessor<
-        LEGION_READ_ONLY,
-        Legion::Point<RANGE_DIM>, KERNEL_DIM, Legion::coord_t,
-        Realm::AffineAccessor<
-            Legion::Point<RANGE_DIM>, KERNEL_DIM, Legion::coord_t
-        >
+    using KERNEL_COORD_T = Legion::coord_t;
+    using DOMAIN_COORD_T = Legion::coord_t;
+    using RANGE_COORD_T = Legion::coord_t;
+
+    const AffineReader<
+        Legion::Point<RANGE_DIM, RANGE_COORD_T>, KERNEL_DIM, KERNEL_COORD_T
     > i_reader{coo_matrix, fid_i};
 
-    const Legion::FieldAccessor<
-        LEGION_READ_ONLY,
-        Legion::Point<DOMAIN_DIM>, KERNEL_DIM, Legion::coord_t,
-        Realm::AffineAccessor<
-            Legion::Point<DOMAIN_DIM>, KERNEL_DIM, Legion::coord_t
-        >
+    const AffineReader<
+        Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>, KERNEL_DIM, KERNEL_COORD_T
     > j_reader{coo_matrix, fid_j};
 
-    const Legion::FieldAccessor<
-        LEGION_READ_ONLY, ENTRY_T, KERNEL_DIM, Legion::coord_t,
-        Realm::AffineAccessor<ENTRY_T, KERNEL_DIM, Legion::coord_t>
+    const AffineReader<
+        ENTRY_T, KERNEL_DIM, KERNEL_COORD_T
     > entry_reader{coo_matrix, fid_entry};
 
-    const Legion::FieldAccessor<
-        LEGION_READ_ONLY, ENTRY_T, DOMAIN_DIM, Legion::coord_t,
-        Realm::AffineAccessor<ENTRY_T, DOMAIN_DIM, Legion::coord_t>
+    const AffineReader<
+        ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T
     > input_reader{input_vec, input_fid};
 
     const Legion::ReductionAccessor<
@@ -71,15 +128,12 @@ KokkosTaskTemplate<ExecutionSpace>::task_body(
         output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>
     };
 
-    for (Legion::RectInDomainIterator<KERNEL_DIM>
-         kernel_iter{coo_matrix}; kernel_iter(); ++kernel_iter) {
-        const Legion::Rect<KERNEL_DIM> kernel_rect = *kernel_iter;
-        for (Legion::RectInDomainIterator<DOMAIN_DIM>
-             domain_iter{input_vec}; domain_iter(); ++domain_iter) {
-            const Legion::Rect<DOMAIN_DIM> domain_rect = *domain_iter;
-            for (Legion::RectInDomainIterator<RANGE_DIM>
-                 range_iter{output_vec}; range_iter(); ++range_iter) {
-                const Legion::Rect<RANGE_DIM> range_rect = *range_iter;
+    for (const auto &kernel_rect :
+         Rects<KERNEL_DIM, KERNEL_COORD_T>{coo_matrix}) {
+        for (const auto &domain_rect :
+             Rects<DOMAIN_DIM, DOMAIN_COORD_T>{input_vec}) {
+            for (const auto &range_rect :
+                 Rects<RANGE_DIM, RANGE_COORD_T>{output_vec}) {
                 Kokkos::parallel_for(
                     KokkosRangeFactory<ExecutionSpace, KERNEL_DIM>::create(
                         kernel_rect, ctx, rt
