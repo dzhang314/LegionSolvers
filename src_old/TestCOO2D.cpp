@@ -31,29 +31,9 @@ void top_level_task(const Legion::Task *,
 
     std::cout << "Hello, world!" << std::endl;
 
-    Legion::coord_t NUM_KERNEL_PARTITIONS = 16;
-    Legion::coord_t NUM_INPUT_PARTITIONS = 4;
-    Legion::coord_t NUM_OUTPUT_PARTITIONS = 4;
-    Legion::coord_t GRID_HEIGHT = 1000;
-    Legion::coord_t GRID_WIDTH = 1000;
-    int MAX_ITERATIONS = 10;
-
-    const Legion::InputArgs &args = Legion::Runtime::get_input_args();
-
-    bool ok = Realm::CommandLineParser()
-        .add_option_int("-kp", NUM_KERNEL_PARTITIONS)
-        .add_option_int("-ip", NUM_INPUT_PARTITIONS)
-        .add_option_int("-op", NUM_OUTPUT_PARTITIONS)
-        .add_option_int("-h", GRID_HEIGHT)
-        .add_option_int("-w", GRID_WIDTH)
-        .add_option_int("-it", MAX_ITERATIONS)
-        .parse_command_line(args.argc, (const char **) args.argv);
-
-    assert(ok);
-
     // Create index space and two vector regions (input and output).
     const Legion::IndexSpaceT<2> index_space = rt->create_index_space(ctx,
-        Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
+        Legion::Rect<2>{{0, 0}, {}});
     const auto input_vector = LegionSolvers::create_region(
         index_space, {{sizeof(double), FID_ENTRY}}, ctx, rt);
     const auto output_vector = LegionSolvers::create_region(
@@ -114,21 +94,7 @@ void top_level_task(const Legion::Task *,
 }
 
 
-void fill_2d_plane_task(const Legion::Task *task,
-                        const std::vector<Legion::PhysicalRegion> &regions,
-                        Legion::Context ctx,
-                        Legion::Runtime *rt) {
 
-    assert(regions.size() == 1);
-    const auto &vector = regions[0];
-
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, double, 2> entry_writer{vector, FID_ENTRY};
-
-    for (Legion::PointInDomainIterator<2> iter{vector}; iter(); ++iter) {
-        const auto [i, j] = *iter;
-        entry_writer[*iter] = static_cast<double>(i + j);
-    }
-}
 
 
 int main(int argc, char **argv) {

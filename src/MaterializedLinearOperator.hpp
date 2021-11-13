@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_MATERIALIZED_LINEAR_OPERATOR_HPP
 #define LEGION_SOLVERS_MATERIALIZED_LINEAR_OPERATOR_HPP
 
+#include <map>
+
 #include <legion.h>
 
 #include "LinearOperator.hpp"

@@ -19,6 +19,8 @@ namespace LegionSolvers {
 
     public:
 
+        virtual ~DistributedVector() = 0;
+
         virtual void zero_fill() = 0;
 
         virtual void constant_fill(ENTRY_T) = 0;
@@ -49,6 +51,10 @@ namespace LegionSolvers {
         virtual Legion::Future dot(const DistributedVector &) = 0;
 
     }; // class DistributedVector
+
+
+    template <typename ENTRY_T>
+    DistributedVector<ENTRY_T>::~DistributedVector() {}
 
 
     template <typename ENTRY_T,
@@ -299,7 +305,7 @@ namespace LegionSolvers {
             });
             launcher.add_field(1, w_ref.fid);
             return rt->execute_index_space(
-                ctx, launcher, LEGION_REDOP_SUM<ENTRY_T>
+                ctx, launcher, LEGION_REDOP_SUM_FLOAT64 // TODO
             );
         }
 

@@ -14,6 +14,8 @@ namespace LegionSolvers {
 
     public:
 
+        virtual ~LinearOperator() = 0;
+
         virtual void matvec(
             DistributedVector<ENTRY_T> &output_vector,
             const DistributedVector<ENTRY_T> &input_vector,
@@ -27,8 +29,6 @@ namespace LegionSolvers {
         ) const = 0;
 
         virtual void print() const = 0;
-
-        virtual ~LinearOperator() = 0;
 
     }; // class LinearOperator
 

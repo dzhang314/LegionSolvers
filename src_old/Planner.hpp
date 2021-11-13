@@ -31,60 +31,6 @@ namespace LegionSolvers {
         std::vector<std::tuple<int, int, std::unique_ptr<LinearOperator>>> operators;
 
 
-        const std::vector<std::pair<Legion::IndexSpace, Legion::IndexPartition>> &
-        get_dimensions() const noexcept { return dimensions; }
-
-
-        std::size_t add_rhs_vector(Legion::LogicalRegion rhs_region,
-                                   Legion::FieldID fid_rhs,
-                                   Legion::IndexPartition partition) {
-            rhs_vectors.emplace_back(rhs_region, fid_rhs);
-            dimensions.emplace_back(rhs_region.get_index_space(), partition);
-            return rhs_vectors.size() - 1;
-        }
-
-
-        std::size_t add_solution_vector(Legion::LogicalRegion sol_region,
-                                        Legion::FieldID fid_sol,
-                                        Legion::IndexPartition partition) {
-            solution_vectors.emplace_back(sol_region, fid_sol);
-            // TODO: Ensure consistent dimensions of RHS and solution vectors
-            // dimensions.emplace_back(sol_region.get_index_space(), partition);
-            return solution_vectors.size() - 1;
-        }
-
-
-        template <int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
-        void add_coo_matrix(
-            int rhs_index, int sol_index,
-            Legion::LogicalRegionT<KERNEL_DIM> matrix_region,
-            Legion::IndexPartitionT<KERNEL_DIM> matrix_partition,
-            Legion::FieldID fid_i, Legion::FieldID fid_j, Legion::FieldID fid_entry,
-            Legion::Context ctx, Legion::Runtime *rt
-        ) {
-            const Legion::IndexPartition domain_partition = dimensions[sol_index].second;
-            assert(domain_partition.get_dim() == DOMAIN_DIM);
-
-            const Legion::IndexPartition range_partition = dimensions[rhs_index].second;
-            assert(range_partition.get_dim() == RANGE_DIM);
-
-            operators.emplace_back(
-                rhs_index, sol_index,
-                std::make_unique<COOMatrix<T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>>(
-                    matrix_region, fid_i, fid_j, fid_entry, matrix_partition,
-                    Legion::IndexPartitionT<DOMAIN_DIM>{domain_partition},
-                    Legion::IndexPartitionT<RANGE_DIM>{range_partition},
-                    ctx, rt
-                )
-            );
-
-            const auto matrix = dynamic_cast<
-                COOMatrix<T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> *
-            >(std::get<2>(operators.back()).get());
-            assert(matrix != nullptr);
-        }
-
-
         void dummy_task_sol(Legion::Context ctx, Legion::Runtime *rt) const {
 
             assert(dimensions.size() == solution_vectors.size());

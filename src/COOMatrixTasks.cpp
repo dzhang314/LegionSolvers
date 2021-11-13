@@ -72,13 +72,13 @@ KokkosTaskTemplate<ExecutionSpace>::task_body(
     };
 
     for (Legion::RectInDomainIterator<KERNEL_DIM>
-            kernel_iter{coo_matrix}; kernel_iter(); ++kernel_iter) {
+         kernel_iter{coo_matrix}; kernel_iter(); ++kernel_iter) {
         const Legion::Rect<KERNEL_DIM> kernel_rect = *kernel_iter;
         for (Legion::RectInDomainIterator<DOMAIN_DIM>
-                domain_iter{input_vec}; domain_iter(); ++domain_iter) {
+             domain_iter{input_vec}; domain_iter(); ++domain_iter) {
             const Legion::Rect<DOMAIN_DIM> domain_rect = *domain_iter;
             for (Legion::RectInDomainIterator<RANGE_DIM>
-                    range_iter{output_vec}; range_iter(); ++range_iter) {
+                 range_iter{output_vec}; range_iter(); ++range_iter) {
                 const Legion::Rect<RANGE_DIM> range_rect = *range_iter;
                 Kokkos::parallel_for(
                     KokkosRangeFactory<ExecutionSpace, KERNEL_DIM>::create(

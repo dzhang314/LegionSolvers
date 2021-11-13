@@ -145,17 +145,7 @@ namespace LegionSolvers {
 
         static std::string task_name() { return "division"; }
 
-        static T task(const Legion::Task *task,
-                      const std::vector<Legion::PhysicalRegion> &regions,
-                      Legion::Context,
-                      Legion::Runtime *) {
 
-            assert(task->futures.size() == 2);
-            Legion::Future a = task->futures[0];
-            Legion::Future b = task->futures[1];
-
-            return a.get_result<T>() / b.get_result<T>();
-        }
 
     }; // struct DivisionTask
 
