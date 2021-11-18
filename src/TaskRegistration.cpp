@@ -8,6 +8,16 @@
 
 void LegionSolvers::preregister_solver_tasks(bool verbose) {
 
+    LegionSolvers::AdditionTask<float>::preregister_cpu(verbose);
+    LegionSolvers::AdditionTask<double>::preregister_cpu(verbose);
+    LegionSolvers::SubtractionTask<float>::preregister_cpu(verbose);
+    LegionSolvers::SubtractionTask<double>::preregister_cpu(verbose);
+    LegionSolvers::NegationTask<float>::preregister_cpu(verbose);
+    LegionSolvers::NegationTask<double>::preregister_cpu(verbose);
+    LegionSolvers::MultiplicationTask<float>::preregister_cpu(verbose);
+    LegionSolvers::MultiplicationTask<double>::preregister_cpu(verbose);
+    LegionSolvers::DivisionTask<float>::preregister_cpu(verbose);
+    LegionSolvers::DivisionTask<double>::preregister_cpu(verbose);
     LegionSolvers::RandomFillTask<float, 1>::preregister_cpu(verbose);
     LegionSolvers::RandomFillTask<float, 2>::preregister_cpu(verbose);
     LegionSolvers::RandomFillTask<float, 3>::preregister_cpu(verbose);
