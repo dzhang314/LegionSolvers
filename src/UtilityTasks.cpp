@@ -140,57 +140,52 @@ void LegionSolvers::PrintVectorTask<T, DIM>::task_body(
 }
 
 
-[[maybe_unused]]
-static constexpr auto instantiations = std::make_tuple(
+// template __half LegionSolvers::AdditionTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float LegionSolvers::AdditionTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::AdditionTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template long double LegionSolvers::AdditionTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template __float128 LegionSolvers::AdditionTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
-    LegionSolvers::AdditionTask<__half>::task_body,
-    LegionSolvers::AdditionTask<float>::task_body,
-    LegionSolvers::AdditionTask<double>::task_body,
-    LegionSolvers::AdditionTask<long double>::task_body,
-    LegionSolvers::AdditionTask<__float128>::task_body,
+// template __half LegionSolvers::SubtractionTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float LegionSolvers::SubtractionTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::SubtractionTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template long double LegionSolvers::SubtractionTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template __float128 LegionSolvers::SubtractionTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
-    LegionSolvers::SubtractionTask<__half>::task_body,
-    LegionSolvers::SubtractionTask<float>::task_body,
-    LegionSolvers::SubtractionTask<double>::task_body,
-    LegionSolvers::SubtractionTask<long double>::task_body,
-    LegionSolvers::SubtractionTask<__float128>::task_body,
+// template __half LegionSolvers::NegationTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float LegionSolvers::NegationTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::NegationTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template long double LegionSolvers::NegationTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template __float128 LegionSolvers::NegationTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
-    LegionSolvers::NegationTask<__half>::task_body,
-    LegionSolvers::NegationTask<float>::task_body,
-    LegionSolvers::NegationTask<double>::task_body,
-    LegionSolvers::NegationTask<long double>::task_body,
-    LegionSolvers::NegationTask<__float128>::task_body,
+// template __half LegionSolvers::MultiplicationTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float LegionSolvers::MultiplicationTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::MultiplicationTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template long double LegionSolvers::MultiplicationTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template __float128 LegionSolvers::MultiplicationTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
-    LegionSolvers::MultiplicationTask<__half>::task_body,
-    LegionSolvers::MultiplicationTask<float>::task_body,
-    LegionSolvers::MultiplicationTask<double>::task_body,
-    LegionSolvers::MultiplicationTask<long double>::task_body,
-    LegionSolvers::MultiplicationTask<__float128>::task_body,
+// template __half LegionSolvers::DivisionTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float LegionSolvers::DivisionTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DivisionTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template long double LegionSolvers::DivisionTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template __float128 LegionSolvers::DivisionTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
-    LegionSolvers::DivisionTask<__half>::task_body,
-    LegionSolvers::DivisionTask<float>::task_body,
-    LegionSolvers::DivisionTask<double>::task_body,
-    LegionSolvers::DivisionTask<long double>::task_body,
-    LegionSolvers::DivisionTask<__float128>::task_body,
+template void LegionSolvers::RandomFillTask<float, 1>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<float, 2>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<float, 3>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<double, 1>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<double, 2>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<double, 3>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<long double, 1>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<long double, 2>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::RandomFillTask<long double, 3>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
-    LegionSolvers::RandomFillTask<float, 1>::task_body,
-    LegionSolvers::RandomFillTask<float, 2>::task_body,
-    LegionSolvers::RandomFillTask<float, 3>::task_body,
-    LegionSolvers::RandomFillTask<double, 1>::task_body,
-    LegionSolvers::RandomFillTask<double, 2>::task_body,
-    LegionSolvers::RandomFillTask<double, 3>::task_body,
-    LegionSolvers::RandomFillTask<long double, 1>::task_body,
-    LegionSolvers::RandomFillTask<long double, 2>::task_body,
-    LegionSolvers::RandomFillTask<long double, 3>::task_body,
-
-    LegionSolvers::PrintVectorTask<float, 1>::task_body,
-    LegionSolvers::PrintVectorTask<float, 2>::task_body,
-    LegionSolvers::PrintVectorTask<float, 3>::task_body,
-    LegionSolvers::PrintVectorTask<double, 1>::task_body,
-    LegionSolvers::PrintVectorTask<double, 2>::task_body,
-    LegionSolvers::PrintVectorTask<double, 3>::task_body,
-    LegionSolvers::PrintVectorTask<long double, 1>::task_body,
-    LegionSolvers::PrintVectorTask<long double, 2>::task_body,
-    LegionSolvers::PrintVectorTask<long double, 3>::task_body
-
-);
+template void LegionSolvers::PrintVectorTask<float, 1>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<float, 2>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<float, 3>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<double, 1>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<double, 2>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<double, 3>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<long double, 1>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<long double, 2>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::PrintVectorTask<long double, 3>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
