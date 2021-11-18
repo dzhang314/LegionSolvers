@@ -28,6 +28,14 @@ namespace LegionSolvers {
             Legion::Context ctx, Legion::Runtime *rt
         ) : ctx(ctx), rt(rt), future(Legion::Future::from_value(rt, value)) {}
 
+        Scalar(const Scalar &rhs) : ctx(rhs.ctx), rt(rhs.rt),
+                                    future(rhs.future) {}
+
+        Scalar &operator=(const Scalar &rhs) {
+            future = rhs.future;
+            return *this;
+        }
+
         Legion::Future get_future() const { return future; }
 
         T get_value() const { return future.get_result<T>(); }
