@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_DISTRIBUTED_VECTOR_HPP
 #define LEGION_SOLVERS_DISTRIBUTED_VECTOR_HPP
 
+#include <cassert>
+#include <memory>
 #include <string>
 
 #include <legion.h>
@@ -21,6 +23,16 @@ namespace LegionSolvers {
     public:
 
         virtual ~DistributedVector() = 0;
+
+        virtual Legion::IndexSpace get_index_space() const = 0;
+
+        virtual Legion::IndexSpace get_color_space() const = 0;
+
+        virtual Legion::IndexPartition get_index_partition() const = 0;
+
+        virtual std::unique_ptr<DistributedVector> similar(
+            const std::string &new_name
+        ) const = 0;
 
         virtual void zero_fill() = 0;
 
@@ -51,7 +63,7 @@ namespace LegionSolvers {
 
         virtual void xpay(ENTRY_T, const DistributedVector &) = 0;
 
-        virtual Scalar<ENTRY_T> dot(const DistributedVector &) = 0;
+        virtual Scalar<ENTRY_T> dot(const DistributedVector &) const = 0;
 
     }; // class DistributedVector
 
@@ -66,18 +78,18 @@ namespace LegionSolvers {
               typename COLOR_COORD_T = Legion::coord_t>
     class DistributedVectorT: public DistributedVector<ENTRY_T> {
 
+        const Legion::Context ctx;
+        Legion::Runtime *const rt;
+
     public:
 
-        Legion::Context ctx;
-        Legion::Runtime *rt;
-        std::string name;
-        Legion::IndexSpaceT<DIM, COORD_T> index_space;
-        Legion::FieldID fid;
-        Legion::LogicalRegionT<DIM, COORD_T> logical_region;
-        Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;
-        // TODO: COORD_T or COLOR_COORD_T here?
-        Legion::IndexPartitionT<DIM> index_partition;
-        Legion::LogicalPartitionT<DIM, COORD_T> logical_partition;
+        const std::string name;
+        const Legion::IndexSpaceT<DIM, COORD_T> index_space;
+        const Legion::FieldID fid;
+        const Legion::LogicalRegionT<DIM, COORD_T> logical_region;
+        const Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;
+        const Legion::IndexPartitionT<DIM, COORD_T> index_partition;
+        const Legion::LogicalPartitionT<DIM, COORD_T> logical_partition;
 
         DistributedVectorT() = delete;
         DistributedVectorT(const DistributedVectorT &) = delete;
@@ -124,6 +136,26 @@ namespace LegionSolvers {
             logical_partition(
                 rt->get_logical_partition(logical_region, index_partition)
             ) {}
+
+        virtual Legion::IndexSpace get_index_space() const override {
+            return index_space;
+        }
+
+        virtual Legion::IndexSpace get_color_space() const override {
+            return color_space;
+        }
+
+        virtual Legion::IndexPartition get_index_partition() const override {
+            return index_partition;
+        }
+
+        virtual std::unique_ptr<DistributedVector<ENTRY_T>> similar(
+            const std::string &new_name
+        ) const override {
+            return std::make_unique<DistributedVectorT>(
+                new_name, index_partition, ctx, rt
+            );
+        }
 
         virtual void zero_fill() override {
             static constexpr ENTRY_T zero = static_cast<ENTRY_T>(0);
@@ -287,7 +319,7 @@ namespace LegionSolvers {
 
         virtual Scalar<ENTRY_T> dot(
             const DistributedVector<ENTRY_T> &w
-        ) override {
+        ) const override {
             const DistributedVectorT &w_ref =
                 dynamic_cast<const DistributedVectorT &>(w);
             assert(index_space == w_ref.index_space);
