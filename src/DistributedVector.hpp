@@ -85,10 +85,16 @@ namespace LegionSolvers {
 
         const std::string name;
         const Legion::IndexSpaceT<DIM, COORD_T> index_space;
+        const bool owns_index_space;
         const Legion::FieldID fid;
+        const Legion::FieldSpace field_space;
+        const bool owns_field_space;
         const Legion::LogicalRegionT<DIM, COORD_T> logical_region;
+        const bool owns_logical_region;
         const Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;
+        const bool owns_color_space;
         const Legion::IndexPartitionT<DIM, COORD_T> index_partition;
+        const bool owns_index_partition;
         const Legion::LogicalPartitionT<DIM, COORD_T> logical_partition;
 
         DistributedVectorT() = delete;
@@ -101,18 +107,27 @@ namespace LegionSolvers {
             Legion::IndexSpaceT<DIM, COORD_T> index_space,
             Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space,
             Legion::Context ctx, Legion::Runtime *rt
-        ) : ctx(ctx),
-            rt(rt),
-            name(name),
+        ) : ctx(ctx), rt(rt), name(name),
             index_space(index_space),
+            owns_index_space(false),
             fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
-            logical_region(create_region(
-                index_space, {{sizeof(ENTRY_T), fid}}, ctx, rt
+            field_space(create_field_space(
+                std::vector<std::size_t>{sizeof(ENTRY_T)},
+                std::vector<Legion::FieldID>{fid},
+                ctx, rt
             )),
+            owns_field_space(true),
+            logical_region(rt->create_logical_region(ctx,
+                index_space,
+                field_space
+            )),
+            owns_logical_region(true),
             color_space(color_space),
+            owns_color_space(false),
             index_partition(
                 rt->create_equal_partition(ctx, index_space, color_space)
             ),
+            owns_index_partition(true),
             logical_partition(
                 rt->get_logical_partition(logical_region, index_partition)
             ) {}
@@ -121,18 +136,27 @@ namespace LegionSolvers {
             const std::string &name,
             Legion::IndexPartitionT<DIM, COORD_T> index_partition,
             Legion::Context ctx, Legion::Runtime *rt
-        ) : ctx(ctx),
-            rt(rt),
-            name(name),
+        ) : ctx(ctx), rt(rt), name(name),
             index_space(rt->get_parent_index_space(index_partition)),
+            owns_index_space(false),
             fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
-            logical_region(create_region(
-                index_space, {{sizeof(ENTRY_T), fid}}, ctx, rt
+            field_space(create_field_space(
+                std::vector<std::size_t>{sizeof(ENTRY_T)},
+                std::vector<Legion::FieldID>{fid},
+                ctx, rt
             )),
-            color_space(rt->get_index_partition_color_space_name(
-                index_partition
+            owns_field_space(true),
+            logical_region(rt->create_logical_region(ctx,
+                index_space,
+                field_space
             )),
+            owns_logical_region(true),
+            color_space(
+                rt->get_index_partition_color_space_name(index_partition)
+            ),
+            owns_color_space(false),
             index_partition(index_partition),
+            owns_index_partition(false),
             logical_partition(
                 rt->get_logical_partition(logical_region, index_partition)
             ) {}
@@ -342,7 +366,7 @@ namespace LegionSolvers {
             launcher.add_field(1, w_ref.fid);
             return Scalar<ENTRY_T>{
                 rt->execute_index_space(
-                    ctx, launcher, LEGION_REDOP_SUM_FLOAT64 // TODO
+                    ctx, launcher, LEGION_REDOP_SUM<ENTRY_T>
                 ),
                 ctx, rt
             };

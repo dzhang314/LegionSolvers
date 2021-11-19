@@ -94,6 +94,16 @@ namespace LegionSolvers {
             return Scalar{rt->execute_task(ctx, launcher), ctx, rt};
         }
 
+        void assert_small() const {
+            Legion::TaskLauncher launcher{
+                AssertSmallTask<T>::task_id,
+                Legion::TaskArgument{nullptr, 0}
+            };
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_future(future);
+            rt->execute_task(ctx, launcher);
+        }
+
     }; // class Scalar
 
 

@@ -1,8 +1,9 @@
 #include "UtilityTasks.hpp"
 
+#include <cmath>
 #include <iostream>
+#include <limits>
 #include <random>
-#include <tuple>
 
 
 template <typename T>
@@ -38,8 +39,8 @@ T LegionSolvers::NegationTask<T>::task_body(
     Legion::Context ctx, Legion::Runtime *rt
 ) {
     assert(task->futures.size() == 1);
-    Legion::Future a = task->futures[0];
-    return -a.get_result<T>();
+    Legion::Future x = task->futures[0];
+    return -x.get_result<T>();
 }
 
 
@@ -66,6 +67,18 @@ T LegionSolvers::DivisionTask<T>::task_body(
     Legion::Future a = task->futures[0];
     Legion::Future b = task->futures[1];
     return a.get_result<T>() / b.get_result<T>();
+}
+
+
+template <typename T>
+void LegionSolvers::AssertSmallTask<T>::task_body(
+    const Legion::Task *task,
+    const std::vector<Legion::PhysicalRegion> &regions,
+    Legion::Context ctx, Legion::Runtime *rt
+) {
+    assert(task->futures.size() == 1);
+    Legion::Future x = task->futures[0];
+    assert(std::abs(x.get_result<T>()) <= std::numeric_limits<T>::epsilon());
 }
 
 
@@ -169,6 +182,12 @@ template float LegionSolvers::DivisionTask<float>::task_body(const Legion::Task 
 template double LegionSolvers::DivisionTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template long double LegionSolvers::DivisionTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template __float128 LegionSolvers::DivisionTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+
+// template void LegionSolvers::AssertSmallTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AssertSmallTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AssertSmallTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AssertSmallTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+// template void LegionSolvers::AssertSmallTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
 template void LegionSolvers::RandomFillTask<float, 1>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::RandomFillTask<float, 2>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);

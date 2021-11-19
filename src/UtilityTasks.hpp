@@ -102,6 +102,25 @@ namespace LegionSolvers {
     }; // struct DivisionTask
 
 
+    template <typename T>
+    struct AssertSmallTask : TaskT<ASSERT_SMALL_TASK_BLOCK_ID,
+                                   AssertSmallTask, T> {
+
+        static constexpr const char *task_base_name = "assert_small";
+
+        static constexpr bool is_leaf = true;
+
+        using return_type = void;
+
+        static void task_body(
+            const Legion::Task *task,
+            const std::vector<Legion::PhysicalRegion> &regions,
+            Legion::Context ctx, Legion::Runtime *rt
+        );
+
+    }; // struct DivisionTask
+
+
     template <typename T, int DIM>
     struct RandomFillTask : TaskTD<RANDOM_FILL_TASK_BLOCK_ID,
                                    RandomFillTask, T, DIM> {

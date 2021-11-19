@@ -1,4 +1,10 @@
-build/
-build_master/
-build_cr/
+build_master_debug/
+build_master_gex_debug/
+build_master_release/
+build_master_gex_release/
+build_cr_debug/
+build_cr_gex_debug/
+build_cr_release/
+build_cr_gex_release/
+__pycache__/
 .vscode/

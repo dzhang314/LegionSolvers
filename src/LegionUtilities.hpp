@@ -1,6 +1,7 @@
 #ifndef LEGION_SOLVERS_LEGION_UTILITIES_HPP
 #define LEGION_SOLVERS_LEGION_UTILITIES_HPP
 
+#include <cassert>
 #include <cstddef>     // for std::size_t
 #include <type_traits> // for std::is_void_v
 #include <utility>     // for std::pair
@@ -13,6 +14,19 @@
 
 
 namespace LegionSolvers {
+
+
+    inline Legion::FieldSpace create_field_space(
+        const std::vector<std::size_t> &field_sizes,
+        const std::vector<Legion::FieldID> &field_ids,
+        Legion::Context ctx, Legion::Runtime *rt
+    ) {
+        std::vector<Legion::FieldID> field_ids_copy{field_ids};
+        const Legion::FieldSpace result =
+            rt->create_field_space(ctx, field_sizes, field_ids_copy);
+        assert(field_ids == field_ids_copy);
+        return result;
+    }
 
 
     template <int DIM, typename COORD_T>

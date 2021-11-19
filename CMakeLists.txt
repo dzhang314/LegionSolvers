@@ -7,11 +7,21 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-but-set-variable -Wno-u
 find_package(Legion REQUIRED)
 find_package(Kokkos REQUIRED)
 
-add_executable(TestExecutable
-    src/TestMain.cpp
+add_executable(Test01VectorArithmetic
     src/COOMatrixTasks.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
+    src/Test01VectorArithmetic.cpp
+    src/UtilityTasks.cpp
+)
+
+target_link_libraries(Test01VectorArithmetic Kokkos::kokkoscore Legion::Legion)
+
+add_executable(TestExecutable
+    src/COOMatrixTasks.cpp
+    src/LinearAlgebraTasks.cpp
+    src/TaskRegistration.cpp
+    src/TestMain.cpp
     src/UtilityTasks.cpp
 )
 
