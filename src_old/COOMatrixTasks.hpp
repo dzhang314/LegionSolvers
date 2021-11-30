@@ -1,13 +1,3 @@
-#include <map>
-#include <string>
-
-#include "KokkosUtilities.hpp"
-#include "TaskBaseClasses.hpp"
-#include "TaskIDs.hpp"
-
-
-
-
     // template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
     // struct COORmatvecTask : TaskTDDD<COO_RMATVEC_TASK_BLOCK_ID,
     //                                  COORmatvecTask, ENTRY_T,
@@ -125,9 +115,3 @@
     //     }
 
     // }; // struct COOPrintTask
-
-
-} // namespace LegionSolvers
-
-
-#endif // LEGION_SOLVERS_COO_MATRIX_TASKS_HPP

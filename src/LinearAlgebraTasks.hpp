@@ -59,7 +59,7 @@ namespace LegionSolvers {
 
 
     template <typename T, int N>
-    struct ScalTask : TaskTD<SCAL_TASK_BLOCK_ID, ScalTask, T, N> {
+    struct ScalTask : public TaskTD<SCAL_TASK_BLOCK_ID, ScalTask, T, N> {
 
         static constexpr const char *task_base_name = "scal";
 
@@ -158,7 +158,7 @@ namespace LegionSolvers {
 
 
     template <typename T, int N>
-    struct AxpyTask : TaskTD<AXPY_TASK_BLOCK_ID, AxpyTask, T, N> {
+    struct AxpyTask : public TaskTD<AXPY_TASK_BLOCK_ID, AxpyTask, T, N> {
 
         static constexpr const char *task_base_name = "axpy";
 
@@ -257,7 +257,7 @@ namespace LegionSolvers {
 
 
     template <typename T, int N>
-    struct XpayTask : TaskTD<XPAY_TASK_BLOCK_ID, XpayTask, T, N> {
+    struct XpayTask : public TaskTD<XPAY_TASK_BLOCK_ID, XpayTask, T, N> {
 
         static constexpr const char *task_base_name = "xpay";
 
@@ -328,7 +328,7 @@ namespace LegionSolvers {
 
 
     template <typename T, int N>
-    struct DotTask : TaskTD<DOT_TASK_BLOCK_ID, DotTask, T, N> {
+    struct DotTask : public TaskTD<DOT_TASK_BLOCK_ID, DotTask, T, N> {
 
         static constexpr const char *task_base_name = "dot_product";
 

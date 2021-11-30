@@ -148,9 +148,9 @@ namespace LegionSolvers {
 
 
     template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
-    struct COOMatvecTask : TaskTDDD<COO_MATVEC_TASK_BLOCK_ID,
-                                    COOMatvecTask, ENTRY_T,
-                                    KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
+    struct COOMatvecTask : public TaskTDDD<COO_MATVEC_TASK_BLOCK_ID,
+                                           COOMatvecTask, ENTRY_T,
+                                           KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
 
         static constexpr const char *task_base_name = "coo_matvec";
 

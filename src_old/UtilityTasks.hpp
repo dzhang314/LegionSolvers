@@ -15,7 +15,7 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct DummyTask : TaskTD<DUMMY_TASK_BLOCK_ID, DummyTask, T, DIM> {
+    struct DummyTask : public TaskTD<DUMMY_TASK_BLOCK_ID, DummyTask, T, DIM> {
 
         static std::string task_base_name() { return "dummy_task"; }
 

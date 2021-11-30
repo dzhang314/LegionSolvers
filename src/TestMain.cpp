@@ -148,46 +148,41 @@ void fill_2d_plane_task(const Legion::Task *task,
 }
 
 
-constexpr Legion::coord_t laplacian_2d_kernel_size(Legion::coord_t height, Legion::coord_t width) {
-    return 8 + (height - 2) * 2 * 3 + (width - 2) * 2 * 3 + (height - 2) * (width - 2) * 4 + width * height;
-}
-
-
 void top_level_task(const Legion::Task *,
                     const std::vector<Legion::PhysicalRegion> &,
                     Legion::Context ctx, Legion::Runtime *rt) {
 
-    Legion::coord_t NUM_KERNEL_PARTITIONS = 16;
-    Legion::coord_t NUM_VECTOR_PARTITIONS = 4;
-    Legion::coord_t GRID_HEIGHT = 1000;
-    Legion::coord_t GRID_WIDTH = 1000;
-    int MAX_ITERATIONS = 10;
+    // Legion::coord_t NUM_KERNEL_PARTITIONS = 16;
+    // Legion::coord_t NUM_VECTOR_PARTITIONS = 4;
+    // Legion::coord_t GRID_HEIGHT = 1000;
+    // Legion::coord_t GRID_WIDTH = 1000;
+    // int MAX_ITERATIONS = 10;
 
-    const Legion::InputArgs &args = Legion::Runtime::get_input_args();
+    // const Legion::InputArgs &args = Legion::Runtime::get_input_args();
 
-    bool ok = Realm::CommandLineParser()
-        .add_option_int("-kp", NUM_KERNEL_PARTITIONS)
-        .add_option_int("-vp", NUM_VECTOR_PARTITIONS)
-        .add_option_int("-h", GRID_HEIGHT)
-        .add_option_int("-w", GRID_WIDTH)
-        .add_option_int("-it", MAX_ITERATIONS)
-        .parse_command_line(args.argc, (const char **) args.argv);
+    // bool ok = Realm::CommandLineParser()
+    //     .add_option_int("-kp", NUM_KERNEL_PARTITIONS)
+    //     .add_option_int("-vp", NUM_VECTOR_PARTITIONS)
+    //     .add_option_int("-h", GRID_HEIGHT)
+    //     .add_option_int("-w", GRID_WIDTH)
+    //     .add_option_int("-it", MAX_ITERATIONS)
+    //     .parse_command_line(args.argc, (const char **) args.argv);
 
-    assert(ok);
+    // assert(ok);
 
     // const Legion::IndexSpaceT<2> index_space =
     //     rt->create_index_space(ctx, Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
     // const Legion::IndexSpaceT<1> color_space =
     //     rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_VECTOR_PARTITIONS - 1});
 
-    const Legion::IndexSpaceT<1> index_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, GRID_HEIGHT - 1});
-    const Legion::IndexSpaceT<1> color_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_VECTOR_PARTITIONS - 1});
+    // const Legion::IndexSpaceT<1> index_space =
+    //     rt->create_index_space(ctx, Legion::Rect<1>{0, GRID_HEIGHT - 1});
+    // const Legion::IndexSpaceT<1> color_space =
+    //     rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_VECTOR_PARTITIONS - 1});
 
-    LegionSolvers::DistributedVectorT<double, 1, 1> sol{"sol", index_space, color_space, ctx, rt};
-    LegionSolvers::DistributedVectorT<double, 1, 1> rhs{"rhs", sol.index_partition, ctx, rt};
-    LegionSolvers::DistributedVectorT<double, 1, 1> x{"x", sol.index_partition, ctx, rt};
+    // LegionSolvers::DistributedVectorT<double, 1, 1> sol{"sol", index_space, color_space, ctx, rt};
+    // LegionSolvers::DistributedVectorT<double, 1, 1> rhs{"rhs", sol.index_partition, ctx, rt};
+    // LegionSolvers::DistributedVectorT<double, 1, 1> x{"x", sol.index_partition, ctx, rt};
 
     // {
     //     Legion::TaskLauncher launcher{
@@ -202,50 +197,50 @@ void top_level_task(const Legion::Task *,
     //     rt->execute_task(ctx, launcher);
     // }
 
-    const Legion::IndexSpaceT<1> matrix_index_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, 3 * GRID_HEIGHT - 3});
-    const Legion::IndexSpaceT<1> matrix_color_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_KERNEL_PARTITIONS - 1});
+    // const Legion::IndexSpaceT<1> matrix_index_space =
+    //     rt->create_index_space(ctx, Legion::Rect<1>{0, 3 * GRID_HEIGHT - 3});
+    // const Legion::IndexSpaceT<1> matrix_color_space =
+    //     rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_KERNEL_PARTITIONS - 1});
 
-    LegionSolvers::DistributedCOOMatrixT<double, 1, 1, 1, 1> coo_matrix{
-        "negative_laplacian_1d", matrix_index_space,
-        index_space, index_space, matrix_color_space, ctx, rt
-    };
+    // LegionSolvers::DistributedCOOMatrixT<double, 1, 1, 1, 1> coo_matrix{
+    //     "negative_laplacian_1d", matrix_index_space,
+    //     index_space, index_space, matrix_color_space, ctx, rt
+    // };
 
-    {
-        const Args1D args{coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry, GRID_HEIGHT};
-        Legion::TaskLauncher launcher{FILL_1D_LAPLACIAN_TASK_ID, Legion::TaskArgument{&args, sizeof(args)}};
-        launcher.add_region_requirement(Legion::RegionRequirement{
-            coo_matrix.kernel_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix.kernel_region
-        });
-        launcher.add_field(0, coo_matrix.fid_i);
-        launcher.add_field(0, coo_matrix.fid_j);
-        launcher.add_field(0, coo_matrix.fid_entry);
-        rt->execute_task(ctx, launcher);
-    }
+    // {
+    //     const Args1D args{coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry, GRID_HEIGHT};
+    //     Legion::TaskLauncher launcher{FILL_1D_LAPLACIAN_TASK_ID, Legion::TaskArgument{&args, sizeof(args)}};
+    //     launcher.add_region_requirement(Legion::RegionRequirement{
+    //         coo_matrix.kernel_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix.kernel_region
+    //     });
+    //     launcher.add_field(0, coo_matrix.fid_i);
+    //     launcher.add_field(0, coo_matrix.fid_j);
+    //     launcher.add_field(0, coo_matrix.fid_entry);
+    //     rt->execute_task(ctx, launcher);
+    // }
 
-    const LegionSolvers::MaterializedLinearOperator<double> &matrix = coo_matrix;
-    const auto tile_map = matrix.compute_nonempty_tiles(
-        sol.index_partition, sol.index_partition, ctx, rt
-    );
+    // const LegionSolvers::MaterializedLinearOperator<double> &matrix = coo_matrix;
+    // const auto tile_map = matrix.compute_nonempty_tiles(
+    //     sol.index_partition, sol.index_partition, ctx, rt
+    // );
 
-    x = 0.0;
-    rhs = 0.0;
-    sol.random_fill();
-    matrix.matvec(rhs, sol, tile_map);
-    // rhs.print();
+    // x = 0.0;
+    // rhs = 0.0;
+    // sol.random_fill();
+    // matrix.matvec(rhs, sol, tile_map);
+    // // rhs.print();
 
-    LegionSolvers::SquarePlanner<double> planner{ctx, rt};
-    planner.add_solution_vector(x);
-    planner.add_rhs_vector(rhs);
-    planner.add_operator(0, 0, coo_matrix);
+    // LegionSolvers::SquarePlanner<double> planner{ctx, rt};
+    // planner.add_solution_vector(x);
+    // planner.add_rhs_vector(rhs);
+    // planner.add_operator(0, 0, coo_matrix);
 
-    LegionSolvers::CGSolver solver{planner};
-    solver.setup();
-    for (int i = 0; i < 100; ++i) {
-        solver.step();
-        // std::cout << solver.residual_norm_squared.back().get_value() << std::endl;
-    }
+    // LegionSolvers::CGSolver solver{planner};
+    // solver.setup();
+    // for (int i = 0; i < 100; ++i) {
+    //     solver.step();
+    //     std::cout << solver.residual_norm_squared.back().get_value() << std::endl;
+    // }
 
 }
 

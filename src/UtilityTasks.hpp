@@ -11,7 +11,8 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    struct AdditionTask : TaskT<ADDITION_TASK_BLOCK_ID, AdditionTask, T> {
+    struct AdditionTask : public TaskT<ADDITION_TASK_BLOCK_ID,
+                                       AdditionTask, T> {
 
         static constexpr const char *task_base_name = "addition";
 
@@ -29,8 +30,8 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    struct SubtractionTask : TaskT<SUBTRACTION_TASK_BLOCK_ID,
-                                   SubtractionTask, T> {
+    struct SubtractionTask : public TaskT<SUBTRACTION_TASK_BLOCK_ID,
+                                          SubtractionTask, T> {
 
         static constexpr const char *task_base_name = "subtraction";
 
@@ -48,7 +49,8 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    struct NegationTask : TaskT<NEGATION_TASK_BLOCK_ID, NegationTask, T> {
+    struct NegationTask : public TaskT<NEGATION_TASK_BLOCK_ID,
+                                       NegationTask, T> {
 
         static constexpr const char *task_base_name = "negation";
 
@@ -66,8 +68,8 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    struct MultiplicationTask : TaskT<MULTIPLICATION_TASK_BLOCK_ID,
-                                      MultiplicationTask, T> {
+    struct MultiplicationTask : public TaskT<MULTIPLICATION_TASK_BLOCK_ID,
+                                             MultiplicationTask, T> {
 
         static constexpr const char *task_base_name = "multiplication";
 
@@ -85,7 +87,8 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    struct DivisionTask : TaskT<DIVISION_TASK_BLOCK_ID, DivisionTask, T> {
+    struct DivisionTask : public TaskT<DIVISION_TASK_BLOCK_ID,
+                                       DivisionTask, T> {
 
         static constexpr const char *task_base_name = "division";
 
@@ -103,8 +106,8 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    struct AssertSmallTask : TaskT<ASSERT_SMALL_TASK_BLOCK_ID,
-                                   AssertSmallTask, T> {
+    struct AssertSmallTask : public TaskT<ASSERT_SMALL_TASK_BLOCK_ID,
+                                          AssertSmallTask, T> {
 
         static constexpr const char *task_base_name = "assert_small";
 
@@ -122,8 +125,8 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct RandomFillTask : TaskTD<RANDOM_FILL_TASK_BLOCK_ID,
-                                   RandomFillTask, T, DIM> {
+    struct RandomFillTask : public TaskTD<RANDOM_FILL_TASK_BLOCK_ID,
+                                          RandomFillTask, T, DIM> {
 
         static constexpr const char *task_base_name = "random_fill";
 
@@ -141,8 +144,8 @@ namespace LegionSolvers {
 
 
     template <typename T, int DIM>
-    struct PrintVectorTask : TaskTD<PRINT_VECTOR_TASK_BLOCK_ID,
-                                    PrintVectorTask, T, DIM> {
+    struct PrintVectorTask : public TaskTD<PRINT_VECTOR_TASK_BLOCK_ID,
+                                           PrintVectorTask, T, DIM> {
 
         static constexpr const char *task_base_name = "print_vector";
 
