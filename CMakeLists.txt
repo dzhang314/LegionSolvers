@@ -9,6 +9,7 @@ find_package(Kokkos REQUIRED)
 
 add_executable(Test01VectorArithmetic
     src/COOMatrixTasks.cpp
+    src/ExampleSystems.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/Test01VectorArithmetic.cpp
@@ -17,8 +18,20 @@ add_executable(Test01VectorArithmetic
 
 target_link_libraries(Test01VectorArithmetic Kokkos::kokkoscore Legion::Legion)
 
+add_executable(Test02CGLaplacian1D
+    src/COOMatrixTasks.cpp
+    src/ExampleSystems.cpp
+    src/LinearAlgebraTasks.cpp
+    src/TaskRegistration.cpp
+    src/Test02CGLaplacian1D.cpp
+    src/UtilityTasks.cpp
+)
+
+target_link_libraries(Test02CGLaplacian1D Kokkos::kokkoscore Legion::Legion)
+
 add_executable(TestExecutable
     src/COOMatrixTasks.cpp
+    src/ExampleSystems.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/TestMain.cpp
@@ -26,11 +39,3 @@ add_executable(TestExecutable
 )
 
 target_link_libraries(TestExecutable Kokkos::kokkoscore Legion::Legion)
-
-# add_executable(LegionSolversTestCOO1D src/TestCOO1D.cpp)
-# add_executable(LegionSolversTestCOO2D src/TestCOO2D.cpp)
-# add_executable(LegionSolversTestCSR1D src/TestCSR1D.cpp)
-
-# target_link_libraries(LegionSolversTestCOO1D Kokkos::kokkoscore Legion::Legion)
-# target_link_libraries(LegionSolversTestCOO2D Kokkos::kokkoscore Legion::Legion)
-# target_link_libraries(LegionSolversTestCSR1D Kokkos::kokkoscore Legion::Legion)

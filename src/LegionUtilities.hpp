@@ -243,6 +243,74 @@ namespace LegionSolvers {
     }; // struct ProjectionTwoLevel
 
 
+    class RectIteratorSentinel {};
+
+
+    template <int DIM, typename COORD_T>
+    class RectIterator {
+
+        Legion::RectInDomainIterator<DIM, COORD_T> iterator;
+
+    public:
+
+        explicit RectIterator(
+            const Legion::PhysicalRegion &region
+        ) : iterator(region) {}
+
+        Legion::Rect<DIM, COORD_T> operator*() {
+            return *iterator;
+        }
+
+        RectIterator &operator++() {
+            ++iterator;
+            return *this;
+        }
+
+        bool operator!=(RectIteratorSentinel) {
+            return iterator();
+        }
+
+    }; // class RectIterator
+
+
+    template <int DIM, typename COORD_T>
+    class Rects {
+
+        const Legion::PhysicalRegion &region;
+
+    public:
+
+        explicit constexpr Rects(
+            const Legion::PhysicalRegion &region
+        ) noexcept : region(region) {}
+
+        RectIterator<DIM, COORD_T> begin() {
+            return RectIterator<DIM, COORD_T>{region};
+        }
+
+        constexpr RectIteratorSentinel end() noexcept {
+            return RectIteratorSentinel{};
+        }
+
+    }; // class Rects
+
+
+    template <typename FIELD_TYPE, int DIM, typename COORD_T>
+    using AffineReader = Legion::FieldAccessor<
+        LEGION_READ_ONLY, FIELD_TYPE, DIM, COORD_T,
+        Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
+        LEGION_SOLVERS_CHECK_BOUNDS
+    >;
+
+
+    template <typename FIELD_TYPE, int DIM, typename COORD_T>
+    using AffineSumAccessor = Legion::ReductionAccessor<
+        Legion::SumReduction<FIELD_TYPE>, false, // non-exclusive
+        DIM, COORD_T, Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
+        LEGION_SOLVERS_CHECK_BOUNDS
+    >;
+
+
 } // namespace LegionSolvers
 
 

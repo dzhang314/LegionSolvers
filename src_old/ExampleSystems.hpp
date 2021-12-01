@@ -12,16 +12,6 @@ namespace LegionSolvers {
 
 
     template <typename T>
-    struct FillCOONegativeLaplacian1DTask : public TaskT<FILL_COO_NEGATIVE_LAPLACIAN_1D_TASK_BLOCK_ID, T> {
-
-        static std::string task_name() { return "fill_coo_negative_laplacian_1d"; }
-
-
-
-    }; // struct FillCOONegativeLaplacian1DTask
-
-
-    template <typename T>
     Legion::LogicalRegionT<1> coo_negative_laplacian_1d(Legion::FieldID fid_i,
                                                         Legion::FieldID fid_j,
                                                         Legion::FieldID fid_entry,
@@ -45,16 +35,6 @@ namespace LegionSolvers {
         rt->execute_task(ctx, launcher);
         return negative_laplacian;
     }
-
-
-    template <typename T>
-    struct FillCOONegativeLaplacian2DTask : public TaskT<FILL_COO_NEGATIVE_LAPLACIAN_2D_TASK_BLOCK_ID, T> {
-
-        static std::string task_name() { return "fill_coo_negative_laplacian_2d"; }
-
-
-
-    }; // struct FillCOONegativeLaplacian2DTask
 
 
     template <typename T>

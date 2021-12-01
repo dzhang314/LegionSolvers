@@ -5,6 +5,7 @@
 #include <legion.h>
 
 #include "KokkosUtilities.hpp"
+#include "LegionUtilities.hpp"
 #include "TaskBaseClasses.hpp"
 #include "TaskIDs.hpp"
 
@@ -13,32 +14,29 @@ namespace LegionSolvers {
 
 
     template <typename ExecutionSpace, typename ENTRY_T,
-              int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
+              int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM,
+              typename KERNEL_COORD_T,
+              typename DOMAIN_COORD_T, typename RANGE_COORD_T>
     struct KokkosCOOMatvecFunctor {
 
-        const Legion::Rect<DOMAIN_DIM> domain_rect;
+        const Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T> domain_rect;
 
-        const Legion::Rect<RANGE_DIM> range_rect;
+        const Legion::Rect<RANGE_DIM, RANGE_COORD_T> range_rect;
 
-        const Realm::AffineAccessor<
-            Legion::Point<RANGE_DIM>, KERNEL_DIM, Legion::coord_t
-        > i_reader;
+        const Realm::AffineAccessor<Legion::Point<RANGE_DIM, RANGE_COORD_T>,
+                                    KERNEL_DIM, KERNEL_COORD_T> i_reader;
 
-        const Realm::AffineAccessor<
-            Legion::Point<DOMAIN_DIM>, KERNEL_DIM, Legion::coord_t
-        > j_reader;
+        const Realm::AffineAccessor<Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
+                                    KERNEL_DIM, KERNEL_COORD_T> j_reader;
 
-        const Realm::AffineAccessor<ENTRY_T, KERNEL_DIM, Legion::coord_t>
+        const Realm::AffineAccessor<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T>
         entry_reader;
 
-        const Realm::AffineAccessor<ENTRY_T, DOMAIN_DIM, Legion::coord_t>
+        const Realm::AffineAccessor<ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T>
         input_reader;
 
-        const Legion::ReductionAccessor<
-            Legion::SumReduction<ENTRY_T>, false,
-            RANGE_DIM, Legion::coord_t,
-            Realm::AffineAccessor<ENTRY_T, RANGE_DIM, Legion::coord_t>
-        > output_writer;
+        const AffineSumAccessor<ENTRY_T, RANGE_DIM, RANGE_COORD_T>
+        output_writer;
 
         KOKKOS_INLINE_FUNCTION void operator()(int a) const {
             const Legion::Point<1> index{a};

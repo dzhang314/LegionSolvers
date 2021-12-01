@@ -1,69 +1,5 @@
-#include <tuple>
-
 #include "COOMatrixTasks.hpp"
-
-
-class RectIteratorSentinel {};
-
-
-template <int DIM, typename COORD_T>
-class RectIterator {
-
-    Legion::RectInDomainIterator<DIM, COORD_T> iterator;
-
-public:
-
-    explicit RectIterator(
-        const Legion::PhysicalRegion &region
-    ) : iterator(region) {}
-
-    Legion::Rect<DIM, COORD_T> operator*() {
-        return *iterator;
-    }
-
-    RectIterator &operator++() {
-        ++iterator;
-        return *this;
-    }
-
-    bool operator!=(RectIteratorSentinel) {
-        return iterator();
-    }
-
-};
-
-
-template <int DIM, typename COORD_T>
-class Rects {
-
-    const Legion::PhysicalRegion &region;
-
-public:
-
-    explicit constexpr Rects(
-        const Legion::PhysicalRegion &region
-    ) noexcept : region(region) {}
-
-    RectIterator<DIM, COORD_T> begin() {
-        return RectIterator<DIM, COORD_T>{region};
-    }
-
-    constexpr RectIteratorSentinel end() noexcept {
-        return RectIteratorSentinel{};
-    }
-
-};
-
-
-constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = true;
-
-
-template <typename FIELD_TYPE, int DIM, typename COORD_T>
-using AffineReader = Legion::FieldAccessor<
-    LEGION_READ_ONLY, FIELD_TYPE, DIM, COORD_T,
-    Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
-    LEGION_SOLVERS_CHECK_BOUNDS
->;
+#include "LegionUtilities.hpp"
 
 
 template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
@@ -112,21 +48,14 @@ KokkosTaskTemplate<ExecutionSpace>::task_body(
         Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>, KERNEL_DIM, KERNEL_COORD_T
     > j_reader{coo_matrix, fid_j};
 
-    const AffineReader<
-        ENTRY_T, KERNEL_DIM, KERNEL_COORD_T
-    > entry_reader{coo_matrix, fid_entry};
+    const AffineReader<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T>
+    entry_reader{coo_matrix, fid_entry};
 
-    const AffineReader<
-        ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T
-    > input_reader{input_vec, input_fid};
+    const AffineReader<ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T>
+    input_reader{input_vec, input_fid};
 
-    const Legion::ReductionAccessor<
-        Legion::SumReduction<ENTRY_T>, false,
-        RANGE_DIM, Legion::coord_t,
-        Realm::AffineAccessor<ENTRY_T, RANGE_DIM, Legion::coord_t>
-    > output_writer{
-        output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>
-    };
+    const AffineSumAccessor<ENTRY_T, RANGE_DIM, RANGE_COORD_T>
+    output_writer{output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>};
 
     for (const auto &kernel_rect :
          Rects<KERNEL_DIM, KERNEL_COORD_T>{coo_matrix}) {
@@ -140,7 +69,8 @@ KokkosTaskTemplate<ExecutionSpace>::task_body(
                     ),
                     KokkosCOOMatvecFunctor<
                         ExecutionSpace, ENTRY_T,
-                        KERNEL_DIM, DOMAIN_DIM, RANGE_DIM
+                        KERNEL_DIM, DOMAIN_DIM, RANGE_DIM,
+                        KERNEL_COORD_T, DOMAIN_COORD_T, RANGE_COORD_T
                     >{
                         domain_rect, range_rect,
                         i_reader.accessor, j_reader.accessor,
