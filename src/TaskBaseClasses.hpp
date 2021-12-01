@@ -15,12 +15,15 @@
 namespace LegionSolvers {
 
 
-    template <typename T> constexpr const char *LEGION_SOLVERS_TYPE_NAME   () { return typeid(T).name(); }
-    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__half     >() { return "half"          ; }
-    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<float      >() { return "float"         ; }
-    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<double     >() { return "double"        ; }
-    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<long double>() { return "longdouble"    ; }
-    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__float128 >() { return "float128"      ; }
+    template <typename T> constexpr const char *LEGION_SOLVERS_TYPE_NAME       () { return typeid(T).name(); }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__half         >() { return "half"          ; }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<float          >() { return "float"         ; }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<double         >() { return "double"        ; }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<long double    >() { return "longdouble"    ; }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__float128     >() { return "float128"      ; }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<int            >() { return "signed int"    ; }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<unsigned       >() { return "unsigned int"  ; }
+    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<Legion::coord_t>() { return "coord_t"       ; }
 
 
     template <typename T>
