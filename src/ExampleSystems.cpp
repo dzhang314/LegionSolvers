@@ -4,7 +4,9 @@
 
 
 template <typename T>
-void LegionSolvers::FillCOONegativeLaplacian1DTask<T>::task_body(
+template <typename KokkosExecutionSpace>
+void LegionSolvers::FillCOONegativeLaplacian1DTask<T>::
+KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
@@ -15,34 +17,35 @@ void LegionSolvers::FillCOONegativeLaplacian1DTask<T>::task_body(
     assert(regions.size() == 1);
     const auto &matrix = regions[0];
 
+    assert(task->regions.size() == 1);
+    const auto &matrix_req = task->regions[0];
+
     assert(task->arglen == sizeof(Args));
     const Args args = *reinterpret_cast<const Args *>(task->args);
 
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<1>, 1>
+    const AffineWriter<Legion::Point<1>, 1, Legion::coord_t>
     i_writer{matrix, args.fid_i};
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, Legion::Point<1>, 1>
+    const AffineWriter<Legion::Point<1>, 1, Legion::coord_t>
     j_writer{matrix, args.fid_j};
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, 1>
+    const AffineWriter<T, 1, Legion::coord_t>
     entry_writer{matrix, args.fid_entry};
 
-    Legion::PointInDomainIterator<1> iter{matrix};
-    for (Legion::coord_t i = 0; i < args.grid_length; ++i) {
-        i_writer[*iter] = Legion::Point<1>{i};
-        j_writer[*iter] = Legion::Point<1>{i};
-        entry_writer[*iter] = static_cast<T>(2.0);
-        ++iter;
+    const Legion::Domain matrix_domain = rt->get_index_space_domain(
+        ctx, matrix_req.region.get_index_space()
+    );
+
+    for (Legion::RectInDomainIterator<1> it{matrix_domain}; it(); ++it) {
+        const Legion::Rect<1> rect = *it;
+        Kokkos::parallel_for(
+            KokkosRangeFactory<KokkosExecutionSpace, 1>::create(
+                rect, ctx, rt
+            ),
+            KokkosFillCOONegativeLaplacian1DFunctor<KokkosExecutionSpace, T>{
+                i_writer.accessor, j_writer.accessor, entry_writer.accessor
+            }
+        );
     }
 
-    for (Legion::coord_t i = 0; i < args.grid_length - 1; ++i) {
-        i_writer[*iter] = Legion::Point<1>{i + 1};
-        j_writer[*iter] = Legion::Point<1>{i};
-        entry_writer[*iter] = static_cast<T>(-1.0);
-        ++iter;
-        i_writer[*iter] = Legion::Point<1>{i};
-        j_writer[*iter] = Legion::Point<1>{i + 1};
-        entry_writer[*iter] = static_cast<T>(-1.0);
-        ++iter;
-    }
     std::cout << "[LegionSolvers] Finished constructing COO 1D Laplacian."
               << std::endl;
 }
@@ -107,8 +110,12 @@ void LegionSolvers::FillCOONegativeLaplacian2DTask<T>::task_body(
               << std::endl;
 }
 
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
-template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCOONegativeLaplacian2DTask<float >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCOONegativeLaplacian2DTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);

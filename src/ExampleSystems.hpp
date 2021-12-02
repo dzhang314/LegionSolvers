@@ -27,6 +27,28 @@ namespace LegionSolvers {
     }
 
 
+    template <typename ExecutionSpace, typename T>
+    struct KokkosFillCOONegativeLaplacian1DFunctor {
+
+        const KokkosMutableOffsetView<ExecutionSpace, Legion::Point<1>, 1> i_view;
+        const KokkosMutableOffsetView<ExecutionSpace, Legion::Point<1>, 1> j_view;
+        const KokkosMutableOffsetView<ExecutionSpace, T, 1> entry_view;
+
+        explicit KokkosFillCOONegativeLaplacian1DFunctor(
+            Realm::AffineAccessor<Legion::Point<1>, 1, Legion::coord_t> i_accessor,
+            Realm::AffineAccessor<Legion::Point<1>, 1, Legion::coord_t> j_accessor,
+            Realm::AffineAccessor<T, 1, Legion::coord_t> entry_accessor
+        ) : i_view(i_accessor), j_view(j_accessor), entry_view(entry_accessor) {}
+
+        KOKKOS_INLINE_FUNCTION void operator()(int k) const {
+            i_view(k) = Legion::Point<1>{(k + 1) / 3};
+            j_view(k) = Legion::Point<1>{k - 2 * ((k + 1) / 3)};
+            entry_view(k) = (k % 3) ? -1.0 : +2.0;
+        }
+
+    }; // struct KokkosFillCOONegativeLaplacian1DFunctor
+
+
     template <typename T>
     struct FillCOONegativeLaplacian1DTask : public TaskT<
         FILL_COO_NEGATIVE_LAPLACIAN_1D_TASK_BLOCK_ID,
@@ -49,11 +71,16 @@ namespace LegionSolvers {
 
         using return_type = void;
 
-        static void task_body(
-            const Legion::Task *task,
-            const std::vector<Legion::PhysicalRegion> &regions,
-            Legion::Context ctx, Legion::Runtime *rt
-        );
+        template <typename KokkosExecutionSpace>
+        struct KokkosTaskTemplate {
+
+            static void task_body(
+                const Legion::Task *task,
+                const std::vector<Legion::PhysicalRegion> &regions,
+                Legion::Context ctx, Legion::Runtime *rt
+            );
+
+        }; // struct KokkosTaskTemplate
 
     }; // struct FillCOONegativeLaplacian1DTask
 
@@ -137,19 +164,19 @@ namespace LegionSolvers {
             coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry, grid_size
         };
 
-        Legion::TaskLauncher launcher{
-            FillCOONegativeLaplacian1DTask<ENTRY_T>::task_id,
-            Legion::TaskArgument{&args, sizeof(args)}
+        Legion::IndexLauncher launcher{
+            FillCOONegativeLaplacian1DTask<ENTRY_T>::task_id, matrix_color_space,
+            Legion::TaskArgument{&args, sizeof(args)}, Legion::ArgumentMap{}
         };
         launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(Legion::RegionRequirement{
-            coo_matrix.kernel_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE,
-            coo_matrix.kernel_region
+            coo_matrix.kernel_logical_partition, 0,
+            LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, coo_matrix.kernel_region
         });
         launcher.add_field(0, coo_matrix.fid_i);
         launcher.add_field(0, coo_matrix.fid_j);
         launcher.add_field(0, coo_matrix.fid_entry);
-        rt->execute_task(ctx, launcher);
+        rt->execute_index_space(ctx, launcher);
         return coo_matrix;
     }
 

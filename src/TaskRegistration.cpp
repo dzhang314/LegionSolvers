@@ -181,8 +181,8 @@ void LegionSolvers::preregister_solver_tasks(bool verbose) {
 
     // ExampleSystems.hpp =====================================================
 
-    LegionSolvers::FillCOONegativeLaplacian1DTask<float >::preregister_cpu(verbose);
-    LegionSolvers::FillCOONegativeLaplacian1DTask<double>::preregister_cpu(verbose);
+    LegionSolvers::FillCOONegativeLaplacian1DTask<float >::preregister_kokkos(verbose);
+    LegionSolvers::FillCOONegativeLaplacian1DTask<double>::preregister_kokkos(verbose);
     LegionSolvers::FillCOONegativeLaplacian2DTask<float >::preregister_cpu(verbose);
     LegionSolvers::FillCOONegativeLaplacian2DTask<double>::preregister_cpu(verbose);
 

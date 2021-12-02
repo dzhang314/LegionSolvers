@@ -68,6 +68,17 @@ namespace LegionSolvers {
                       << " on processor " << proc << '.' << std::endl;
         }
 
+        static void preregister_kokkos(bool verbose) {
+            preregister_kokkos_task<
+                typename TaskClass<T>::return_type,
+                TaskClass<T>::template KokkosTaskTemplate
+            >(
+                task_id, task_name(),
+                TaskClass<T>::is_inner, TaskClass<T>::is_leaf,
+                verbose
+            );
+        }
+
     }; // struct TaskT
 
 
