@@ -141,16 +141,14 @@ namespace LegionSolvers {
             FillCOONegativeLaplacian1DTask<ENTRY_T>::task_id,
             Legion::TaskArgument{&args, sizeof(args)}
         };
-
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
         launcher.add_region_requirement(Legion::RegionRequirement{
             coo_matrix.kernel_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE,
             coo_matrix.kernel_region
         });
-
         launcher.add_field(0, coo_matrix.fid_i);
         launcher.add_field(0, coo_matrix.fid_j);
         launcher.add_field(0, coo_matrix.fid_entry);
-
         rt->execute_task(ctx, launcher);
         return coo_matrix;
     }

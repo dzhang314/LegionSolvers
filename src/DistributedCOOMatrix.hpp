@@ -148,7 +148,7 @@ namespace LegionSolvers {
                 Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
                 Legion::ArgumentMap{}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
 
             launcher.add_region_requirement(Legion::RegionRequirement{
                 output_vector.logical_partition,
@@ -214,7 +214,7 @@ namespace LegionSolvers {
             //     Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
             //     Legion::ArgumentMap{}
             // };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_region_requirement(Legion::RegionRequirement{
                 kernel_region, LEGION_READ_ONLY, LEGION_EXCLUSIVE,
                 kernel_region

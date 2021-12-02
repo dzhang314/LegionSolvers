@@ -29,6 +29,7 @@ namespace LegionSolvers {
 
         virtual Legion::Mapping::Mapper::MapperSyncModel
         get_mapper_sync_model() const override {
+            // TODO: What is the correct model?
             return SERIALIZED_NON_REENTRANT_MAPPER_MODEL;
         }
 

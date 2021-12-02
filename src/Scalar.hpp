@@ -45,7 +45,7 @@ namespace LegionSolvers {
                 AdditionTask<T>::task_id,
                 Legion::TaskArgument{nullptr, 0}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_future(future);
             launcher.add_future(rhs.future);
             return Scalar{rt->execute_task(ctx, launcher), ctx, rt};
@@ -56,7 +56,7 @@ namespace LegionSolvers {
                 SubtractionTask<T>::task_id,
                 Legion::TaskArgument{nullptr, 0}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_future(future);
             launcher.add_future(rhs.future);
             return Scalar{rt->execute_task(ctx, launcher), ctx, rt};
@@ -67,7 +67,7 @@ namespace LegionSolvers {
                 NegationTask<T>::task_id,
                 Legion::TaskArgument{nullptr, 0}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_future(future);
             return Scalar{rt->execute_task(ctx, launcher), ctx, rt};
         }
@@ -77,7 +77,7 @@ namespace LegionSolvers {
                 MultiplicationTask<T>::task_id,
                 Legion::TaskArgument{nullptr, 0}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_future(future);
             launcher.add_future(rhs.future);
             return Scalar{rt->execute_task(ctx, launcher), ctx, rt};
@@ -88,7 +88,7 @@ namespace LegionSolvers {
                 DivisionTask<T>::task_id,
                 Legion::TaskArgument{nullptr, 0}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_future(future);
             launcher.add_future(rhs.future);
             return Scalar{rt->execute_task(ctx, launcher), ctx, rt};
@@ -99,7 +99,7 @@ namespace LegionSolvers {
                 AssertSmallTask<T>::task_id,
                 Legion::TaskArgument{nullptr, 0}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_future(future);
             rt->execute_task(ctx, launcher);
         }

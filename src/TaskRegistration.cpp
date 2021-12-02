@@ -195,6 +195,6 @@ void LegionSolvers::preregister_solver_tasks(bool verbose) {
 
     // LegionSolversMapper.hpp ================================================
 
-    // Legion::Runtime::add_registration_callback(mapper_registration_callback);
+    Legion::Runtime::add_registration_callback(mapper_registration_callback);
 
 }

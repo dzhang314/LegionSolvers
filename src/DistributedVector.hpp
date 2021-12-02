@@ -197,7 +197,7 @@ namespace LegionSolvers {
                 color_space, logical_partition, logical_region,
                 Legion::TaskArgument{&zero, sizeof(ENTRY_T)}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_field(fid);
             rt->fill_fields(ctx, launcher);
         }
@@ -207,7 +207,7 @@ namespace LegionSolvers {
                 color_space, logical_partition, logical_region,
                 Legion::TaskArgument{&value, sizeof(ENTRY_T)}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_field(fid);
             rt->fill_fields(ctx, launcher);
         }
@@ -221,7 +221,7 @@ namespace LegionSolvers {
                 color_space, logical_partition,
                 logical_region, value.get_future()
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_field(fid);
             rt->fill_fields(ctx, launcher);
         }
@@ -240,7 +240,7 @@ namespace LegionSolvers {
                 Legion::TaskArgument{&args, 2 * sizeof(ENTRY_T)},
                 Legion::ArgumentMap{}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_region_requirement(Legion::RegionRequirement{
                 logical_partition, 0,
                 LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, logical_region
@@ -255,7 +255,7 @@ namespace LegionSolvers {
                 Legion::TaskArgument{name.c_str(), name.length() + 1},
                 Legion::ArgumentMap{}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_region_requirement(Legion::RegionRequirement{
                 logical_partition, 0,
                 LEGION_READ_ONLY, LEGION_EXCLUSIVE, logical_region
@@ -269,7 +269,7 @@ namespace LegionSolvers {
             assert(color_space == x.color_space);
             assert(index_partition == x.index_partition);
             Legion::IndexCopyLauncher launcher{color_space};
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_copy_requirements(
                 Legion::RegionRequirement{
                     x.logical_partition, 0,
@@ -300,7 +300,7 @@ namespace LegionSolvers {
                 AxpyTask<ENTRY_T, DIM>::task_id, color_space,
                 Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_region_requirement(Legion::RegionRequirement{
                 logical_partition, 0,
                 LEGION_READ_WRITE, LEGION_EXCLUSIVE, logical_region
@@ -331,7 +331,7 @@ namespace LegionSolvers {
                 XpayTask<ENTRY_T, DIM>::task_id, color_space,
                 Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_region_requirement(Legion::RegionRequirement{
                 logical_partition, 0,
                 LEGION_READ_WRITE, LEGION_EXCLUSIVE, logical_region
@@ -363,7 +363,7 @@ namespace LegionSolvers {
                 DotTask<ENTRY_T, DIM>::task_id, color_space,
                 Legion::TaskArgument{nullptr, 0}, Legion::ArgumentMap{}
             };
-            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
             launcher.add_region_requirement(Legion::RegionRequirement{
                 logical_partition, 0,
                 LEGION_READ_ONLY, LEGION_EXCLUSIVE, logical_region
