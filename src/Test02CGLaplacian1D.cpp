@@ -8,6 +8,7 @@
 #include "DistributedVector.hpp"
 #include "ExampleSystems.hpp"
 #include "LegionUtilities.hpp"
+#include "LibraryOptions.hpp"
 #include "SquarePlanner.hpp"
 #include "TaskRegistration.hpp"
 
@@ -160,5 +161,7 @@ int main(int argc, char **argv) {
     );
     LegionSolvers::preregister_solver_tasks(false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
+    Legion::Runtime::set_top_level_task_mapper_id(
+        LegionSolvers::LEGION_SOLVERS_MAPPER_ID);
     return Legion::Runtime::start(argc, argv);
 }

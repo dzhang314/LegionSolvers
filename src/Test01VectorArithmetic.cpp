@@ -5,6 +5,7 @@
 
 #include "DistributedVector.hpp"
 #include "LegionUtilities.hpp"
+#include "LibraryOptions.hpp"
 #include "TaskRegistration.hpp"
 
 
@@ -275,5 +276,7 @@ int main(int argc, char **argv) {
     LegionSolvers::preregister_cpu_task<test_task<double, 3, 3, Legion::coord_t, unsigned       >>(TEST_DOUBLE_3D_3D_CT_UI_TASK_ID, "test_double_3d_3d_ct_ui", true, false, false);
     LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level", true, false, false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
+    Legion::Runtime::set_top_level_task_mapper_id(
+        LegionSolvers::LEGION_SOLVERS_MAPPER_ID);
     return Legion::Runtime::start(argc, argv);
 }
