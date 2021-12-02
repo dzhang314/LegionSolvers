@@ -170,6 +170,26 @@ namespace LegionSolvers {
     }; // struct COOMatvecTask
 
 
+    template <typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM>
+    struct COOPrintTask : public TaskTDDD<COO_PRINT_TASK_BLOCK_ID,
+                                          COOPrintTask, ENTRY_T,
+                                          KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
+
+        static constexpr const char *task_base_name = "coo_print";
+
+        static constexpr bool is_leaf = true;
+
+        using return_type = void;
+
+        static void task_body(
+            const Legion::Task *task,
+            const std::vector<Legion::PhysicalRegion> &regions,
+            Legion::Context ctx, Legion::Runtime *rt
+        );
+
+    }; // struct COOPrintTask
+
+
 } // namespace LegionSolvers
 
 

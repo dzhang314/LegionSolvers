@@ -1,80 +1,160 @@
+#include <cstddef>
+
+#include <realm/cmdline.h>
 #include <legion.h>
 
+#include "CGSolver.hpp"
 #include "DistributedCOOMatrix.hpp"
 #include "DistributedVector.hpp"
 #include "ExampleSystems.hpp"
 #include "LegionUtilities.hpp"
+#include "SquarePlanner.hpp"
 #include "TaskRegistration.hpp"
 
 
 enum TaskIDs : Legion::TaskID {
+    FILL_RHS_TASK_ID,
     TOP_LEVEL_TASK_ID
 };
+
+
+using ENTRY_T = double; // vary this
+constexpr int VECTOR_DIM = 1;
+// constexpr int KERNEL_DIM = 1;
+using VECTOR_COORD_T = Legion::coord_t; // TODO: can't vary this yet
+using KERNEL_COORD_T = Legion::coord_t; // TODO: can't vary this yet
+
+
+void fill_rhs_task(const Legion::Task *task,
+                   const std::vector<Legion::PhysicalRegion> &regions,
+                   Legion::Context ctx, Legion::Runtime *rt) {
+
+    assert(regions.size() == 1);
+    const auto &region = regions[0];
+
+    assert(task->regions.size() == 1);
+    const auto &region_req = task->regions[0];
+
+    assert(region_req.privilege_fields.size() == 1);
+    const Legion::FieldID fid = *region_req.privilege_fields.begin();
+
+    assert(task->arglen == sizeof(VECTOR_COORD_T));
+    const auto arg_ptr = reinterpret_cast<const VECTOR_COORD_T *>(task->args);
+    const VECTOR_COORD_T n = *arg_ptr;
+
+    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, ENTRY_T, VECTOR_DIM>
+    entry_writer{region, fid};
+
+    for (Legion::PointInDomainIterator<VECTOR_DIM, VECTOR_COORD_T>
+         iter{region}; iter(); ++iter) {
+        const auto [i] = *iter;
+        if (i == 0) {
+            entry_writer[*iter] = static_cast<ENTRY_T>(-1);
+        } else if (i == n - 1) {
+            entry_writer[*iter] = static_cast<ENTRY_T>(+1);
+        } else {
+            entry_writer[*iter] = static_cast<ENTRY_T>(0);
+        }
+    }
+}
 
 
 void top_level_task(const Legion::Task *,
                     const std::vector<Legion::PhysicalRegion> &,
                     Legion::Context ctx, Legion::Runtime *rt) {
 
-    using ENTRY_T = double; // vary this
-    constexpr int VECTOR_DIM = 1; // constant
-    constexpr int KERNEL_DIM = 1; // constant
     constexpr int VECTOR_COLOR_DIM = 1; // vary this
     constexpr int KERNEL_COLOR_DIM = 1; // vary this
-    using VECTOR_COORD_T = Legion::coord_t;
-    using VECTOR_COLOR_COORD_T = Legion::coord_t;
 
+    using VECTOR_COLOR_COORD_T = Legion::coord_t; // vary this
+    using KERNEL_COLOR_COORD_T = Legion::coord_t; // vary this
+
+    using VectorRect = Legion::Rect<VECTOR_DIM, VECTOR_COORD_T>;
+    using VectorColorRect = Legion::Rect<VECTOR_COLOR_DIM,
+                                         VECTOR_COLOR_COORD_T>;
+    using KernelColorRect = Legion::Rect<KERNEL_COLOR_DIM,
+                                         KERNEL_COLOR_COORD_T>;
     using DistributedVector = LegionSolvers::DistributedVectorT<
         ENTRY_T, VECTOR_DIM, VECTOR_COLOR_DIM
     >;
 
-    VECTOR_COORD_T GRID_SIZE = 16;
-    VECTOR_COLOR_COORD_T NUM_VECTOR_PARTITIONS = 1;
-    Legion::coord_t NUM_KERNEL_PARTITIONS = 1;
+    VECTOR_COORD_T grid_size = 100;
+    VECTOR_COLOR_COORD_T num_vector_partitions = 1;
+    KERNEL_COLOR_COORD_T num_kernel_partitions = 1;
+    std::size_t num_iterations = 10;
 
-    const Legion::IndexSpaceT<VECTOR_DIM, VECTOR_COORD_T> index_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, GRID_SIZE - 1});
-    const Legion::IndexSpaceT<VECTOR_COLOR_DIM, VECTOR_COLOR_COORD_T> color_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_VECTOR_PARTITIONS - 1});
+    const Legion::InputArgs &args = Legion::Runtime::get_input_args();
 
-    DistributedVector sol{"sol", index_space, color_space, ctx, rt};
-    DistributedVector rhs{"rhs", sol.index_partition, ctx, rt};
-    DistributedVector x{"x", sol.index_partition, ctx, rt};
+    bool ok = Realm::CommandLineParser()
+        .add_option_int("-n", grid_size)
+        .add_option_int("-vp", num_vector_partitions)
+        .add_option_int("-kp", num_kernel_partitions)
+        .add_option_int("-it", num_iterations)
+        .parse_command_line(args.argc, (const char **) args.argv);
 
-    const Legion::IndexSpaceT<1> matrix_index_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, 3 * GRID_SIZE - 3});
-    const Legion::IndexSpaceT<1> matrix_color_space =
-        rt->create_index_space(ctx, Legion::Rect<1>{0, NUM_KERNEL_PARTITIONS - 1});
+    assert(ok);
 
-    LegionSolvers::DistributedCOOMatrixT<
-        ENTRY_T, KERNEL_DIM, VECTOR_DIM, VECTOR_DIM, KERNEL_COLOR_DIM
-    > coo_matrix{
-        "negative_laplacian_1d", matrix_index_space,
-        index_space, index_space, matrix_color_space, ctx, rt
-    };
+    const auto vector_index_space = rt->create_index_space(ctx,
+        VectorRect{0, grid_size - 1});
+    const auto vector_color_space = rt->create_index_space(ctx,
+        VectorColorRect{0, num_vector_partitions - 1});
+
+    DistributedVector rhs{"rhs", vector_index_space,
+                          vector_color_space, ctx, rt};
 
     {
-        const LegionSolvers::FillCOONegativeLaplacian1DTask<double>::Args
-        args{coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry, GRID_SIZE};
         Legion::TaskLauncher launcher{
-            LegionSolvers::FillCOONegativeLaplacian1DTask<double>::task_id,
-            Legion::TaskArgument{&args, sizeof(args)}
+            FILL_RHS_TASK_ID,
+            Legion::TaskArgument{&grid_size, sizeof(grid_size)}
         };
         launcher.add_region_requirement(Legion::RegionRequirement{
-            coo_matrix.kernel_region,
-            LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE,
-            coo_matrix.kernel_region
+            rhs.logical_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE,
+            rhs.logical_region
         });
-        launcher.add_field(0, coo_matrix.fid_i);
-        launcher.add_field(0, coo_matrix.fid_j);
-        launcher.add_field(0, coo_matrix.fid_entry);
+        launcher.add_field(0, rhs.fid);
         rt->execute_task(ctx, launcher);
     }
+
+    // rhs.print();
+
+    DistributedVector x{"x", rhs.index_partition, ctx, rt};
+
+    x = 0.0;
+
+    const auto matrix_color_space = rt->create_index_space(ctx,
+        KernelColorRect{0, num_kernel_partitions - 1});
+
+    const auto coo_matrix = LegionSolvers::negative_laplacian_1d_coo<
+        ENTRY_T, VECTOR_COORD_T, KERNEL_COORD_T,
+        KERNEL_COLOR_DIM, KERNEL_COLOR_COORD_T
+    >(vector_index_space, matrix_color_space, ctx, rt);
+
+    // coo_matrix.print();
+
+    LegionSolvers::SquarePlanner<ENTRY_T> planner{ctx, rt};
+    planner.add_solution_vector(x);
+    planner.add_rhs_vector(rhs);
+    planner.add_operator(0, 0, coo_matrix);
+
+    LegionSolvers::CGSolver solver{planner};
+    solver.setup();
+    for (std::size_t i = 0; i < num_iterations; ++i) {
+        solver.step();
+    }
+
+    for (std::size_t i = 0; i <= num_iterations; ++i) {
+        std::cout << solver.residual_norm_squared[i].get_value() << std::endl;
+    }
+
+    // x.print();
 
 }
 
 
 int main(int argc, char **argv) {
+    LegionSolvers::preregister_cpu_task<fill_rhs_task>(
+        FILL_RHS_TASK_ID, "fill_rhs", false, false
+    );
     LegionSolvers::preregister_cpu_task<top_level_task>(
         TOP_LEVEL_TASK_ID, "top_level", false, false
     );

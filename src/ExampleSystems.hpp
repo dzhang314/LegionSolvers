@@ -3,6 +3,7 @@
 
 #include <legion.h>
 
+#include "DistributedCOOMatrix.hpp"
 #include "TaskBaseClasses.hpp"
 #include "TaskIDs.hpp"
 
@@ -10,14 +11,14 @@
 namespace LegionSolvers {
 
 
-    constexpr Legion::coord_t
-    laplacian_1d_kernel_size(Legion::coord_t length) {
+    template <typename T>
+    constexpr T laplacian_1d_kernel_size(T length) {
         return 3 * length - 2;
     }
 
 
-    constexpr Legion::coord_t
-    laplacian_2d_kernel_size(Legion::coord_t height, Legion::coord_t width) {
+    template <typename T>
+    constexpr T laplacian_2d_kernel_size(T height, T width) {
         return (4 * 2 +                          // four corners
                 (height - 2) * 2 * 3 +           // vertical edges
                 (width - 2) * 2 * 3 +            // horizontal edges
@@ -83,6 +84,72 @@ namespace LegionSolvers {
         );
 
     }; // struct FillCOONegativeLaplacian2DTask
+
+
+    template <typename ENTRY_T,
+              typename VECTOR_COORD_T, typename KERNEL_COORD_T,
+              int KERNEL_COLOR_DIM, typename KERNEL_COLOR_COORD_T>
+    DistributedCOOMatrixT<
+        ENTRY_T, 1, 1, 1, KERNEL_COLOR_DIM, KERNEL_COORD_T,
+        VECTOR_COORD_T, VECTOR_COORD_T, KERNEL_COLOR_COORD_T
+    > negative_laplacian_1d_coo(
+        Legion::IndexSpaceT<1, VECTOR_COORD_T> index_space,
+        Legion::IndexSpaceT<KERNEL_COLOR_DIM, KERNEL_COLOR_COORD_T>
+            matrix_color_space,
+        Legion::Context ctx, Legion::Runtime *rt
+    ) {
+        constexpr int VECTOR_DIM = 1;
+        constexpr int KERNEL_DIM = 1;
+
+        const Legion::DomainT<VECTOR_DIM, VECTOR_COORD_T> domain =
+            rt->get_index_space_domain(ctx, index_space);
+
+        const VECTOR_COORD_T grid_size = domain.volume();
+
+        const Legion::Rect<VECTOR_DIM, VECTOR_COORD_T>
+        vector_rect{0, grid_size - 1};
+
+        assert(domain.bounds == vector_rect);
+
+        const KERNEL_COORD_T kernel_size = laplacian_1d_kernel_size(
+            static_cast<KERNEL_COORD_T>(grid_size)
+        );
+
+        const Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>
+        kernel_rect{0, kernel_size - 1};
+
+        const Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> matrix_index_space =
+            rt->create_index_space(ctx, kernel_rect);
+
+        DistributedCOOMatrixT<
+            ENTRY_T, KERNEL_DIM, VECTOR_DIM, VECTOR_DIM, KERNEL_COLOR_DIM,
+            KERNEL_COORD_T, VECTOR_COORD_T, VECTOR_COORD_T, KERNEL_COLOR_COORD_T
+        > coo_matrix{
+            "negative_laplacian_1d_coo", matrix_index_space,
+            index_space, index_space, matrix_color_space, ctx, rt
+        };
+
+        const typename FillCOONegativeLaplacian1DTask<ENTRY_T>::Args args{
+            coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry, grid_size
+        };
+
+        Legion::TaskLauncher launcher{
+            FillCOONegativeLaplacian1DTask<ENTRY_T>::task_id,
+            Legion::TaskArgument{&args, sizeof(args)}
+        };
+
+        launcher.add_region_requirement(Legion::RegionRequirement{
+            coo_matrix.kernel_region, LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE,
+            coo_matrix.kernel_region
+        });
+
+        launcher.add_field(0, coo_matrix.fid_i);
+        launcher.add_field(0, coo_matrix.fid_j);
+        launcher.add_field(0, coo_matrix.fid_entry);
+
+        rt->execute_task(ctx, launcher);
+        return coo_matrix;
+    }
 
 
 } // namespace LegionSolvers

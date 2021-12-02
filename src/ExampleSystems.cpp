@@ -9,7 +9,8 @@ void LegionSolvers::FillCOONegativeLaplacian1DTask<T>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    std::cout << "Constructing 1D Laplacian matrix..." << std::endl;
+    std::cout << "[LegionSolvers] Constructing COO 1D Laplacian matrix..."
+              << std::endl;
 
     assert(regions.size() == 1);
     const auto &matrix = regions[0];
@@ -42,7 +43,8 @@ void LegionSolvers::FillCOONegativeLaplacian1DTask<T>::task_body(
         entry_writer[*iter] = static_cast<T>(-1.0);
         ++iter;
     }
-    std::cout << "Finished constructing 1D Laplacian." << std::endl;
+    std::cout << "[LegionSolvers] Finished constructing COO 1D Laplacian."
+              << std::endl;
 }
 
 
@@ -52,7 +54,8 @@ void LegionSolvers::FillCOONegativeLaplacian2DTask<T>::task_body(
     const std::vector<Legion::PhysicalRegion> &regions,
     Legion::Context ctx, Legion::Runtime *rt
 ) {
-    std::cout << "Constructing 2D Laplacian matrix..." << std::endl;
+    std::cout << "[LegionSolvers] Constructing COO 2D Laplacian matrix..."
+              << std::endl;
 
     assert(regions.size() == 1);
     const auto &matrix = regions[0];
@@ -100,7 +103,8 @@ void LegionSolvers::FillCOONegativeLaplacian2DTask<T>::task_body(
             }
         }
     }
-    std::cout << "Finished constructing 2D Laplacian." << std::endl;
+    std::cout << "[LegionSolvers] Finished constructing COO 2D Laplacian."
+              << std::endl;
 }
 
 

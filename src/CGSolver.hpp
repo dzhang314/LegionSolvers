@@ -32,7 +32,8 @@ namespace LegionSolvers {
             const SquarePlanner<T> &planner
         ) : planner(planner),
             workspace() {
-            assert(planner.solution_vectors.size() == planner.rhs_vectors.size());
+            assert(planner.solution_vectors.size() ==
+                   planner.rhs_vectors.size());
             workspace.emplace_back();
             workspace.emplace_back();
             workspace.emplace_back();
@@ -46,7 +47,9 @@ namespace LegionSolvers {
         void setup() {
             planner.copy_rhs(workspace[P]);
             planner.copy_rhs(workspace[R]);
-            residual_norm_squared.push_back(planner.dot(workspace[R], workspace[R]));
+            residual_norm_squared.push_back(
+                planner.dot(workspace[R], workspace[R])
+            );
         }
 
         void step() {
@@ -61,19 +64,19 @@ namespace LegionSolvers {
             planner.xpay(workspace[P], beta, workspace[R]);
         }
 
-        void solve() {
-            setup();
-            for (int i = 0; i < 10; ++i) {
-                // rt->begin_trace(ctx, 101);
-                step();
-                // rt->end_trace(ctx, 101);
-                // const T r2 = residual_norm_squared[2].get_result<T>();
-                // if (print_residual) {
-                //     std::cout << "residual: " << std::sqrt(r2) << std::endl;
-                // }
-                // if (r2 <= residual_threshold * residual_threshold) { break; }
-            }
-        }
+        // void solve() {
+        //     setup();
+        //     for (int i = 0; i < 10; ++i) {
+        //         // rt->begin_trace(ctx, 101);
+        //         step();
+        //         // rt->end_trace(ctx, 101);
+        //         // const T r2 = residual_norm_squared[2].get_result<T>();
+        //         // if (print_residual) {
+        //         //     std::cout << "residual: " << std::sqrt(r2) << std::endl;
+        //         // }
+        //         // if (r2 <= residual_threshold * residual_threshold) { break; }
+        //     }
+        // }
 
     }; // class CGSolver
 

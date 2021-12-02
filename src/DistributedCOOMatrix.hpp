@@ -29,8 +29,8 @@ namespace LegionSolvers {
 
     public:
 
-        Legion::Context ctx;
-        Legion::Runtime *rt;
+        const Legion::Context ctx;
+        Legion::Runtime *const rt;
         std::string name;
         Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> kernel_space;
         Legion::IndexSpaceT<DOMAIN_DIM, DOMAIN_COORD_T> domain_space;
@@ -45,7 +45,7 @@ namespace LegionSolvers {
 
         DistributedCOOMatrixT() = delete;
         DistributedCOOMatrixT(const DistributedCOOMatrixT &) = delete;
-        DistributedCOOMatrixT(DistributedCOOMatrixT &&) = delete;
+        DistributedCOOMatrixT(DistributedCOOMatrixT &&) = default;
         DistributedCOOMatrixT &operator=(const DistributedCOOMatrixT &) = delete;
         DistributedCOOMatrixT &operator=(DistributedCOOMatrixT &&) = delete;
 
@@ -201,7 +201,33 @@ namespace LegionSolvers {
         }
 
         virtual void print() const override {
-            // TODO
+            // TODO: index print?
+            const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
+            Legion::TaskLauncher launcher{
+                COOPrintTask<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM>::task_id,
+                Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])}
+            };
+            // Legion::IndexLauncher launcher{
+            //     COOPrintTask<ENTRY_T, KERNEL_DIM,
+            //                  DOMAIN_DIM, RANGE_DIM>::task_id,
+            //     this->tile_index_space,
+            //     Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
+            //     Legion::ArgumentMap{}
+            // };
+            // launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                kernel_region, LEGION_READ_ONLY, LEGION_EXCLUSIVE,
+                kernel_region
+            });
+            // launcher.add_region_requirement(Legion::RegionRequirement{
+            //     this->column_logical_partition, PFID_IJ_TO_IJ,
+            //     LEGION_READ_ONLY, LEGION_EXCLUSIVE, this->matrix_region
+            // });
+            launcher.add_field(0, fid_i);
+            launcher.add_field(0, fid_j);
+            launcher.add_field(0, fid_entry);
+            // rt->execute_index_space(ctx, launcher);
+            rt->execute_task(ctx, launcher);
         }
 
     }; // class DistributedCOOMatrixT

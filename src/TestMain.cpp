@@ -1,7 +1,5 @@
 int main() {}
 
-// #include <realm/cmdline.h>
-
 // #include "CGSolver.hpp"
 // #include "COOMatrixTasks.hpp"
 // #include "DistributedCOOMatrix.hpp"
@@ -46,17 +44,6 @@ int main() {}
 //     // Legion::coord_t GRID_WIDTH = 1000;
 //     // int MAX_ITERATIONS = 10;
 
-//     // const Legion::InputArgs &args = Legion::Runtime::get_input_args();
-
-//     // bool ok = Realm::CommandLineParser()
-//     //     .add_option_int("-kp", NUM_KERNEL_PARTITIONS)
-//     //     .add_option_int("-vp", NUM_VECTOR_PARTITIONS)
-//     //     .add_option_int("-h", GRID_HEIGHT)
-//     //     .add_option_int("-w", GRID_WIDTH)
-//     //     .add_option_int("-it", MAX_ITERATIONS)
-//     //     .parse_command_line(args.argc, (const char **) args.argv);
-
-//     // assert(ok);
 
 //     // const Legion::IndexSpaceT<2> index_space =
 //     //     rt->create_index_space(ctx, Legion::Rect<2>{{0, 0}, {GRID_HEIGHT - 1, GRID_WIDTH - 1}});
@@ -101,45 +88,9 @@ int main() {}
 //         index_space, index_space, matrix_color_space, ctx, rt
 //     };
 
-//     {
-//         const LegionSolvers::FillCOONegativeLaplacian1DTask<double>::Args
-//         args{coo_matrix.fid_i, coo_matrix.fid_j, coo_matrix.fid_entry, GRID_SIZE};
-//         Legion::TaskLauncher launcher{
-//             LegionSolvers::FillCOONegativeLaplacian1DTask<double>::task_id,
-//             Legion::TaskArgument{&args, sizeof(args)}
-//         };
-//         launcher.add_region_requirement(Legion::RegionRequirement{
-//             coo_matrix.kernel_region,
-//             LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE,
-//             coo_matrix.kernel_region
-//         });
-//         launcher.add_field(0, coo_matrix.fid_i);
-//         launcher.add_field(0, coo_matrix.fid_j);
-//         launcher.add_field(0, coo_matrix.fid_entry);
-//         rt->execute_task(ctx, launcher);
-//     }
-
 //     // const LegionSolvers::MaterializedLinearOperator<double> &matrix = coo_matrix;
 //     // const auto tile_map = matrix.compute_nonempty_tiles(
 //     //     sol.index_partition, sol.index_partition, ctx, rt
 //     // );
-
-//     // x = 0.0;
-//     // rhs = 0.0;
-//     // sol.random_fill();
-//     // matrix.matvec(rhs, sol, tile_map);
-//     // // rhs.print();
-
-//     // LegionSolvers::SquarePlanner<double> planner{ctx, rt};
-//     // planner.add_solution_vector(x);
-//     // planner.add_rhs_vector(rhs);
-//     // planner.add_operator(0, 0, coo_matrix);
-
-//     // LegionSolvers::CGSolver solver{planner};
-//     // solver.setup();
-//     // for (int i = 0; i < 100; ++i) {
-//     //     solver.step();
-//     //     std::cout << solver.residual_norm_squared.back().get_value() << std::endl;
-//     // }
 
 // }
