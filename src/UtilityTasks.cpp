@@ -107,8 +107,8 @@ void LegionSolvers::RandomFillTask<T, DIM>::task_body(
     std::random_device rng{};
     std::uniform_real_distribution<T> entry_dist{low, high};
 
-    const Legion::FieldAccessor<LEGION_WRITE_DISCARD, T, DIM>
-    entry_writer{region, fid};
+    using COORD_T = Legion::coord_t; // TODO
+    const AffineWriter<T, DIM, COORD_T> entry_writer{region, fid};
 
     for (Legion::PointInDomainIterator<DIM> iter{region}; iter(); ++iter) {
         entry_writer[*iter] = entry_dist(rng);
