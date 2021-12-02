@@ -63,6 +63,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "scal";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         using return_type = void;
@@ -161,6 +163,8 @@ namespace LegionSolvers {
     struct AxpyTask : public TaskTD<AXPY_TASK_BLOCK_ID, AxpyTask, T, N> {
 
         static constexpr const char *task_base_name = "axpy";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 
@@ -261,6 +265,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "xpay";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         using return_type = void;
@@ -331,6 +337,8 @@ namespace LegionSolvers {
     struct DotTask : public TaskTD<DOT_TASK_BLOCK_ID, DotTask, T, N> {
 
         static constexpr const char *task_base_name = "dot_product";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 

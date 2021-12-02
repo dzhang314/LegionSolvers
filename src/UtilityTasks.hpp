@@ -16,6 +16,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "addition";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         using return_type = T;
@@ -34,6 +36,8 @@ namespace LegionSolvers {
                                           SubtractionTask, T> {
 
         static constexpr const char *task_base_name = "subtraction";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 
@@ -54,6 +58,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "negation";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         using return_type = T;
@@ -72,6 +78,8 @@ namespace LegionSolvers {
                                              MultiplicationTask, T> {
 
         static constexpr const char *task_base_name = "multiplication";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 
@@ -92,6 +100,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "division";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         using return_type = T;
@@ -110,6 +120,8 @@ namespace LegionSolvers {
                                           AssertSmallTask, T> {
 
         static constexpr const char *task_base_name = "assert_small";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 
@@ -130,6 +142,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "random_fill";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         using return_type = void;
@@ -148,6 +162,8 @@ namespace LegionSolvers {
                                            PrintVectorTask, T, DIM> {
 
         static constexpr const char *task_base_name = "print_vector";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 

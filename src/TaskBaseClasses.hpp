@@ -55,7 +55,11 @@ namespace LegionSolvers {
             preregister_cpu_task<
                 typename TaskClass<T>::return_type,
                 TaskClass<T>::task_body
-            >(task_id, task_name(), TaskClass<T>::is_leaf, verbose);
+            >(
+                task_id, task_name(),
+                TaskClass<T>::is_inner, TaskClass<T>::is_leaf,
+                verbose
+            );
         }
 
         static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
@@ -88,7 +92,11 @@ namespace LegionSolvers {
             preregister_cpu_task<
                 typename TaskClass<T, N>::return_type,
                 TaskClass<T, N>::task_body
-            >(task_id, task_name(), TaskClass<T, N>::is_leaf, verbose);
+            >(
+                task_id, task_name(),
+                TaskClass<T, N>::is_inner, TaskClass<T, N>::is_leaf,
+                verbose
+            );
         }
 
         static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
@@ -109,7 +117,11 @@ namespace LegionSolvers {
             preregister_kokkos_task<
                 typename TaskClass<T, N>::return_type,
                 TaskClass<T, N>::template KokkosTaskTemplate
-            >(task_id, task_name(), TaskClass<T, N>::is_leaf, verbose);
+            >(
+                task_id, task_name(),
+                TaskClass<T, N>::is_inner, TaskClass<T, N>::is_leaf,
+                verbose
+            );
         }
 
         static void announce_kokkos(Legion::DomainPoint index_point,
@@ -151,7 +163,12 @@ namespace LegionSolvers {
             preregister_cpu_task<
                 typename TaskClass<T, N1, N2, N3>::return_type,
                 TaskClass<T, N1, N2, N3>::task_body
-            >(task_id, task_name(), TaskClass<T, N1, N2, N3>::is_leaf, verbose);
+            >(
+                task_id, task_name(),
+                TaskClass<T, N1, N2, N3>::is_inner,
+                TaskClass<T, N1, N2, N3>::is_leaf,
+                verbose
+            );
         }
 
         static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
@@ -172,7 +189,12 @@ namespace LegionSolvers {
             preregister_kokkos_task<
                 typename TaskClass<T, N1, N2, N3>::return_type,
                 TaskClass<T, N1, N2, N3>::template KokkosTaskTemplate
-            >(task_id, task_name(), TaskClass<T, N1, N2, N3>::is_leaf, verbose);
+            >(
+                task_id, task_name(),
+                TaskClass<T, N1, N2, N3>::is_inner,
+                TaskClass<T, N1, N2, N3>::is_leaf,
+                verbose
+            );
         }
 
         static void announce_kokkos(Legion::DomainPoint index_point,

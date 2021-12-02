@@ -54,7 +54,7 @@ namespace LegionSolvers {
                                Legion::Context, Legion::Runtime *)>
     void preregister_cpu_task(Legion::TaskID task_id,
                               const std::string &task_name,
-                              bool is_leaf, bool verbose) {
+                              bool is_inner, bool is_leaf, bool verbose) {
         if (verbose) {
             std::cout << "[LegionSolvers] Registering task " << task_name
                       << " with ID " << task_id << "." << std::endl;
@@ -63,6 +63,7 @@ namespace LegionSolvers {
         registrar.add_constraint(
             Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
         );
+        registrar.set_inner(is_inner);
         registrar.set_leaf(is_leaf);
         Legion::Runtime::preregister_task_variant<TASK_PTR>(
             registrar, task_name.c_str()
@@ -76,7 +77,7 @@ namespace LegionSolvers {
                                    Legion::Context, Legion::Runtime *)>
     void preregister_cpu_task(Legion::TaskID task_id,
                               const std::string &task_name,
-                              bool is_leaf, bool verbose) {
+                              bool is_inner, bool is_leaf, bool verbose) {
         if (verbose) {
             std::cout << "[LegionSolvers] Registering task " << task_name
                       << " with ID " << task_id << "." << std::endl;
@@ -85,6 +86,7 @@ namespace LegionSolvers {
         registrar.add_constraint(
             Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
         );
+        registrar.set_inner(is_inner);
         registrar.set_leaf(is_leaf);
         if constexpr (std::is_void_v<RETURN_T>) {
             Legion::Runtime::preregister_task_variant<TASK_PTR>(
@@ -102,7 +104,7 @@ namespace LegionSolvers {
               template <typename> typename KokkosTaskTemplate>
     void preregister_kokkos_task(Legion::TaskID task_id,
                                  const std::string &task_name,
-                                 bool is_leaf, bool verbose) {
+                                 bool is_inner, bool is_leaf, bool verbose) {
 
         #ifdef KOKKOS_ENABLE_SERIAL
         {
@@ -115,6 +117,7 @@ namespace LegionSolvers {
             registrar.add_constraint(Legion::ProcessorConstraint{
                 Legion::Processor::LOC_PROC
             });
+            registrar.set_inner(is_inner);
             registrar.set_leaf(is_leaf);
             if constexpr (std::is_void_v<ReturnType>) {
                 Legion::Runtime::preregister_task_variant<
@@ -144,6 +147,7 @@ namespace LegionSolvers {
                     Legion::Processor::LOC_PROC
                 #endif
             });
+            registrar.set_inner(is_inner);
             registrar.set_leaf(is_leaf);
             if constexpr (std::is_void_v<ReturnType>) {
                 Legion::Runtime::preregister_task_variant<
@@ -169,6 +173,7 @@ namespace LegionSolvers {
             registrar.add_constraint(Legion::ProcessorConstraint{
                 Legion::Processor::TOC_PROC
             });
+            registrar.set_inner(is_inner);
             registrar.set_leaf(is_leaf);
             if constexpr (std::is_void_v<ReturnType>) {
                 Legion::Runtime::preregister_task_variant<
@@ -193,9 +198,9 @@ namespace LegionSolvers {
         explicit ProjectionOneLevel(Legion::coord_t index) noexcept :
             index(index) {}
 
-        virtual bool is_functional(void) const noexcept { return true; }
+        virtual bool is_functional() const noexcept { return true; }
 
-        virtual unsigned get_depth(void) const noexcept { return 0; }
+        virtual unsigned get_depth() const noexcept { return 0; }
 
         using Legion::ProjectionFunctor::project;
 
@@ -220,9 +225,9 @@ namespace LegionSolvers {
         explicit ProjectionTwoLevel(Legion::coord_t i, Legion::coord_t j)
             noexcept : i(i), j(j) {}
 
-        virtual bool is_functional(void) const noexcept { return true; }
+        virtual bool is_functional() const noexcept { return true; }
 
-        virtual unsigned get_depth(void) const noexcept { return 1; }
+        virtual unsigned get_depth() const noexcept { return 1; }
 
         using Legion::ProjectionFunctor::project;
 
@@ -298,6 +303,14 @@ namespace LegionSolvers {
     template <typename FIELD_TYPE, int DIM, typename COORD_T>
     using AffineReader = Legion::FieldAccessor<
         LEGION_READ_ONLY, FIELD_TYPE, DIM, COORD_T,
+        Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
+        LEGION_SOLVERS_CHECK_BOUNDS
+    >;
+
+
+    template <typename FIELD_TYPE, int DIM, typename COORD_T>
+    using AffineWriter = Legion::FieldAccessor<
+        LEGION_WRITE_ONLY, FIELD_TYPE, DIM, COORD_T,
         Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
         LEGION_SOLVERS_CHECK_BOUNDS
     >;

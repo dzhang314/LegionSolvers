@@ -36,6 +36,8 @@ namespace LegionSolvers {
         static constexpr const char *
         task_base_name = "fill_coo_negative_laplacian_1d";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         struct Args {
@@ -64,6 +66,8 @@ namespace LegionSolvers {
 
         static constexpr const char *
         task_base_name = "fill_coo_negative_laplacian_2d";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 

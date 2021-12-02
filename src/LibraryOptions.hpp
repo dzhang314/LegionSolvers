@@ -72,7 +72,7 @@ namespace LegionSolvers {
 
 
     // TODO: preprocessor flag for bounds checking
-    constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = true;
+    constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = false;
 
 
 } // namespace LegionSolvers

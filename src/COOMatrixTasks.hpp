@@ -152,6 +152,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "coo_matvec";
 
+        static constexpr bool is_inner = false;
+
         static constexpr bool is_leaf = true;
 
         using return_type = void;
@@ -176,6 +178,8 @@ namespace LegionSolvers {
                                           KERNEL_DIM, DOMAIN_DIM, RANGE_DIM> {
 
         static constexpr const char *task_base_name = "coo_print";
+
+        static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
 

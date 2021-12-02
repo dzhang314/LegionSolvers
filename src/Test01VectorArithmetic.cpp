@@ -101,7 +101,7 @@ void test_task(const Legion::Task *,
 
     using LegionSolvers::LEGION_SOLVERS_TYPE_NAME;
 
-    const std::vector<VECTOR_COLOR_COORD_T> color_nums{1, 4, 10, 20};
+    const std::vector<VECTOR_COLOR_COORD_T> color_nums{1, 4, 10, 27};
 
     for (VECTOR_COORD_T vec_size = 500; vec_size <= 1000; vec_size += 100) {
         for (const VECTOR_COLOR_COORD_T num_colors : color_nums) {
@@ -124,21 +124,26 @@ void test_task(const Legion::Task *,
             const auto index_space = rt->create_index_space(ctx, index_rect);
             const auto color_space = rt->create_index_space(ctx, color_rect);
 
-            DistributedVector u{"u", index_space, color_space, ctx, rt};
-            DistributedVector v{"v", u.index_partition, ctx, rt};
-            DistributedVector w{"w", u.index_partition, ctx, rt};
+            {
+                DistributedVector u{"u", index_space, color_space, ctx, rt};
+                DistributedVector v{"v", u.index_partition, ctx, rt};
+                DistributedVector w{"w", u.index_partition, ctx, rt};
 
-            u.random_fill();
-            v.random_fill();
-            w = u;
+                u.random_fill();
+                v.random_fill();
+                w = u;
 
-            w.axpy(1.0, v);
-            v.xpay(-1.0, u);
-            u.axpy(-0.5, v);
-            u.axpy(-0.5, w);
+                w.axpy(1.0, v);
+                v.xpay(-1.0, u);
+                u.axpy(-0.5, v);
+                u.axpy(-0.5, w);
 
-            // u.print();
-            u.dot(u).assert_small();
+                // u.print();
+                u.dot(u).assert_small();
+            }
+
+            rt->destroy_index_space(ctx, index_space);
+            rt->destroy_index_space(ctx, color_space);
 
         }
     }
@@ -214,61 +219,61 @@ void top_level_task(const Legion::Task *,
 
 int main(int argc, char **argv) {
     LegionSolvers::preregister_solver_tasks(false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 1, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__1D_1D_CT_CT_TASK_ID, "test_float__1d_1d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 2, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__1D_2D_CT_CT_TASK_ID, "test_float__1d_2d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 3, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__1D_3D_CT_CT_TASK_ID, "test_float__1d_3d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 1, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__2D_1D_CT_CT_TASK_ID, "test_float__2d_1d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 2, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__2D_2D_CT_CT_TASK_ID, "test_float__2d_2d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 3, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__2D_3D_CT_CT_TASK_ID, "test_float__2d_3d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 1, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__3D_1D_CT_CT_TASK_ID, "test_float__3d_1d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 2, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__3D_2D_CT_CT_TASK_ID, "test_float__3d_2d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 3, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__3D_3D_CT_CT_TASK_ID, "test_float__3d_3d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 1, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_1D_1D_CT_CT_TASK_ID, "test_double_1d_1d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 2, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_1D_2D_CT_CT_TASK_ID, "test_double_1d_2d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 3, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_1D_3D_CT_CT_TASK_ID, "test_double_1d_3d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 1, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_2D_1D_CT_CT_TASK_ID, "test_double_2d_1d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 2, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_2D_2D_CT_CT_TASK_ID, "test_double_2d_2d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 3, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_2D_3D_CT_CT_TASK_ID, "test_double_2d_3d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 1, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_3D_1D_CT_CT_TASK_ID, "test_double_3d_1d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 2, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_3D_2D_CT_CT_TASK_ID, "test_double_3d_2d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 3, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_3D_3D_CT_CT_TASK_ID, "test_double_3d_3d_ct_ct", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 1, Legion::coord_t, int            >>(TEST_FLOAT__1D_1D_CT_SI_TASK_ID, "test_float__1d_1d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 2, Legion::coord_t, int            >>(TEST_FLOAT__1D_2D_CT_SI_TASK_ID, "test_float__1d_2d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 3, Legion::coord_t, int            >>(TEST_FLOAT__1D_3D_CT_SI_TASK_ID, "test_float__1d_3d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 1, Legion::coord_t, int            >>(TEST_FLOAT__2D_1D_CT_SI_TASK_ID, "test_float__2d_1d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 2, Legion::coord_t, int            >>(TEST_FLOAT__2D_2D_CT_SI_TASK_ID, "test_float__2d_2d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 3, Legion::coord_t, int            >>(TEST_FLOAT__2D_3D_CT_SI_TASK_ID, "test_float__2d_3d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 1, Legion::coord_t, int            >>(TEST_FLOAT__3D_1D_CT_SI_TASK_ID, "test_float__3d_1d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 2, Legion::coord_t, int            >>(TEST_FLOAT__3D_2D_CT_SI_TASK_ID, "test_float__3d_2d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 3, Legion::coord_t, int            >>(TEST_FLOAT__3D_3D_CT_SI_TASK_ID, "test_float__3d_3d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 1, Legion::coord_t, int            >>(TEST_DOUBLE_1D_1D_CT_SI_TASK_ID, "test_double_1d_1d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 2, Legion::coord_t, int            >>(TEST_DOUBLE_1D_2D_CT_SI_TASK_ID, "test_double_1d_2d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 3, Legion::coord_t, int            >>(TEST_DOUBLE_1D_3D_CT_SI_TASK_ID, "test_double_1d_3d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 1, Legion::coord_t, int            >>(TEST_DOUBLE_2D_1D_CT_SI_TASK_ID, "test_double_2d_1d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 2, Legion::coord_t, int            >>(TEST_DOUBLE_2D_2D_CT_SI_TASK_ID, "test_double_2d_2d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 3, Legion::coord_t, int            >>(TEST_DOUBLE_2D_3D_CT_SI_TASK_ID, "test_double_2d_3d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 1, Legion::coord_t, int            >>(TEST_DOUBLE_3D_1D_CT_SI_TASK_ID, "test_double_3d_1d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 2, Legion::coord_t, int            >>(TEST_DOUBLE_3D_2D_CT_SI_TASK_ID, "test_double_3d_2d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 3, Legion::coord_t, int            >>(TEST_DOUBLE_3D_3D_CT_SI_TASK_ID, "test_double_3d_3d_ct_si", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 1, Legion::coord_t, unsigned       >>(TEST_FLOAT__1D_1D_CT_UI_TASK_ID, "test_float__1d_1d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 2, Legion::coord_t, unsigned       >>(TEST_FLOAT__1D_2D_CT_UI_TASK_ID, "test_float__1d_2d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 1, 3, Legion::coord_t, unsigned       >>(TEST_FLOAT__1D_3D_CT_UI_TASK_ID, "test_float__1d_3d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 1, Legion::coord_t, unsigned       >>(TEST_FLOAT__2D_1D_CT_UI_TASK_ID, "test_float__2d_1d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 2, Legion::coord_t, unsigned       >>(TEST_FLOAT__2D_2D_CT_UI_TASK_ID, "test_float__2d_2d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 2, 3, Legion::coord_t, unsigned       >>(TEST_FLOAT__2D_3D_CT_UI_TASK_ID, "test_float__2d_3d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 1, Legion::coord_t, unsigned       >>(TEST_FLOAT__3D_1D_CT_UI_TASK_ID, "test_float__3d_1d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 2, Legion::coord_t, unsigned       >>(TEST_FLOAT__3D_2D_CT_UI_TASK_ID, "test_float__3d_2d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<float , 3, 3, Legion::coord_t, unsigned       >>(TEST_FLOAT__3D_3D_CT_UI_TASK_ID, "test_float__3d_3d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 1, Legion::coord_t, unsigned       >>(TEST_DOUBLE_1D_1D_CT_UI_TASK_ID, "test_double_1d_1d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 2, Legion::coord_t, unsigned       >>(TEST_DOUBLE_1D_2D_CT_UI_TASK_ID, "test_double_1d_2d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 1, 3, Legion::coord_t, unsigned       >>(TEST_DOUBLE_1D_3D_CT_UI_TASK_ID, "test_double_1d_3d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 1, Legion::coord_t, unsigned       >>(TEST_DOUBLE_2D_1D_CT_UI_TASK_ID, "test_double_2d_1d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 2, Legion::coord_t, unsigned       >>(TEST_DOUBLE_2D_2D_CT_UI_TASK_ID, "test_double_2d_2d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 2, 3, Legion::coord_t, unsigned       >>(TEST_DOUBLE_2D_3D_CT_UI_TASK_ID, "test_double_2d_3d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 1, Legion::coord_t, unsigned       >>(TEST_DOUBLE_3D_1D_CT_UI_TASK_ID, "test_double_3d_1d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 2, Legion::coord_t, unsigned       >>(TEST_DOUBLE_3D_2D_CT_UI_TASK_ID, "test_double_3d_2d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<test_task<double, 3, 3, Legion::coord_t, unsigned       >>(TEST_DOUBLE_3D_3D_CT_UI_TASK_ID, "test_double_3d_3d_ct_ui", false, false);
-    LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level", false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 1, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__1D_1D_CT_CT_TASK_ID, "test_float__1d_1d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 2, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__1D_2D_CT_CT_TASK_ID, "test_float__1d_2d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 3, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__1D_3D_CT_CT_TASK_ID, "test_float__1d_3d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 1, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__2D_1D_CT_CT_TASK_ID, "test_float__2d_1d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 2, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__2D_2D_CT_CT_TASK_ID, "test_float__2d_2d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 3, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__2D_3D_CT_CT_TASK_ID, "test_float__2d_3d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 1, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__3D_1D_CT_CT_TASK_ID, "test_float__3d_1d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 2, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__3D_2D_CT_CT_TASK_ID, "test_float__3d_2d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 3, Legion::coord_t, Legion::coord_t>>(TEST_FLOAT__3D_3D_CT_CT_TASK_ID, "test_float__3d_3d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 1, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_1D_1D_CT_CT_TASK_ID, "test_double_1d_1d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 2, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_1D_2D_CT_CT_TASK_ID, "test_double_1d_2d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 3, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_1D_3D_CT_CT_TASK_ID, "test_double_1d_3d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 1, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_2D_1D_CT_CT_TASK_ID, "test_double_2d_1d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 2, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_2D_2D_CT_CT_TASK_ID, "test_double_2d_2d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 3, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_2D_3D_CT_CT_TASK_ID, "test_double_2d_3d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 1, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_3D_1D_CT_CT_TASK_ID, "test_double_3d_1d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 2, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_3D_2D_CT_CT_TASK_ID, "test_double_3d_2d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 3, Legion::coord_t, Legion::coord_t>>(TEST_DOUBLE_3D_3D_CT_CT_TASK_ID, "test_double_3d_3d_ct_ct", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 1, Legion::coord_t, int            >>(TEST_FLOAT__1D_1D_CT_SI_TASK_ID, "test_float__1d_1d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 2, Legion::coord_t, int            >>(TEST_FLOAT__1D_2D_CT_SI_TASK_ID, "test_float__1d_2d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 3, Legion::coord_t, int            >>(TEST_FLOAT__1D_3D_CT_SI_TASK_ID, "test_float__1d_3d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 1, Legion::coord_t, int            >>(TEST_FLOAT__2D_1D_CT_SI_TASK_ID, "test_float__2d_1d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 2, Legion::coord_t, int            >>(TEST_FLOAT__2D_2D_CT_SI_TASK_ID, "test_float__2d_2d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 3, Legion::coord_t, int            >>(TEST_FLOAT__2D_3D_CT_SI_TASK_ID, "test_float__2d_3d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 1, Legion::coord_t, int            >>(TEST_FLOAT__3D_1D_CT_SI_TASK_ID, "test_float__3d_1d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 2, Legion::coord_t, int            >>(TEST_FLOAT__3D_2D_CT_SI_TASK_ID, "test_float__3d_2d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 3, Legion::coord_t, int            >>(TEST_FLOAT__3D_3D_CT_SI_TASK_ID, "test_float__3d_3d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 1, Legion::coord_t, int            >>(TEST_DOUBLE_1D_1D_CT_SI_TASK_ID, "test_double_1d_1d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 2, Legion::coord_t, int            >>(TEST_DOUBLE_1D_2D_CT_SI_TASK_ID, "test_double_1d_2d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 3, Legion::coord_t, int            >>(TEST_DOUBLE_1D_3D_CT_SI_TASK_ID, "test_double_1d_3d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 1, Legion::coord_t, int            >>(TEST_DOUBLE_2D_1D_CT_SI_TASK_ID, "test_double_2d_1d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 2, Legion::coord_t, int            >>(TEST_DOUBLE_2D_2D_CT_SI_TASK_ID, "test_double_2d_2d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 3, Legion::coord_t, int            >>(TEST_DOUBLE_2D_3D_CT_SI_TASK_ID, "test_double_2d_3d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 1, Legion::coord_t, int            >>(TEST_DOUBLE_3D_1D_CT_SI_TASK_ID, "test_double_3d_1d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 2, Legion::coord_t, int            >>(TEST_DOUBLE_3D_2D_CT_SI_TASK_ID, "test_double_3d_2d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 3, Legion::coord_t, int            >>(TEST_DOUBLE_3D_3D_CT_SI_TASK_ID, "test_double_3d_3d_ct_si", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 1, Legion::coord_t, unsigned       >>(TEST_FLOAT__1D_1D_CT_UI_TASK_ID, "test_float__1d_1d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 2, Legion::coord_t, unsigned       >>(TEST_FLOAT__1D_2D_CT_UI_TASK_ID, "test_float__1d_2d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 1, 3, Legion::coord_t, unsigned       >>(TEST_FLOAT__1D_3D_CT_UI_TASK_ID, "test_float__1d_3d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 1, Legion::coord_t, unsigned       >>(TEST_FLOAT__2D_1D_CT_UI_TASK_ID, "test_float__2d_1d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 2, Legion::coord_t, unsigned       >>(TEST_FLOAT__2D_2D_CT_UI_TASK_ID, "test_float__2d_2d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 2, 3, Legion::coord_t, unsigned       >>(TEST_FLOAT__2D_3D_CT_UI_TASK_ID, "test_float__2d_3d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 1, Legion::coord_t, unsigned       >>(TEST_FLOAT__3D_1D_CT_UI_TASK_ID, "test_float__3d_1d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 2, Legion::coord_t, unsigned       >>(TEST_FLOAT__3D_2D_CT_UI_TASK_ID, "test_float__3d_2d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<float , 3, 3, Legion::coord_t, unsigned       >>(TEST_FLOAT__3D_3D_CT_UI_TASK_ID, "test_float__3d_3d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 1, Legion::coord_t, unsigned       >>(TEST_DOUBLE_1D_1D_CT_UI_TASK_ID, "test_double_1d_1d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 2, Legion::coord_t, unsigned       >>(TEST_DOUBLE_1D_2D_CT_UI_TASK_ID, "test_double_1d_2d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 1, 3, Legion::coord_t, unsigned       >>(TEST_DOUBLE_1D_3D_CT_UI_TASK_ID, "test_double_1d_3d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 1, Legion::coord_t, unsigned       >>(TEST_DOUBLE_2D_1D_CT_UI_TASK_ID, "test_double_2d_1d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 2, Legion::coord_t, unsigned       >>(TEST_DOUBLE_2D_2D_CT_UI_TASK_ID, "test_double_2d_2d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 2, 3, Legion::coord_t, unsigned       >>(TEST_DOUBLE_2D_3D_CT_UI_TASK_ID, "test_double_2d_3d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 1, Legion::coord_t, unsigned       >>(TEST_DOUBLE_3D_1D_CT_UI_TASK_ID, "test_double_3d_1d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 2, Legion::coord_t, unsigned       >>(TEST_DOUBLE_3D_2D_CT_UI_TASK_ID, "test_double_3d_2d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<test_task<double, 3, 3, Legion::coord_t, unsigned       >>(TEST_DOUBLE_3D_3D_CT_UI_TASK_ID, "test_double_3d_3d_ct_ui", true, false, false);
+    LegionSolvers::preregister_cpu_task<top_level_task>(TOP_LEVEL_TASK_ID, "top_level", true, false, false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     return Legion::Runtime::start(argc, argv);
 }

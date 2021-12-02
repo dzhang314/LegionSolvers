@@ -161,6 +161,16 @@ namespace LegionSolvers {
                 rt->get_logical_partition(logical_region, index_partition)
             ) {}
 
+        virtual ~DistributedVectorT() {
+            if (owns_index_partition)
+                rt->destroy_index_partition(ctx, index_partition);
+            if (owns_color_space) rt->destroy_index_space(ctx, color_space);
+            if (owns_logical_region)
+                rt->destroy_logical_region(ctx, logical_region);
+            if (owns_field_space) rt->destroy_field_space(ctx, field_space);
+            if (owns_index_space) rt->destroy_index_space(ctx, index_space);
+        }
+
         virtual Legion::IndexSpace get_index_space() const override {
             return index_space;
         }
