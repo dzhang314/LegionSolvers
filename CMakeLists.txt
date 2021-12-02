@@ -10,6 +10,7 @@ find_package(Kokkos REQUIRED)
 add_executable(Test01VectorArithmetic
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp
+    src/LegionSolversMapper.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/Test01VectorArithmetic.cpp
@@ -21,6 +22,7 @@ target_link_libraries(Test01VectorArithmetic Kokkos::kokkoscore Legion::Legion)
 add_executable(Test02CGLaplacian1D
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp
+    src/LegionSolversMapper.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/Test02CGLaplacian1D.cpp
@@ -32,6 +34,7 @@ target_link_libraries(Test02CGLaplacian1D Kokkos::kokkoscore Legion::Legion)
 add_executable(TestExecutable
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp
+    src/LegionSolversMapper.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/TestMain.cpp

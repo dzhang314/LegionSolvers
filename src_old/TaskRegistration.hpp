@@ -291,10 +291,6 @@ namespace LegionSolvers {
             LEGION_SOLVERS_SUPPORTED_TYPES, IntList<>, IntList<>
         >::execute(true, verbose);
 
-        Legion::Runtime::add_registration_callback(
-            mapper_registration_callback
-        );
-
     }
 
 
