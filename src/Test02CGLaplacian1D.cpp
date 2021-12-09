@@ -3,7 +3,9 @@
 #include <realm/cmdline.h>
 #include <legion.h>
 
+#include "BiCGStabSolver.hpp"
 #include "CGSolver.hpp"
+#include "CGSSolver.hpp"
 #include "DistributedCOOMatrix.hpp"
 #include "DistributedVector.hpp"
 #include "ExampleSystems.hpp"
@@ -140,7 +142,9 @@ void top_level_task(const Legion::Task *,
     LegionSolvers::CGSolver solver{planner};
     solver.setup();
     for (std::size_t i = 0; i < num_iterations; ++i) {
+        rt->begin_trace(ctx, 201);
         solver.step();
+        rt->end_trace(ctx, 201);
     }
 
     for (std::size_t i = 0; i <= num_iterations; ++i) {

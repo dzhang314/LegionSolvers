@@ -18,10 +18,10 @@ namespace LegionSolvers {
     template <typename T>
     class SquarePlanner {
 
+    public:
+
         const Legion::Context ctx;
         Legion::Runtime *const rt;
-
-    public:
 
         std::vector<DistributedVector<T> *> solution_vectors;
         std::vector<DistributedVector<T> *> rhs_vectors;
@@ -74,6 +74,26 @@ namespace LegionSolvers {
                 rhs_vectors[rhs_index]->get_index_partition(),
                 ctx, rt
             ));
+        }
+
+        void zero_fill(
+            const std::vector<std::unique_ptr<DistributedVector<T>>> &dst
+        ) const {
+            const std::size_t n = dst.size();
+            for (std::size_t i = 0; i < n; ++i) {
+                dst[i]->zero_fill();
+            }
+        }
+
+        void copy(
+            const std::vector<std::unique_ptr<DistributedVector<T>>> &dst,
+            const std::vector<std::unique_ptr<DistributedVector<T>>> &src
+        ) const {
+            const std::size_t n = dst.size();
+            assert(n == src.size());
+            for (std::size_t i = 0; i < n; ++i) {
+                *dst[i] = *src[i];
+            }
         }
 
         void copy_rhs(

@@ -1,7 +1,6 @@
 #ifndef LEGION_SOLVERS_CG_SOLVER_HPP
 #define LEGION_SOLVERS_CG_SOLVER_HPP
 
-#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -31,7 +30,8 @@ namespace LegionSolvers {
         explicit CGSolver(
             const SquarePlanner<T> &planner
         ) : planner(planner),
-            workspace() {
+            workspace(),
+            residual_norm_squared() {
             assert(planner.solution_vectors.size() ==
                    planner.rhs_vectors.size());
             workspace.emplace_back();
