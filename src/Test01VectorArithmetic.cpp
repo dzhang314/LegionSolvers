@@ -154,6 +154,7 @@ void test_task(const Legion::Task *,
 void launch_task(Legion::TaskID task_id,
                  Legion::Context ctx, Legion::Runtime *rt) {
     Legion::TaskLauncher launcher{task_id, Legion::TaskArgument{nullptr, 0}};
+    launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
     rt->execute_task(ctx, launcher);
 }
 
