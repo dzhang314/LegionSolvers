@@ -27,11 +27,11 @@ def legion_cmake_command(build_flag, network_flag, lib_name):
         "-DCMAKE_INSTALL_PREFIX=/home/dkzhang/lib/" + lib_name,
         "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++",
         "-DLegion_USE_OpenMP=ON", "-DLegion_USE_CUDA=ON",
-        "-DLegion_MAX_DIM=4", "-DLegion_MAX_FIELDS=1024",
+        "-DLegion_MAX_DIM=3", "-DLegion_MAX_FIELDS=512",
         "-DLegion_USE_Kokkos=ON",
         "-DKokkos_DIR=/home/dkzhang/lib/kokkos/lib/cmake/Kokkos",
         "-DKOKKOS_CXX_COMPILER=/home/dkzhang/lib/kokkos/bin/nvcc_wrapper",
-        "-DGASNet_INCLUDE_DIR=/home/dkzhang/gasnet/release/include",
+        "-DGASNet_INCLUDE_DIR=/home/dkzhang/lib/gasnet/release/include",
         network_flag, build_flag
     ]
 
@@ -66,7 +66,7 @@ def main():
                 subprocess.run(legion_cmake_command(
                     build_flag, network_flag, "_".join(lib_name)
                 ))
-                subprocess.run(["make"])
+                subprocess.run(["cmake", "--build", ".", "--parallel", "20"])
                 subprocess.run(["make", "install"])
                 os.chdir("..")
         os.chdir("..")
