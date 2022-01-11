@@ -5,7 +5,8 @@ import shutil
 import subprocess
 
 from build_legion_variants import (
-    LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES, add_tag
+    LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES,
+    KOKKOS_DIR_FLAG, GASNET_DIR_FLAG, add_tag
 )
 
 
@@ -14,9 +15,7 @@ def legion_solvers_cmake_command(build_flag, lib_name):
         "cmake", "..",
         "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++",
         "-DLegion_DIR=/home/dkzhang/lib/" + lib_name + "/share/Legion/cmake",
-        "-DGASNet_INCLUDE_DIR=/home/dkzhang/gasnet/release/include",
-        "-DKokkos_DIR=/home/dkzhang/lib/kokkos/lib/cmake/Kokkos",
-        build_flag
+        KOKKOS_DIR_FLAG, GASNET_DIR_FLAG, build_flag
     ]
 
 

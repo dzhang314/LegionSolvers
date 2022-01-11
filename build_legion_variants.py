@@ -20,6 +20,10 @@ NETWORK_TYPES = [
     ("gex", "-DLegion_NETWORKS=gasnetex"),
 ]
 
+KOKKOS_DIR_FLAG = "-DKokkos_DIR=/home/dkzhang/lib/kokkos-3.5.00/lib/cmake/Kokkos"
+KOKKOS_CXX_COMPILER_FLAG = "-DKOKKOS_CXX_COMPILER=/home/dkzhang/lib/kokkos-3.5.00/bin/nvcc_wrapper"
+GASNET_DIR_FLAG = "-DGASNet_INCLUDE_DIR=/home/dkzhang/lib/gasnet/release/include"
+
 
 def legion_cmake_command(build_flag, network_flag, lib_name):
     return [
@@ -28,11 +32,8 @@ def legion_cmake_command(build_flag, network_flag, lib_name):
         "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++",
         "-DLegion_USE_OpenMP=ON", "-DLegion_USE_CUDA=ON",
         "-DLegion_MAX_DIM=3", "-DLegion_MAX_FIELDS=512",
-        "-DLegion_USE_Kokkos=ON",
-        "-DKokkos_DIR=/home/dkzhang/lib/kokkos/lib/cmake/Kokkos",
-        "-DKOKKOS_CXX_COMPILER=/home/dkzhang/lib/kokkos/bin/nvcc_wrapper",
-        "-DGASNet_INCLUDE_DIR=/home/dkzhang/lib/gasnet/release/include",
-        network_flag, build_flag
+        "-DLegion_USE_Kokkos=ON", KOKKOS_DIR_FLAG, KOKKOS_CXX_COMPILER_FLAG,
+        network_flag, GASNET_DIR_FLAG, build_flag
     ]
 
 
