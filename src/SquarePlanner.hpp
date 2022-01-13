@@ -38,6 +38,12 @@ namespace LegionSolvers {
             operators(),
             tile_maps() {}
 
+        ~SquarePlanner() {
+            for (const auto tile_index_space : tile_maps) {
+                rt->destroy_index_space(ctx, tile_index_space);
+            }
+        }
+
         std::size_t add_solution_vector(DistributedVector<T> &sol) {
             const std::size_t index = solution_vectors.size();
             solution_vectors.push_back(&sol);
