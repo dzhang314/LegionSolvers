@@ -31,17 +31,24 @@ namespace LegionSolvers {
 
         const Legion::Context ctx;
         Legion::Runtime *const rt;
-        std::string name;
-        Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> kernel_space;
-        Legion::IndexSpaceT<DOMAIN_DIM, DOMAIN_COORD_T> domain_space;
-        Legion::IndexSpaceT<RANGE_DIM, RANGE_COORD_T> range_space;
-        Legion::FieldID fid_i;     // Legion::Rect<RANGE_DIM, RANGE_COORD_T>
-        Legion::FieldID fid_j;     // Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T>
-        Legion::FieldID fid_entry; // ENTRY_T
-        Legion::LogicalRegionT<KERNEL_DIM, KERNEL_COORD_T> kernel_region;
-        Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;
-        Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_index_partition;
-        Legion::LogicalPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_logical_partition;
+
+        const std::string name;
+        const Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> kernel_space;
+        const bool owns_kernel_space;
+        const Legion::IndexSpaceT<DOMAIN_DIM, DOMAIN_COORD_T> domain_space;
+        const bool owns_domain_space;
+        const Legion::IndexSpaceT<RANGE_DIM, RANGE_COORD_T> range_space;
+        const bool owns_range_space;
+        const Legion::FieldID fid_i;     // Legion::Rect<RANGE_DIM, RANGE_COORD_T>
+        const Legion::FieldID fid_j;     // Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T>
+        const Legion::FieldID fid_entry; // ENTRY_T
+        const Legion::LogicalRegionT<KERNEL_DIM, KERNEL_COORD_T> kernel_region;
+        const bool owns_kernel_region;
+        const Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space;
+        const bool owns_color_space;
+        const Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_index_partition;
+        const bool owns_kernel_index_partition;
+        const Legion::LogicalPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_logical_partition;
 
         DistributedCOOMatrixT() = delete;
         DistributedCOOMatrixT(const DistributedCOOMatrixT &) = delete;
@@ -51,36 +58,40 @@ namespace LegionSolvers {
 
         explicit DistributedCOOMatrixT(
             const std::string &name,
-            Legion::IndexSpaceT<KERNEL_DIM, KERNEL_COORD_T> kernel_space,
+            Legion::LogicalPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel,
             Legion::IndexSpaceT<DOMAIN_DIM, DOMAIN_COORD_T> domain_space,
             Legion::IndexSpaceT<RANGE_DIM, RANGE_COORD_T> range_space,
-            Legion::IndexSpaceT<COLOR_DIM, COLOR_COORD_T> color_space,
+            Legion::FieldID fid_i, Legion::FieldID fid_j,
+            Legion::FieldID fid_entry,
             Legion::Context ctx, Legion::Runtime *rt
-        ) : ctx(ctx),
-            rt(rt),
+        ) : ctx(ctx), rt(rt),
             name(name),
-            kernel_space(kernel_space),
-            domain_space(domain_space),
-            range_space(range_space),
-            fid_i(LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_I),
-            fid_j(LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_J),
-            fid_entry(LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_ENTRY),
-            kernel_region(create_region(
-                kernel_space,
-                {
-                    {sizeof(Legion::Point<RANGE_DIM, RANGE_COORD_T>), fid_i},
-                    {sizeof(Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>), fid_j},
-                    {sizeof(ENTRY_T), fid_entry},
-                },
-                ctx, rt
+            kernel_space(rt->get_parent_index_space(
+                kernel.get_index_partition()
             )),
-            color_space(color_space),
-            kernel_index_partition(
-                rt->create_equal_partition(ctx, kernel_space, color_space)
-            ),
-            kernel_logical_partition(
-                rt->get_logical_partition(kernel_region, kernel_index_partition)
-            ) {}
+            owns_kernel_space(false),
+            domain_space(domain_space),
+            owns_domain_space(false),
+            range_space(range_space),
+            owns_range_space(false),
+            fid_i(fid_i),
+            fid_j(fid_j),
+            fid_entry(fid_entry),
+            kernel_region(rt->get_parent_logical_region(kernel)),
+            owns_kernel_region(false),
+            color_space(rt->get_index_partition_color_space_name(
+                kernel.get_index_partition()
+            )),
+            owns_color_space(false),
+            kernel_index_partition(kernel.get_index_partition()),
+            owns_kernel_index_partition(false),
+            kernel_logical_partition(kernel) {}
+
+        ~DistributedCOOMatrixT() {
+            if (owns_kernel_index_partition)
+                rt->destroy_index_partition(ctx, kernel_index_partition);
+            if (owns_kernel_space) rt->destroy_index_space(ctx, kernel_space);
+        }
 
         virtual Legion::LogicalRegionT<KERNEL_DIM, KERNEL_COORD_T>
         get_kernel_region() const override { return kernel_region; }
