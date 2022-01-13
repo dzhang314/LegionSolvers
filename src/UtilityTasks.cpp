@@ -71,6 +71,19 @@ T LegionSolvers::DivisionTask<T>::task_body(
 
 
 template <typename T>
+int LegionSolvers::PrintScalarTask<T>::task_body(
+    const Legion::Task *task,
+    const std::vector<Legion::PhysicalRegion> &regions,
+    Legion::Context ctx, Legion::Runtime *rt
+) {
+    assert((task->futures.size() == 1) || (task->futures.size() == 2));
+    Legion::Future x = task->futures[0];
+    std::cout << x.get_result<T>() << std::endl;
+    return 0;
+}
+
+
+template <typename T>
 void LegionSolvers::AssertSmallTask<T>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
@@ -182,6 +195,12 @@ template float LegionSolvers::DivisionTask<float>::task_body(const Legion::Task 
 template double LegionSolvers::DivisionTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template long double LegionSolvers::DivisionTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template __float128 LegionSolvers::DivisionTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+
+// template int LegionSolvers::PrintScalarTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template int LegionSolvers::PrintScalarTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template int LegionSolvers::PrintScalarTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template int LegionSolvers::PrintScalarTask<long double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+// template int LegionSolvers::PrintScalarTask<__float128>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
 // template void LegionSolvers::AssertSmallTask<__half>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::AssertSmallTask<float>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);

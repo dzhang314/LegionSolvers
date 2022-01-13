@@ -23,6 +23,8 @@ void LegionSolvers::preregister_solver_tasks(bool verbose) {
     LegionSolvers::MultiplicationTask<double>::preregister_cpu(verbose);
     LegionSolvers::DivisionTask      <float >::preregister_cpu(verbose);
     LegionSolvers::DivisionTask      <double>::preregister_cpu(verbose);
+    LegionSolvers::PrintScalarTask   <float >::preregister_cpu(verbose);
+    LegionSolvers::PrintScalarTask   <double>::preregister_cpu(verbose);
     LegionSolvers::AssertSmallTask   <float >::preregister_cpu(verbose);
     LegionSolvers::AssertSmallTask   <double>::preregister_cpu(verbose);
 

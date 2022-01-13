@@ -116,6 +116,27 @@ namespace LegionSolvers {
 
 
     template <typename T>
+    struct PrintScalarTask : public TaskT<PRINT_SCALAR_TASK_BLOCK_ID,
+                                          PrintScalarTask, T> {
+
+        static constexpr const char *task_base_name = "print_scalar";
+
+        static constexpr bool is_inner = false;
+
+        static constexpr bool is_leaf = true;
+
+        using return_type = int;
+
+        static int task_body(
+            const Legion::Task *task,
+            const std::vector<Legion::PhysicalRegion> &regions,
+            Legion::Context ctx, Legion::Runtime *rt
+        );
+
+    }; // struct PrintScalarTask
+
+
+    template <typename T>
     struct AssertSmallTask : public TaskT<ASSERT_SMALL_TASK_BLOCK_ID,
                                           AssertSmallTask, T> {
 
@@ -133,7 +154,7 @@ namespace LegionSolvers {
             Legion::Context ctx, Legion::Runtime *rt
         );
 
-    }; // struct DivisionTask
+    }; // struct AssertSmallTask
 
 
     template <typename T, int DIM>
