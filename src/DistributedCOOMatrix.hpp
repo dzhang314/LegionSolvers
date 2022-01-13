@@ -88,9 +88,24 @@ namespace LegionSolvers {
             kernel_logical_partition(kernel) {}
 
         ~DistributedCOOMatrixT() {
-            if (owns_kernel_index_partition)
+            if (owns_kernel_index_partition) {
                 rt->destroy_index_partition(ctx, kernel_index_partition);
-            if (owns_kernel_space) rt->destroy_index_space(ctx, kernel_space);
+            }
+            if (owns_color_space) {
+                rt->destroy_index_space(ctx, color_space);
+            }
+            if (owns_kernel_region) {
+                rt->destroy_logical_region(ctx, kernel_region);
+            }
+            if (owns_range_space) {
+                rt->destroy_index_space(ctx, range_space);
+            }
+            if (owns_domain_space) {
+                rt->destroy_index_space(ctx, domain_space);
+            }
+            if (owns_kernel_space) {
+                rt->destroy_index_space(ctx, kernel_space);
+            }
         }
 
         virtual Legion::LogicalRegionT<KERNEL_DIM, KERNEL_COORD_T>
