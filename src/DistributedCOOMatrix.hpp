@@ -118,12 +118,12 @@ namespace LegionSolvers {
         kernel_partition_from_domain_partition(
             Legion::IndexPartitionT<DOMAIN_DIM, DOMAIN_COORD_T> domain_partition
         ) const {
-            const Legion::IndexSpace color_space =
+            const Legion::IndexSpace domain_color_space =
                 rt->get_index_partition_color_space_name(domain_partition);
             return Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T>{
                 rt->create_partition_by_preimage(
                     ctx, domain_partition, kernel_region, kernel_region,
-                    fid_j, color_space, LEGION_DISJOINT_COMPLETE_KIND
+                    fid_j, domain_color_space, LEGION_DISJOINT_COMPLETE_KIND
                 )
             };
         }
@@ -140,12 +140,12 @@ namespace LegionSolvers {
         kernel_partition_from_range_partition(
             Legion::IndexPartitionT<RANGE_DIM, RANGE_COORD_T> range_partition
         ) const {
-            const Legion::IndexSpace color_space =
+            const Legion::IndexSpace range_color_space =
                 rt->get_index_partition_color_space_name(range_partition);
             return Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T>{
                 rt->create_partition_by_preimage(
                     ctx, range_partition, kernel_region, kernel_region,
-                    fid_i, color_space, LEGION_DISJOINT_COMPLETE_KIND
+                    fid_i, range_color_space, LEGION_DISJOINT_COMPLETE_KIND
                 )
             };
         }
