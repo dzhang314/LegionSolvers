@@ -24,6 +24,14 @@ namespace LegionSolvers {
             Legion::IndexPartition range_partition
         ) const = 0;
 
+        virtual Legion::IndexPartition domain_partition_from_kernel_partition(
+            Legion::IndexPartition kernel_partition
+        ) const = 0;
+
+        virtual Legion::IndexPartition range_partition_from_kernel_partition(
+            Legion::IndexPartition kernel_partition
+        ) const = 0;
+
         virtual Legion::IndexSpaceT<3> compute_nonempty_tiles(
             Legion::IndexPartition domain_partition,
             Legion::IndexPartition range_partition,

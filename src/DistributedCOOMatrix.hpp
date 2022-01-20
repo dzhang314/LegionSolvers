@@ -158,6 +158,52 @@ namespace LegionSolvers {
             );
         }
 
+        Legion::IndexPartitionT<DOMAIN_DIM, DOMAIN_COORD_T>
+        domain_partition_from_kernel_partition(
+            Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_partition
+        ) const {
+            const Legion::IndexSpace kernel_color_space =
+                rt->get_index_partition_color_space_name(kernel_partition);
+            return Legion::IndexPartitionT<DOMAIN_DIM, DOMAIN_COORD_T>{
+                rt->create_partition_by_image(
+                    ctx, domain_space,
+                    rt->get_logical_partition(kernel_region, kernel_partition),
+                    kernel_region, fid_j, kernel_color_space
+                )
+            };
+        }
+
+        virtual Legion::IndexPartition domain_partition_from_kernel_partition(
+            Legion::IndexPartition kernel_partition
+        ) const override {
+            return domain_partition_from_kernel_partition(
+                Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T>{kernel_partition}
+            );
+        }
+
+        Legion::IndexPartitionT<RANGE_DIM, RANGE_COORD_T>
+        range_partition_from_kernel_partition(
+            Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T> kernel_partition
+        ) const {
+            const Legion::IndexSpace kernel_color_space =
+                rt->get_index_partition_color_space_name(kernel_partition);
+            return Legion::IndexPartitionT<RANGE_DIM, RANGE_COORD_T>{
+                rt->create_partition_by_image(
+                    ctx, range_space,
+                    rt->get_logical_partition(kernel_region, kernel_partition),
+                    kernel_region, fid_i, kernel_color_space
+                )
+            };
+        }
+
+        virtual Legion::IndexPartition range_partition_from_kernel_partition(
+            Legion::IndexPartition kernel_partition
+        ) const override {
+            return range_partition_from_kernel_partition(
+                Legion::IndexPartitionT<KERNEL_DIM, KERNEL_COORD_T>{kernel_partition}
+            );
+        }
+
         void matvec(
             DistributedVectorT<
                 ENTRY_T, RANGE_DIM, 1, RANGE_COORD_T, Legion::coord_t
