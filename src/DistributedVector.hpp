@@ -26,6 +26,8 @@ namespace LegionSolvers {
 
         virtual Legion::IndexSpace get_index_space() const = 0;
 
+        virtual Legion::LogicalRegion get_logical_region() const = 0;
+
         virtual Legion::IndexSpace get_color_space() const = 0;
 
         virtual Legion::IndexPartition get_index_partition() const = 0;
@@ -181,6 +183,10 @@ namespace LegionSolvers {
 
         virtual Legion::IndexSpace get_index_space() const override {
             return index_space;
+        }
+
+        virtual Legion::LogicalRegion get_logical_region() const override {
+            return logical_region;
         }
 
         virtual Legion::IndexSpace get_color_space() const override {
