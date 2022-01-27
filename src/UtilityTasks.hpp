@@ -199,6 +199,27 @@ namespace LegionSolvers {
     }; // struct PrintVectorTask
 
 
+    template <int DIM>
+    struct PrintIndexTask : public TaskD<PRINT_INDEX_TASK_BLOCK_ID,
+                                         PrintIndexTask, DIM> {
+
+        static constexpr const char *task_base_name = "print_index";
+
+        static constexpr bool is_inner = false;
+
+        static constexpr bool is_leaf = true;
+
+        using return_type = void;
+
+        static void task_body(
+            const Legion::Task *task,
+            const std::vector<Legion::PhysicalRegion> &regions,
+            Legion::Context ctx, Legion::Runtime *rt
+        );
+
+    }; // struct PrintIndexTask
+
+
 } // namespace LegionSolvers
 
 

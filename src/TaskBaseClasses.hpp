@@ -83,6 +83,52 @@ namespace LegionSolvers {
 
 
     template <Legion::TaskID BLOCK_ID,
+              template <int> typename TaskClass,
+              int N>
+    struct TaskD {
+
+        static constexpr Legion::TaskID task_id =
+            LEGION_SOLVERS_TASK_ID_ORIGIN +
+            LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+            (N - 1);
+
+        static std::string task_name() {
+            return std::string{TaskClass<N>::task_base_name} +
+                   '_' + std::to_string(N);
+        }
+
+        static void preregister_cpu(bool verbose) {
+            preregister_cpu_task<
+                typename TaskClass<N>::return_type,
+                TaskClass<N>::task_body
+            >(
+                task_id, task_name(),
+                TaskClass<N>::is_inner, TaskClass<N>::is_leaf,
+                verbose
+            );
+        }
+
+        static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
+            const Legion::Processor proc = rt->get_executing_processor(ctx);
+            std::cout << "[LegionSolvers] Running CPU task " << task_name()
+                      << " on processor " << proc << '.' << std::endl;
+        }
+
+        static void preregister_kokkos(bool verbose) {
+            preregister_kokkos_task<
+                typename TaskClass<N>::return_type,
+                TaskClass<N>::template KokkosTaskTemplate
+            >(
+                task_id, task_name(),
+                TaskClass<N>::is_inner, TaskClass<N>::is_leaf,
+                verbose
+            );
+        }
+
+    }; // struct TaskD
+
+
+    template <Legion::TaskID BLOCK_ID,
               template <typename, int> typename TaskClass,
               typename T, int N>
     struct TaskTD {
