@@ -32,6 +32,7 @@ void LegionSolvers::print_index_partition(
         rt->get_parent_index_space(index_partition),
         dummy_field_space
     );
+    rt->fill_field(ctx, dummy_region, dummy_region, 0, '\0');
     Legion::IndexLauncher launcher{
         LegionSolvers::PrintIndexTask<0>::task_id(color_dim),
         color_space,
@@ -41,7 +42,7 @@ void LegionSolvers::print_index_partition(
     launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
     launcher.add_region_requirement(Legion::RegionRequirement{
         rt->get_logical_partition(dummy_region, index_partition), 0,
-        LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, dummy_region
+        LEGION_READ_ONLY, LEGION_EXCLUSIVE, dummy_region
     });
     launcher.add_field(0, 0);
     rt->execute_index_space(ctx, launcher);
