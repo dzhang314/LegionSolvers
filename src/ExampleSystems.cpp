@@ -52,6 +52,96 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
 
 
 template <typename T>
+template <typename KokkosExecutionSpace>
+void LegionSolvers::FillCSRNegativeLaplacian1DTask<T>::
+KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
+    const Legion::Task *task,
+    const std::vector<Legion::PhysicalRegion> &regions,
+    Legion::Context ctx, Legion::Runtime *rt
+) {
+    std::cout << "[LegionSolvers] Constructing CSR 1D Laplacian matrix..."
+              << std::endl;
+
+    assert(regions.size() == 1);
+    const auto &matrix = regions[0];
+
+    assert(task->regions.size() == 1);
+    const auto &matrix_req = task->regions[0];
+
+    assert(task->arglen == sizeof(Args));
+    const Args args = *reinterpret_cast<const Args *>(task->args);
+
+    const AffineWriter<Legion::Point<1>, 1, Legion::coord_t>
+    col_writer{matrix, args.fid_col};
+    const AffineWriter<T, 1, Legion::coord_t>
+    entry_writer{matrix, args.fid_entry};
+
+    const Legion::Domain matrix_domain = rt->get_index_space_domain(
+        ctx, matrix_req.region.get_index_space()
+    );
+
+    for (Legion::RectInDomainIterator<1> it{matrix_domain}; it(); ++it) {
+        const Legion::Rect<1> rect = *it;
+        Kokkos::parallel_for(
+            KokkosRangeFactory<KokkosExecutionSpace, 1>::create(
+                rect, ctx, rt
+            ),
+            KokkosFillCSRNegativeLaplacian1DFunctor<KokkosExecutionSpace, T>{
+                col_writer.accessor, entry_writer.accessor
+            }
+        );
+    }
+
+    std::cout << "[LegionSolvers] Finished constructing CSR 1D Laplacian."
+              << std::endl;
+}
+
+
+template <typename T>
+template <typename KokkosExecutionSpace>
+void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<T>::
+KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
+    const Legion::Task *task,
+    const std::vector<Legion::PhysicalRegion> &regions,
+    Legion::Context ctx, Legion::Runtime *rt
+) {
+    std::cout << "[LegionSolvers] Constructing CSR 1D Laplacian row pointer array..."
+              << std::endl;
+
+    assert(regions.size() == 1);
+    const auto &rowptr = regions[0];
+
+    assert(task->regions.size() == 1);
+    const auto &rowptr_req = task->regions[0];
+
+    assert(task->arglen == sizeof(Args));
+    const Args args = *reinterpret_cast<const Args *>(task->args);
+
+    const AffineWriter<Legion::Rect<1>, 1, Legion::coord_t>
+    rowptr_writer{rowptr, args.fid_rowptr};
+
+    const Legion::Domain rowptr_domain = rt->get_index_space_domain(
+        ctx, rowptr_req.region.get_index_space()
+    );
+
+    for (Legion::RectInDomainIterator<1> it{rowptr_domain}; it(); ++it) {
+        const Legion::Rect<1> rect = *it;
+        Kokkos::parallel_for(
+            KokkosRangeFactory<KokkosExecutionSpace, 1>::create(
+                rect, ctx, rt
+            ),
+            KokkosFillCSRNegativeLaplacian1DRowptrFunctor<KokkosExecutionSpace, T>{
+                rowptr_writer.accessor, args.grid_length
+            }
+        );
+    }
+
+    std::cout << "[LegionSolvers] Finished constructing CSR 1D Laplacian row pointers."
+              << std::endl;
+}
+
+
+template <typename T>
 void LegionSolvers::FillCOONegativeLaplacian2DTask<T>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
@@ -116,6 +206,20 @@ template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskT
 template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<double>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 
 template void LegionSolvers::FillCOONegativeLaplacian2DTask<float >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCOONegativeLaplacian2DTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);

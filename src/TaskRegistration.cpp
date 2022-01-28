@@ -188,6 +188,10 @@ void LegionSolvers::preregister_solver_tasks(bool verbose) {
 
     LegionSolvers::FillCOONegativeLaplacian1DTask<float >::preregister_kokkos(verbose);
     LegionSolvers::FillCOONegativeLaplacian1DTask<double>::preregister_kokkos(verbose);
+    LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::preregister_kokkos(verbose);
+    LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::preregister_kokkos(verbose);
+    LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::preregister_kokkos(verbose);
+    LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<double>::preregister_kokkos(verbose);
     LegionSolvers::FillCOONegativeLaplacian2DTask<float >::preregister_cpu(verbose);
     LegionSolvers::FillCOONegativeLaplacian2DTask<double>::preregister_cpu(verbose);
 
