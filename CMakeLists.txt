@@ -11,6 +11,7 @@ add_executable(Test01VectorArithmetic
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp
     src/LegionSolversMapper.cpp
+    src/LegionUtilities.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/Test01VectorArithmetic.cpp
@@ -23,6 +24,7 @@ add_executable(Test02CGLaplacian1D
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp
     src/LegionSolversMapper.cpp
+    src/LegionUtilities.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/Test02CGLaplacian1D.cpp
@@ -35,6 +37,7 @@ add_executable(Test03COO1DPartitioning
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp
     src/LegionSolversMapper.cpp
+    src/LegionUtilities.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/Test03COO1DPartitioning.cpp
@@ -47,6 +50,7 @@ add_executable(TestExecutable
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp
     src/LegionSolversMapper.cpp
+    src/LegionUtilities.cpp
     src/LinearAlgebraTasks.cpp
     src/TaskRegistration.cpp
     src/TestMain.cpp

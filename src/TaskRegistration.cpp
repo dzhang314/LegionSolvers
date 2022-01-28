@@ -41,6 +41,9 @@ void LegionSolvers::preregister_solver_tasks(bool verbose) {
     LegionSolvers::PrintVectorTask<double, 1>::preregister_cpu(verbose);
     LegionSolvers::PrintVectorTask<double, 2>::preregister_cpu(verbose);
     LegionSolvers::PrintVectorTask<double, 3>::preregister_cpu(verbose);
+    LegionSolvers::PrintIndexTask<1>::preregister_cpu(verbose);
+    LegionSolvers::PrintIndexTask<2>::preregister_cpu(verbose);
+    LegionSolvers::PrintIndexTask<3>::preregister_cpu(verbose);
 
     // LinearAlgebraTasks.hpp =================================================
 

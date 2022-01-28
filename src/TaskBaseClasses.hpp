@@ -129,6 +129,19 @@ namespace LegionSolvers {
 
 
     template <Legion::TaskID BLOCK_ID,
+              template <int> typename TaskClass>
+    struct TaskD<BLOCK_ID, TaskClass, 0> {
+
+        static constexpr Legion::TaskID task_id(int N) {
+            return LEGION_SOLVERS_TASK_ID_ORIGIN +
+                   LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+                   (N - 1);
+        }
+
+    }; // struct TaskD<BLOCK_ID, TaskClass, 0>
+
+
+    template <Legion::TaskID BLOCK_ID,
               template <typename, int> typename TaskClass,
               typename T, int N>
     struct TaskTD {
