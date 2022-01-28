@@ -209,7 +209,7 @@ namespace LegionSolvers {
                 ENTRY_T, RANGE_DIM, 1, RANGE_COORD_T, Legion::coord_t
             > &output_vector,
             const DistributedVectorT<
-                ENTRY_T, RANGE_DIM, 1, RANGE_COORD_T, Legion::coord_t
+                ENTRY_T, DOMAIN_DIM, 1, DOMAIN_COORD_T, Legion::coord_t
             > &input_vector,
             Legion::IndexSpaceT<3> tile_index_space
         ) const {
@@ -258,7 +258,7 @@ namespace LegionSolvers {
                     ENTRY_T, RANGE_DIM, 1, RANGE_COORD_T, Legion::coord_t
                 > &>(output_vector),
                 dynamic_cast<const DistributedVectorT<
-                    ENTRY_T, RANGE_DIM, 1, RANGE_COORD_T, Legion::coord_t
+                    ENTRY_T, DOMAIN_DIM, 1, DOMAIN_COORD_T, Legion::coord_t
                 > &>(input_vector),
                 tile_index_space
             );
