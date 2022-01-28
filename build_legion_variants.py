@@ -5,6 +5,9 @@ import shutil
 import subprocess
 
 
+LIB_PREFIX = "/home/dkzhang/lib"
+
+
 LEGION_BRANCHES = [
     ("master", "master"),
     ("cr", "control_replication"),
@@ -20,15 +23,16 @@ NETWORK_TYPES = [
     ("gex", "-DLegion_NETWORKS=gasnetex"),
 ]
 
-KOKKOS_DIR_FLAG = "-DKokkos_DIR=/home/dkzhang/lib/kokkos-3.5.00/lib/cmake/Kokkos"
-KOKKOS_CXX_COMPILER_FLAG = "-DKOKKOS_CXX_COMPILER=/home/dkzhang/lib/kokkos-3.5.00/bin/nvcc_wrapper"
-GASNET_DIR_FLAG = "-DGASNet_INCLUDE_DIR=/home/dkzhang/lib/gasnet/release/include"
+
+KOKKOS_DIR_FLAG = "-DKokkos_DIR=" + LIB_PREFIX + "/kokkos-3.5.00/lib/cmake/Kokkos"
+KOKKOS_CXX_COMPILER_FLAG = "-DKOKKOS_CXX_COMPILER=" + LIB_PREFIX + "/kokkos-3.5.00/bin/nvcc_wrapper"
+GASNET_DIR_FLAG = "-DGASNet_INCLUDE_DIR=" + LIB_PREFIX + "/gasnet/release/include"
 
 
 def legion_cmake_command(build_flag, network_flag, lib_name):
     return [
         "cmake", "..",
-        "-DCMAKE_INSTALL_PREFIX=/home/dkzhang/lib/" + lib_name,
+        "-DCMAKE_INSTALL_PREFIX=" + LIB_PREFIX + "/" + lib_name,
         "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++",
         "-DLegion_USE_OpenMP=ON", "-DLegion_USE_CUDA=ON",
         "-DLegion_MAX_DIM=3", "-DLegion_MAX_FIELDS=512",
@@ -62,12 +66,16 @@ def main():
                 add_tag(build_name, lib_name, dir_name)
                 add_tag(build_name, lib_name, network_tag)
                 add_tag(build_name, lib_name, build_tag)
-                os.mkdir("_".join(build_name))
-                os.chdir("_".join(build_name))
+                build_name = "_".join(build_name)
+                lib_name = "_".join(lib_name)
+                if os.path.exists(LIB_PREFIX + "/" + lib_name):
+                    shutil.rmtree(LIB_PREFIX + "/" + lib_name)
+                os.mkdir(build_name)
+                os.chdir(build_name)
                 subprocess.run(legion_cmake_command(
-                    build_flag, network_flag, "_".join(lib_name)
+                    build_flag, network_flag, lib_name
                 ))
-                subprocess.run(["cmake", "--build", ".", "--parallel", "20"])
+                subprocess.run(["cmake", "--build", ".", "--parallel", "40"])
                 subprocess.run(["make", "install"])
                 os.chdir("..")
         os.chdir("..")
