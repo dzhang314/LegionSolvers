@@ -59,6 +59,19 @@ add_executable(Test04CSR1DPartitioning
 
 target_link_libraries(Test04CSR1DPartitioning Kokkos::kokkoscore Legion::Legion)
 
+add_executable(Test05COO1DSolveCGExact
+    src/COOMatrixTasks.cpp
+    src/ExampleSystems.cpp
+    src/LegionSolversMapper.cpp
+    src/LegionUtilities.cpp
+    src/LinearAlgebraTasks.cpp
+    src/TaskRegistration.cpp
+    src/Test05COO1DSolveCGExact.cpp
+    src/UtilityTasks.cpp
+)
+
+target_link_libraries(Test05COO1DSolveCGExact Kokkos::kokkoscore Legion::Legion)
+
 add_executable(TestExecutable
     src/COOMatrixTasks.cpp
     src/ExampleSystems.cpp

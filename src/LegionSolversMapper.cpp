@@ -40,31 +40,68 @@ void LegionSolvers::LegionSolversMapper::slice_task(
     const SliceTaskInput& input,
     SliceTaskOutput& output
 ) {
-    // if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
-    //     const Legion::DomainPoint lo = input.domain.lo();
-    //     const Legion::DomainPoint hi = input.domain.hi();
-    //     for (Legion::coord_t i = lo[2]; i <= hi[2]; i++) {
-    //         const Legion::Rect<3> rect{
-    //             Legion::Point<3>{lo[0], lo[1], i},
-    //             Legion::Point<3>{hi[0], hi[1], i}
-    //         };
-    //         output.slices.emplace_back(
-    //             input.domain.intersection(Legion::Domain{rect}),
-    //             gpus[address_spaces[i % address_spaces.size()]],
-    //             false, // do not recursively call slice_task
-    //             false // TODO: should this be stealable?
-    //         );
-    //     }
-    //     // for (auto &slice : output.slices) {
-    //     //     std::cout << "Assigning " << slice.domain << " to rank "
-    //     //                 << slice.proc.address_space() << std::endl;
-    //     // }
-    //     // output.verify_correctness = true;
-    // } else {
+    if (is_task(task.task_id, COO_MATVEC_TASK_BLOCK_ID)) {
+        const Legion::DomainPoint lo = input.domain.lo();
+        const Legion::DomainPoint hi = input.domain.hi();
+        if (lo.get_dim() == 3) {
+            for (Legion::coord_t i = lo[2]; i <= hi[2]; i++) {
+                const Legion::Rect<3> rect{
+                    Legion::Point<3>{lo[0], lo[1], i},
+                    Legion::Point<3>{hi[0], hi[1], i}
+                };
+                output.slices.emplace_back(
+                    input.domain.intersection(Legion::Domain{rect}),
+                    gpus[address_spaces[i % address_spaces.size()]],
+                    false, // do not recursively call slice_task
+                    false // TODO: should this be stealable?
+                );
+            }
+            // for (auto &slice : output.slices) {
+            //     std::cout << "Assigning " << slice.domain << " to rank "
+            //                 << slice.proc.address_space() << std::endl;
+            // }
+            output.verify_correctness = true;
+        } else {
+            for (Legion::coord_t i = lo[0]; i <= hi[0]; i++) {
+                const Legion::Rect<1> rect{
+                    Legion::Point<1>{i},
+                    Legion::Point<1>{i}
+                };
+                output.slices.emplace_back(
+                    input.domain.intersection(Legion::Domain{rect}),
+                    gpus[address_spaces[i % address_spaces.size()]],
+                    false, // do not recursively call slice_task
+                    false // TODO: should this be stealable?
+                );
+            }
+            // for (auto &slice : output.slices) {
+            //     std::cout << "Assigning " << slice.domain << " to rank "
+            //                 << slice.proc.address_space() << std::endl;
+            // }
+            output.verify_correctness = true;
+        }
+    } else if (is_task(task.task_id, AXPY_TASK_BLOCK_ID) ||
+               is_task(task.task_id, XPAY_TASK_BLOCK_ID) ||
+               is_task(task.task_id, DOT_TASK_BLOCK_ID)) {
+        const Legion::DomainPoint lo = input.domain.lo();
+        const Legion::DomainPoint hi = input.domain.hi();
+        for (Legion::coord_t i = lo[0]; i <= hi[0]; i++) {
+            const Legion::Rect<1> rect{
+                Legion::Point<1>{i},
+                Legion::Point<1>{i}
+            };
+            output.slices.emplace_back(
+                input.domain.intersection(Legion::Domain{rect}),
+                gpus[address_spaces[i % address_spaces.size()]],
+                false, // do not recursively call slice_task
+                false // TODO: should this be stealable?
+            );
+        }
+    } else {
         Legion::Mapping::DefaultMapper::slice_task(
             ctx, task, input, output
         );
-    // }
+    }
 }
 
 

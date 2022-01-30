@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstddef>
 
 #include <realm/cmdline.h>
@@ -89,14 +90,12 @@ void top_level_task(const Legion::Task *,
     std::size_t num_iterations = 10;
 
     const Legion::InputArgs &args = Legion::Runtime::get_input_args();
-
     bool ok = Realm::CommandLineParser()
         .add_option_int("-n", grid_size)
         .add_option_int("-vp", num_vector_partitions)
         .add_option_int("-kp", num_kernel_partitions)
         .add_option_int("-it", num_iterations)
         .parse_command_line(args.argc, (const char **) args.argv);
-
     assert(ok);
 
     const auto vector_index_space = rt->create_index_space(ctx,
