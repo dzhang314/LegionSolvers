@@ -14,7 +14,6 @@ namespace LegionSolvers {
     template <typename ENTRY_T>
     class CSRMatrix : public AbstractMatrix<ENTRY_T> {
 
-
         Legion::Context ctx;
         Legion::Runtime *rt;
         Legion::IndexSpace kernel_space;
@@ -25,9 +24,7 @@ namespace LegionSolvers {
         Legion::LogicalRegion rowptr_region;
         Legion::FieldID fid_rowptr;
 
-
     public:
-
 
         explicit CSRMatrix(
             Legion::Context ctx,
@@ -46,22 +43,18 @@ namespace LegionSolvers {
             rowptr_region(rowptr_region),
             fid_rowptr(fid_rowptr) {}
 
-
         virtual Legion::IndexSpace get_kernel_space() const override {
             return kernel_space;
         }
-
 
         virtual Legion::LogicalRegion get_kernel_region() const override {
             return kernel_region;
         }
 
-
         virtual std::vector<Legion::LogicalRegion>
         get_auxiliary_regions() const override {
             return {rowptr_region};
         }
-
 
         virtual Legion::IndexPartition kernel_partition_from_domain_partition(
             Legion::IndexPartition domain_partition
@@ -75,7 +68,6 @@ namespace LegionSolvers {
             );
         }
 
-
         virtual Legion::IndexPartition kernel_partition_from_range_partition(
             Legion::IndexPartition range_partition
         ) const override {
@@ -87,7 +79,6 @@ namespace LegionSolvers {
                 rt->get_index_partition_color_space_name(range_partition)
             );
         }
-
 
         virtual Legion::IndexPartition domain_partition_from_kernel_partition(
             Legion::IndexSpace domain_space,
@@ -102,7 +93,6 @@ namespace LegionSolvers {
             );
         }
 
-
         virtual Legion::IndexPartition range_partition_from_kernel_partition(
             Legion::IndexSpace range_space_,
             Legion::IndexPartition kernel_partition
@@ -116,7 +106,6 @@ namespace LegionSolvers {
                 rt->get_index_partition_color_space_name(kernel_partition)
             );
         }
-
 
     }; // class CSRMatrix
 

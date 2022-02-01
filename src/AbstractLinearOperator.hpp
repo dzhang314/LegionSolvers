@@ -12,7 +12,6 @@ namespace LegionSolvers {
     template <typename ENTRY_T>
     class AbstractLinearOperator {
 
-
     public:
 
         virtual Legion::IndexPartition domain_partition_from_range_partition(
@@ -36,7 +35,6 @@ namespace LegionSolvers {
         // ) const = 0;
 
         // virtual void print() const = 0;
-
 
     }; // class AbstractLinearOperator
 

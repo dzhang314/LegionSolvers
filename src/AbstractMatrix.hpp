@@ -14,7 +14,6 @@ namespace LegionSolvers {
     template <typename ENTRY_T>
     class AbstractMatrix : public AbstractLinearOperator<ENTRY_T> {
 
-
     public:
 
         virtual Legion::IndexSpace get_kernel_space() const = 0;
@@ -61,7 +60,6 @@ namespace LegionSolvers {
                 kernel_partition_from_domain_partition(domain_partition)
             );
         }
-
 
     }; // class AbstractMatrix
 
