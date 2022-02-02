@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 
 import os
-import shutil
-import subprocess
+
+from build_legion_dependencies import (
+    Machines, MACHINE, SCRATCH_DIR, LIB_PREFIX,
+    remove_directory, pushd, clone, cmake
+)
 
 
-LIB_PREFIX = "/home/dkzhang/lib"
+############################################################## LEGION PROPERTIES
+
+
+LEGION_GIT_URL = "https://gitlab.com/StanfordLegion/legion.git"
 
 
 LEGION_BRANCHES = [
@@ -13,72 +19,77 @@ LEGION_BRANCHES = [
     ("cr", "control_replication"),
 ]
 
-BUILD_TYPES = [
-    ("debug", "-DCMAKE_BUILD_TYPE=Debug"),
-    ("release", "-DCMAKE_BUILD_TYPE=Release"),
-]
+
+BUILD_TYPES = ["Debug", "Release"]
+
 
 NETWORK_TYPES = [
-    ("", "-DLegion_USE_GASNet=ON"),
-    ("gex", "-DLegion_NETWORKS=gasnetex"),
+    ("", ("Legion_USE_GASNet", True)),
+    ("gex", ("Legion_NETWORKS", "gasnetex")),
 ]
 
 
-KOKKOS_DIR_FLAG = "-DKokkos_DIR=" + LIB_PREFIX + "/kokkos-3.5.00/lib/cmake/Kokkos"
-KOKKOS_CXX_COMPILER_FLAG = "-DKOKKOS_CXX_COMPILER=" + LIB_PREFIX + "/kokkos-3.5.00/bin/nvcc_wrapper"
-GASNET_DIR_FLAG = "-DGASNet_INCLUDE_DIR=" + LIB_PREFIX + "/gasnet/release/include"
+################################################################################
 
 
-def legion_cmake_command(build_flag, network_flag, lib_name):
-    return [
-        "cmake", "..",
-        "-DCMAKE_INSTALL_PREFIX=" + LIB_PREFIX + "/" + lib_name,
-        "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++",
-        "-DLegion_USE_OpenMP=ON", "-DLegion_USE_CUDA=ON",
-        "-DLegion_MAX_DIM=3", "-DLegion_MAX_FIELDS=512",
-        "-DLegion_USE_Kokkos=ON", KOKKOS_DIR_FLAG, KOKKOS_CXX_COMPILER_FLAG,
-        network_flag, GASNET_DIR_FLAG, build_flag
-    ]
+KOKKOS_DIR = os.path.join(
+    LIB_PREFIX, "kokkos-3.5.00",
+    "lib64" if MACHINE == Machines.LASSEN else "lib",
+    "cmake", "Kokkos"
+)
 
 
-def add_tag(build_name, lib_name, tag):
-    if tag:
-        build_name.append(tag)
-        lib_name.append(tag)
+KOKKOS_CXX_COMPILER = os.path.join(
+    LIB_PREFIX, "kokkos-3.5.00", "bin", "nvcc_wrapper"
+)
+
+
+GASNET_DIR = os.path.join(
+    LIB_PREFIX, "gasnet", "release", "include"
+)
+
+
+################################################################################
+
+
+def join(*args):
+    return "_".join(arg for arg in args if arg)
 
 
 def main():
+    os.chdir(SCRATCH_DIR)
     for dir_name, branch_name in LEGION_BRANCHES:
-        if os.path.exists("legion"):
-            shutil.rmtree("legion")
-        if os.path.exists("legion_" + dir_name):
-            shutil.rmtree("legion_" + dir_name)
-        subprocess.run([
-            "git", "clone", "--branch", branch_name,
-            "https://gitlab.com/StanfordLegion/legion.git"
-        ])
-        os.rename("legion", "legion_" + dir_name)
-        os.chdir("legion_" + dir_name)
-        for build_tag, build_flag in BUILD_TYPES:
-            for network_tag, network_flag in NETWORK_TYPES:
-                build_name = ["build"]
-                lib_name = ["legion"]
-                add_tag(build_name, lib_name, dir_name)
-                add_tag(build_name, lib_name, network_tag)
-                add_tag(build_name, lib_name, build_tag)
-                build_name = "_".join(build_name)
-                lib_name = "_".join(lib_name)
-                if os.path.exists(LIB_PREFIX + "/" + lib_name):
-                    shutil.rmtree(LIB_PREFIX + "/" + lib_name)
-                os.mkdir(build_name)
-                os.chdir(build_name)
-                subprocess.run(legion_cmake_command(
-                    build_flag, network_flag, lib_name
-                ))
-                subprocess.run(["cmake", "--build", ".", "--parallel", "40"])
-                subprocess.run(["make", "install"])
-                os.chdir("..")
-        os.chdir("..")
+        remove_directory("legion")
+        remove_directory(join("legion", dir_name))
+        clone(LEGION_GIT_URL, branch=branch_name)
+        os.rename("legion", join("legion", dir_name))
+        with pushd(join("legion", dir_name)):
+            for build_type in BUILD_TYPES:
+                for network_tag, (network_key, network_val) in NETWORK_TYPES:
+                    lib_name = join("legion", dir_name, network_tag, build_type.lower())
+                    remove_directory(os.path.join(LIB_PREFIX, lib_name))
+                    defines = {
+                        "CMAKE_CXX_STANDARD": 17,
+                        "CMAKE_CXX_EXTENSIONS": True,
+                        "CMAKE_BUILD_TYPE": build_type,
+                        "CMAKE_C_COMPILER": "gcc",
+                        "CMAKE_CXX_COMPILER": "g++",
+                        "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, lib_name),
+                        "GASNet_INCLUDE_DIR": GASNET_DIR,
+                        "Kokkos_DIR": KOKKOS_DIR,
+                        "KOKKOS_CXX_COMPILER": KOKKOS_CXX_COMPILER,
+                        "Legion_USE_OpenMP": True,
+                        "Legion_USE_CUDA": True,
+                        "Legion_USE_GASNet": True,
+                        "Legion_USE_Kokkos": True,
+                        "Legion_MAX_DIM": 6,
+                        "Legion_MAX_FIELDS": 1024,
+                        network_key: network_val,
+                    }
+                    cmake(join("build", dir_name, network_tag, build_type.lower()), defines)
+
+
+################################################################################
 
 
 if __name__ == "__main__":
