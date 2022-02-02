@@ -3,8 +3,6 @@
 
 #include <legion.h>
 
-#include "AbstractVector.hpp"
-
 
 namespace LegionSolvers {
 

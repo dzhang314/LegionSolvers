@@ -71,8 +71,11 @@ namespace LegionSolvers {
     using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
 
 
-    // TODO: preprocessor flag for bounds checking (condition on NDEBUG?)
-    constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = false;
+    #ifdef NDEBUG
+        constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = false;
+    #else
+        constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = true;
+    #endif
 
 
 } // namespace LegionSolvers
