@@ -1,54 +1,34 @@
 #!/usr/bin/env python3
 
 import os
-import shutil
-import subprocess
-
+from build_legion_dependencies import remove_directory, cmake, LIB_PREFIX
 from build_legion_variants import (
     LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES,
-    KOKKOS_DIR_FLAG, GASNET_DIR_FLAG, add_tag
+    GASNET_DIR, KOKKOS_DIR, join
 )
 
 
-def legion_solvers_cmake_command(build_flag, lib_name):
-    return [
-        "cmake", "..",
-        "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++",
-        "-DLegion_DIR=/home/dkzhang/lib/" + lib_name + "/share/Legion/cmake",
-        KOKKOS_DIR_FLAG, GASNET_DIR_FLAG, build_flag
-    ]
+################################################################################
 
 
 def main():
     for dir_name, branch_name in LEGION_BRANCHES:
-        for build_tag, build_flag in BUILD_TYPES:
-            for network_tag, network_flag in NETWORK_TYPES:
-                build_name = ["build"]
-                lib_name = ["legion"]
-                add_tag(build_name, lib_name, dir_name)
-                add_tag(build_name, lib_name, network_tag)
-                add_tag(build_name, lib_name, build_tag)
-                build_name = "_".join(build_name)
-                if os.path.exists(build_name):
-                    shutil.rmtree(build_name)
-    for dir_name, branch_name in LEGION_BRANCHES:
-        for build_tag, build_flag in BUILD_TYPES:
-            for network_tag, network_flag in NETWORK_TYPES:
-                build_name = ["build"]
-                lib_name = ["legion"]
-                add_tag(build_name, lib_name, dir_name)
-                add_tag(build_name, lib_name, network_tag)
-                add_tag(build_name, lib_name, build_tag)
-                build_name = "_".join(build_name)
-                lib_name = "_".join(lib_name)
-                if os.path.exists(build_name):
-                    shutil.rmtree(build_name)
-                os.mkdir(build_name)
-                os.chdir(build_name)
-                subprocess.run(legion_solvers_cmake_command(
-                    build_flag, lib_name
-                ))
-                os.chdir("..")
+        for build_type in BUILD_TYPES:
+            for network_tag, _ in NETWORK_TYPES:
+                build_name = join("build", dir_name, network_tag, build_type.lower())
+                lib_name = join("legion", dir_name, network_tag, build_type.lower())
+                remove_directory(build_name)
+                cmake(build_name, {
+                    "CMAKE_BUILD_TYPE": build_type,
+                    "CMAKE_C_COMPILER": "gcc",
+                    "CMAKE_CXX_COMPILER": "g++",
+                    "GASNet_INCLUDE_DIR": GASNET_DIR,
+                    "Kokkos_DIR": KOKKOS_DIR,
+                    "Legion_DIR": os.path.join(LIB_PREFIX, lib_name, "share", "Legion", "cmake"),
+                }, build=False, test=False, install=False)
+
+
+################################################################################
 
 
 if __name__ == "__main__":

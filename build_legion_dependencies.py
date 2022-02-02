@@ -46,7 +46,7 @@ def clone(url, branch=None):
         run("git", "clone", url)
 
 
-def cmake(build_dir="build", defines={}, test=False, install=True):
+def cmake(build_dir="build", defines={}, build=True, test=False, install=True):
     os.mkdir(build_dir)
     with pushd(build_dir):
         cmake_cmd = ["cmake", ".."]
@@ -59,7 +59,8 @@ def cmake(build_dir="build", defines={}, test=False, install=True):
             else:
                 raise TypeError("Unsupported type: {0}".format(type(value)))
         run(*cmake_cmd)
-        run("cmake", "--build", ".", "--parallel", "40")
+        if build:
+            run("cmake", "--build", ".", "--parallel", "40")
         if test:
             run("make", "test")
         if install:
