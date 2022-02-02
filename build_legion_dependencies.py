@@ -138,6 +138,7 @@ def main():
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_CUDA": True,
             "Kokkos_ENABLE_CUDA_LAMBDA": True,
+            "Kokkos_USE_CXX_EXTENSIONS": True,
             "Kokkos_ENABLE_TESTS": True,
         }, test=(MACHINE != Machines.SAPLING), install=True)
         # one test is known to fail on Sapling
@@ -163,6 +164,7 @@ def main():
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_CUDA": True,
             "Kokkos_ENABLE_CUDA_LAMBDA": True,
+            "Kokkos_USE_CXX_EXTENSIONS": True,
             "Kokkos_ENABLE_TESTS": True,
         }
         # Kokkos 3.0.00 does not auto-detect compute capability
