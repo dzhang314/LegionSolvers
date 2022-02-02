@@ -91,6 +91,9 @@ else:
 if MACHINE == Machines.LASSEN:
     SCRATCH_DIR = "/p/gpfs1/zhang70"
     LIB_PREFIX = "/p/gpfs1/zhang70/lib"
+elif MACHINE == Machines.SAPLING:
+    SCRATCH_DIR = "/scratch2/dkzhang"
+    LIB_PREFIX = "/scratch2/dkzhang/lib"
 else:
     SCRATCH_DIR = "/home/dkzhang"
     LIB_PREFIX = "/home/dkzhang/lib"
