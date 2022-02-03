@@ -71,16 +71,3 @@ add_executable(Test05COO1DSolveCGExact
 )
 
 target_link_libraries(Test05COO1DSolveCGExact Kokkos::kokkoscore Legion::Legion)
-
-add_executable(TestExecutable
-    src/COOMatrixTasks.cpp
-    src/ExampleSystems.cpp
-    src/LegionSolversMapper.cpp
-    src/LegionUtilities.cpp
-    src/LinearAlgebraTasks.cpp
-    src/TaskRegistration.cpp
-    src/TestMain.cpp
-    src/UtilityTasks.cpp
-)
-
-target_link_libraries(TestExecutable Kokkos::kokkoscore Legion::Legion)
