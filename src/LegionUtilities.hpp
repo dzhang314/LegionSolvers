@@ -34,7 +34,8 @@ namespace LegionSolvers {
                                Legion::Context, Legion::Runtime *)>
     void preregister_cpu_task(Legion::TaskID task_id,
                               const std::string &task_name,
-                              bool is_inner, bool is_leaf, bool verbose) {
+                              bool is_replicable, bool is_inner,
+                              bool is_leaf, bool verbose) {
         if (verbose) {
             std::cout << "[LegionSolvers] Registering task " << task_name
                       << " with ID " << task_id << "." << std::endl;
@@ -43,6 +44,7 @@ namespace LegionSolvers {
         registrar.add_constraint(
             Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
         );
+        registrar.set_replicable(is_replicable);
         registrar.set_inner(is_inner);
         registrar.set_leaf(is_leaf);
         Legion::Runtime::preregister_task_variant<TASK_PTR>(
@@ -57,7 +59,8 @@ namespace LegionSolvers {
                                    Legion::Context, Legion::Runtime *)>
     void preregister_cpu_task(Legion::TaskID task_id,
                               const std::string &task_name,
-                              bool is_inner, bool is_leaf, bool verbose) {
+                              bool is_replicable, bool is_inner,
+                              bool is_leaf, bool verbose) {
         if (verbose) {
             std::cout << "[LegionSolvers] Registering task " << task_name
                       << " with ID " << task_id << "." << std::endl;
@@ -66,6 +69,7 @@ namespace LegionSolvers {
         registrar.add_constraint(
             Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
         );
+        registrar.set_replicable(is_replicable);
         registrar.set_inner(is_inner);
         registrar.set_leaf(is_leaf);
         if constexpr (std::is_void_v<RETURN_T>) {
@@ -84,7 +88,8 @@ namespace LegionSolvers {
               template <typename> typename KokkosTaskTemplate>
     void preregister_kokkos_task(Legion::TaskID task_id,
                                  const std::string &task_name,
-                                 bool is_inner, bool is_leaf, bool verbose) {
+                                 bool is_replicable, bool is_inner,
+                                 bool is_leaf, bool verbose) {
 
         #ifdef KOKKOS_ENABLE_SERIAL
         {
@@ -97,6 +102,7 @@ namespace LegionSolvers {
             registrar.add_constraint(Legion::ProcessorConstraint{
                 Legion::Processor::LOC_PROC
             });
+            registrar.set_replicable(is_replicable);
             registrar.set_inner(is_inner);
             registrar.set_leaf(is_leaf);
             if constexpr (std::is_void_v<ReturnType>) {
@@ -127,6 +133,7 @@ namespace LegionSolvers {
                     Legion::Processor::LOC_PROC
                 #endif
             });
+            registrar.set_replicable(is_replicable);
             registrar.set_inner(is_inner);
             registrar.set_leaf(is_leaf);
             if constexpr (std::is_void_v<ReturnType>) {
@@ -153,6 +160,7 @@ namespace LegionSolvers {
             registrar.add_constraint(Legion::ProcessorConstraint{
                 Legion::Processor::TOC_PROC
             });
+            registrar.set_replicable(is_replicable);
             registrar.set_inner(is_inner);
             registrar.set_leaf(is_leaf);
             if constexpr (std::is_void_v<ReturnType>) {

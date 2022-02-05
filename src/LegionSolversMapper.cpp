@@ -82,7 +82,8 @@ void LegionSolvers::LegionSolversMapper::slice_task(
         }
     } else if (is_task(task.task_id, AXPY_TASK_BLOCK_ID) ||
                is_task(task.task_id, XPAY_TASK_BLOCK_ID) ||
-               is_task(task.task_id, DOT_TASK_BLOCK_ID)) {
+               is_task(task.task_id, DOT_TASK_BLOCK_ID) ||
+               is_task(task.task_id, FILL_COO_NEGATIVE_LAPLACIAN_1D_TASK_BLOCK_ID)) {
         const Legion::DomainPoint lo = input.domain.lo();
         const Legion::DomainPoint hi = input.domain.hi();
         for (Legion::coord_t i = lo[0]; i <= hi[0]; i++) {

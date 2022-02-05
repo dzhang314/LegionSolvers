@@ -56,7 +56,7 @@ namespace LegionSolvers {
                 typename TaskClass<T>::return_type,
                 TaskClass<T>::task_body
             >(
-                task_id, task_name(),
+                task_id, task_name(), TaskClass<T>::is_replicable,
                 TaskClass<T>::is_inner, TaskClass<T>::is_leaf,
                 verbose
             );
@@ -73,7 +73,7 @@ namespace LegionSolvers {
                 typename TaskClass<T>::return_type,
                 TaskClass<T>::template KokkosTaskTemplate
             >(
-                task_id, task_name(),
+                task_id, task_name(), TaskClass<T>::is_replicable,
                 TaskClass<T>::is_inner, TaskClass<T>::is_leaf,
                 verbose
             );
@@ -102,7 +102,7 @@ namespace LegionSolvers {
                 typename TaskClass<N>::return_type,
                 TaskClass<N>::task_body
             >(
-                task_id, task_name(),
+                task_id, task_name(), TaskClass<N>::is_replicable,
                 TaskClass<N>::is_inner, TaskClass<N>::is_leaf,
                 verbose
             );
@@ -119,7 +119,7 @@ namespace LegionSolvers {
                 typename TaskClass<N>::return_type,
                 TaskClass<N>::template KokkosTaskTemplate
             >(
-                task_id, task_name(),
+                task_id, task_name(), TaskClass<N>::is_replicable,
                 TaskClass<N>::is_inner, TaskClass<N>::is_leaf,
                 verbose
             );
@@ -163,7 +163,7 @@ namespace LegionSolvers {
                 typename TaskClass<T, N>::return_type,
                 TaskClass<T, N>::task_body
             >(
-                task_id, task_name(),
+                task_id, task_name(), TaskClass<T, N>::is_replicable,
                 TaskClass<T, N>::is_inner, TaskClass<T, N>::is_leaf,
                 verbose
             );
@@ -188,7 +188,7 @@ namespace LegionSolvers {
                 typename TaskClass<T, N>::return_type,
                 TaskClass<T, N>::template KokkosTaskTemplate
             >(
-                task_id, task_name(),
+                task_id, task_name(), TaskClass<T, N>::is_replicable,
                 TaskClass<T, N>::is_inner, TaskClass<T, N>::is_leaf,
                 verbose
             );
@@ -235,6 +235,7 @@ namespace LegionSolvers {
                 TaskClass<T, N1, N2, N3>::task_body
             >(
                 task_id, task_name(),
+                TaskClass<T, N1, N2, N3>::is_replicable,
                 TaskClass<T, N1, N2, N3>::is_inner,
                 TaskClass<T, N1, N2, N3>::is_leaf,
                 verbose
@@ -261,6 +262,7 @@ namespace LegionSolvers {
                 TaskClass<T, N1, N2, N3>::template KokkosTaskTemplate
             >(
                 task_id, task_name(),
+                TaskClass<T, N1, N2, N3>::is_replicable,
                 TaskClass<T, N1, N2, N3>::is_inner,
                 TaskClass<T, N1, N2, N3>::is_leaf,
                 verbose

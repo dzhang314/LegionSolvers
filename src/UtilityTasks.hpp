@@ -16,6 +16,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "addition";
 
+        static constexpr bool is_replicable = true;
+
         static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
@@ -36,6 +38,8 @@ namespace LegionSolvers {
                                           SubtractionTask, T> {
 
         static constexpr const char *task_base_name = "subtraction";
+
+        static constexpr bool is_replicable = true;
 
         static constexpr bool is_inner = false;
 
@@ -58,6 +62,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "negation";
 
+        static constexpr bool is_replicable = true;
+
         static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
@@ -78,6 +84,8 @@ namespace LegionSolvers {
                                              MultiplicationTask, T> {
 
         static constexpr const char *task_base_name = "multiplication";
+
+        static constexpr bool is_replicable = true;
 
         static constexpr bool is_inner = false;
 
@@ -100,6 +108,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "division";
 
+        static constexpr bool is_replicable = true;
+
         static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
@@ -120,6 +130,8 @@ namespace LegionSolvers {
                                           PrintScalarTask, T> {
 
         static constexpr const char *task_base_name = "print_scalar";
+
+        static constexpr bool is_replicable = true;
 
         static constexpr bool is_inner = false;
 
@@ -142,6 +154,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "assert_small";
 
+        static constexpr bool is_replicable = true;
+
         static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
@@ -162,6 +176,8 @@ namespace LegionSolvers {
                                           RandomFillTask, T, DIM> {
 
         static constexpr const char *task_base_name = "random_fill";
+
+        static constexpr bool is_replicable = true;
 
         static constexpr bool is_inner = false;
 
@@ -184,6 +200,8 @@ namespace LegionSolvers {
 
         static constexpr const char *task_base_name = "print_vector";
 
+        static constexpr bool is_replicable = true;
+
         static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
@@ -204,6 +222,8 @@ namespace LegionSolvers {
                                          PrintIndexTask, DIM> {
 
         static constexpr const char *task_base_name = "print_index";
+
+        static constexpr bool is_replicable = true;
 
         static constexpr bool is_inner = false;
 

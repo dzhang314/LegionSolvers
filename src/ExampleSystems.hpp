@@ -58,6 +58,8 @@ namespace LegionSolvers {
         static constexpr const char *
         task_base_name = "fill_coo_negative_laplacian_1d";
 
+        static constexpr bool is_replicable = true;
+
         static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
@@ -112,6 +114,8 @@ namespace LegionSolvers {
 
         static constexpr const char *
         task_base_name = "fill_csr_negative_laplacian_1d";
+
+        static constexpr bool is_replicable = true;
 
         static constexpr bool is_inner = false;
 
@@ -173,6 +177,8 @@ namespace LegionSolvers {
         static constexpr const char *
         task_base_name = "fill_csr_negative_laplacian_1d_rowptr";
 
+        static constexpr bool is_replicable = true;
+
         static constexpr bool is_inner = false;
 
         static constexpr bool is_leaf = true;
@@ -206,6 +212,8 @@ namespace LegionSolvers {
 
         static constexpr const char *
         task_base_name = "fill_coo_negative_laplacian_2d";
+
+        static constexpr bool is_replicable = true;
 
         static constexpr bool is_inner = false;
 

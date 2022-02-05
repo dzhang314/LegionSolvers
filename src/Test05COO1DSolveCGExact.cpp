@@ -120,7 +120,7 @@ void top_level_task(const Legion::Task *,
             DistributedVector rhs{"rhs", disjoint_vector_partition, ctx, rt};
             DistributedVector sol{"sol", disjoint_vector_partition, ctx, rt};
 
-            rhs.random_fill();
+            rhs.constant_fill(1.0);
             sol.zero_fill();
 
             DistributedVector P{"P", disjoint_vector_partition, ctx, rt};
@@ -205,7 +205,7 @@ void top_level_task(const Legion::Task *,
 
 int main(int argc, char **argv) {
     LegionSolvers::preregister_cpu_task<top_level_task>(
-        TOP_LEVEL_TASK_ID, "top_level", true, false, false
+        TOP_LEVEL_TASK_ID, "top_level", true, true, false, false
     );
     LegionSolvers::preregister_solver_tasks(false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);

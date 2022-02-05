@@ -108,20 +108,22 @@ void top_level_task(const Legion::Task *,
         DistributedVector rhs{"rhs", vector_index_space,
                               vector_color_space, ctx, rt};
 
-        {
-            Legion::IndexLauncher launcher{
-                FILL_RHS_TASK_ID, vector_color_space,
-                Legion::TaskArgument{&grid_size, sizeof(grid_size)},
-                Legion::ArgumentMap{}
-            };
-            launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
-            launcher.add_region_requirement(Legion::RegionRequirement{
-                rhs.logical_partition, 0,
-                LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, rhs.logical_region
-            });
-            launcher.add_field(0, rhs.fid);
-            rt->execute_index_space(ctx, launcher);
-        }
+        // {
+        //     Legion::IndexLauncher launcher{
+        //         FILL_RHS_TASK_ID, vector_color_space,
+        //         Legion::TaskArgument{&grid_size, sizeof(grid_size)},
+        //         Legion::ArgumentMap{}
+        //     };
+        //     launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
+        //     launcher.add_region_requirement(Legion::RegionRequirement{
+        //         rhs.logical_partition, 0,
+        //         LEGION_WRITE_DISCARD, LEGION_EXCLUSIVE, rhs.logical_region
+        //     });
+        //     launcher.add_field(0, rhs.fid);
+        //     rt->execute_index_space(ctx, launcher);
+        // }
+
+        rhs.constant_fill(1.0);
 
         // rhs.print();
 
@@ -229,10 +231,10 @@ void top_level_task(const Legion::Task *,
 
 int main(int argc, char **argv) {
     LegionSolvers::preregister_cpu_task<fill_rhs_task>(
-        FILL_RHS_TASK_ID, "fill_rhs", false, true, false
+        FILL_RHS_TASK_ID, "fill_rhs", true, false, true, false
     );
     LegionSolvers::preregister_cpu_task<top_level_task>(
-        TOP_LEVEL_TASK_ID, "top_level", true, false, false
+        TOP_LEVEL_TASK_ID, "top_level", true, true, false, false
     );
     LegionSolvers::preregister_solver_tasks(false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
