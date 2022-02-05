@@ -82,7 +82,7 @@ def main():
                         "Legion_USE_CUDA": True,
                         "Legion_USE_GASNet": True,
                         "Legion_USE_Kokkos": True,
-                        "Legion_MAX_DIM": 6,
+                        "Legion_MAX_DIM": 9,
                         "Legion_MAX_FIELDS": 1024,
                         network_key: network_val,
                     }
