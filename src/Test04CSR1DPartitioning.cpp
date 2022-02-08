@@ -54,20 +54,23 @@ void top_level_task(const Legion::Task *,
     const auto matrix_index_space = rt->create_index_space(ctx,
         KernelRect{0, kernel_size - 1});
 
-    const auto matrix_field_space = LegionSolvers::create_field_space(
-        {sizeof(Legion::Point<VECTOR_DIM, VECTOR_COORD_T>),
-         sizeof(ENTRY_T)}, {FID_COL, FID_ENTRY}, ctx, rt);
+    const auto matrix_field_space = LegionSolvers::create_field_space(ctx, rt,
+        {
+            sizeof(Legion::Point<VECTOR_DIM, VECTOR_COORD_T>),
+            sizeof(ENTRY_T)
+        },
+        {FID_COL, FID_ENTRY});
 
-    const auto rowptr_field_space = LegionSolvers::create_field_space(
+    const auto rowptr_field_space = LegionSolvers::create_field_space(ctx, rt,
         {sizeof(Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>)},
-        {FID_ROWPTR}, ctx, rt);
+        {FID_ROWPTR});
 
     {
         const auto range_partition = rt->create_equal_partition(ctx,
             range_space, range_color_space);
 
-        LegionSolvers::print_index_partition(
-            "range_partition", range_partition, ctx, rt);
+        LegionSolvers::print_index_partition(ctx, rt,
+            "range_partition", range_partition);
 
         const auto matrix_region = rt->create_logical_region(ctx,
             matrix_index_space, matrix_field_space);
@@ -112,15 +115,15 @@ void top_level_task(const Legion::Task *,
         const auto matrix_partition =
             csr_matrix.kernel_partition_from_range_partition(range_partition);
 
-        LegionSolvers::print_index_partition(
-            "matrix_partition", matrix_partition, ctx, rt);
+        LegionSolvers::print_index_partition(ctx, rt,
+            "matrix_partition", matrix_partition);
 
         const auto domain_partition =
             csr_matrix.domain_partition_from_kernel_partition(
                 domain_space, matrix_partition);
 
-        LegionSolvers::print_index_partition(
-            "domain_partition", domain_partition, ctx, rt);
+        LegionSolvers::print_index_partition(ctx, rt,
+            "domain_partition", domain_partition);
 
         rt->destroy_index_partition(ctx, matrix_partition);
         rt->destroy_index_partition(ctx, range_partition);

@@ -67,10 +67,14 @@ void top_level_task(const Legion::Task *,
     const auto matrix_index_space = rt->create_index_space(ctx,
         KernelRect{0, kernel_size - 1});
 
-    const auto matrix_field_space = LegionSolvers::create_field_space(
-        {sizeof(Legion::Point<VECTOR_DIM, VECTOR_COORD_T>),
-         sizeof(Legion::Point<VECTOR_DIM, VECTOR_COORD_T>),
-         sizeof(ENTRY_T)}, {FID_I, FID_J, FID_ENTRY}, ctx, rt);
+    const auto matrix_field_space = LegionSolvers::create_field_space(ctx, rt,
+        {
+            sizeof(Legion::Point<VECTOR_DIM, VECTOR_COORD_T>),
+            sizeof(Legion::Point<VECTOR_DIM, VECTOR_COORD_T>),
+            sizeof(ENTRY_T)
+        },
+        {FID_I, FID_J, FID_ENTRY}
+    );
 
     {
         const Legion::IndexPartitionT<VECTOR_DIM, VECTOR_COORD_T>

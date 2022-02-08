@@ -141,14 +141,13 @@ void top_level_task(const Legion::Task *,
         const auto matrix_color_space = rt->create_index_space(ctx,
             KernelColorRect{0, num_kernel_partitions - 1});
 
-        const auto matrix_field_space = LegionSolvers::create_field_space(
+        const auto matrix_field_space = LegionSolvers::create_field_space(ctx, rt,
             {
                 sizeof(Legion::Point<1, VECTOR_COORD_T>),
                 sizeof(Legion::Point<1, VECTOR_COORD_T>),
                 sizeof(ENTRY_T)
             },
-            {0, 1, 2},
-            ctx, rt
+            {0, 1, 2}
         );
 
         {

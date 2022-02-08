@@ -113,10 +113,9 @@ namespace LegionSolvers {
             index_space(index_space),
             owns_index_space(false),
             fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
-            field_space(create_field_space(
+            field_space(create_field_space(ctx, rt,
                 std::vector<std::size_t>{sizeof(ENTRY_T)},
-                std::vector<Legion::FieldID>{fid},
-                ctx, rt
+                std::vector<Legion::FieldID>{fid}
             )),
             owns_field_space(true),
             logical_region(rt->create_logical_region(ctx,
@@ -142,10 +141,9 @@ namespace LegionSolvers {
             index_space(rt->get_parent_index_space(index_partition)),
             owns_index_space(false),
             fid(LEGION_SOLVERS_DEFAULT_VECTOR_FID),
-            field_space(create_field_space(
+            field_space(create_field_space(ctx, rt,
                 std::vector<std::size_t>{sizeof(ENTRY_T)},
-                std::vector<Legion::FieldID>{fid},
-                ctx, rt
+                std::vector<Legion::FieldID>{fid}
             )),
             owns_field_space(true),
             logical_region(rt->create_logical_region(ctx,

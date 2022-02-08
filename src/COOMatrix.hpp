@@ -26,9 +26,9 @@ namespace LegionSolvers {
             Legion::Context ctx,
             Legion::Runtime *rt,
             Legion::LogicalRegion kernel_region,
-            const Legion::FieldID fid_i,
-            const Legion::FieldID fid_j,
-            const Legion::FieldID fid_entry
+            Legion::FieldID fid_i,
+            Legion::FieldID fid_j,
+            Legion::FieldID fid_entry
         ) : ctx(ctx), rt(rt),
             kernel_space(kernel_region.get_index_space()),
             kernel_region(kernel_region),

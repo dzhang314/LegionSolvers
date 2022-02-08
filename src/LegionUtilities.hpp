@@ -16,16 +16,16 @@ namespace LegionSolvers {
 
 
     Legion::FieldSpace create_field_space(
+        Legion::Context ctx, Legion::Runtime *rt,
         const std::vector<std::size_t> &field_sizes,
-        const std::vector<Legion::FieldID> &field_ids,
-        Legion::Context ctx, Legion::Runtime *rt
+        const std::vector<Legion::FieldID> &field_ids
     );
 
 
     void print_index_partition(
+        Legion::Context ctx, Legion::Runtime *rt,
         const std::string &name,
-        Legion::IndexPartition index_partition,
-        Legion::Context ctx, Legion::Runtime *rt
+        Legion::IndexPartition index_partition
     );
 
 
