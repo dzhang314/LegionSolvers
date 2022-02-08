@@ -3,7 +3,7 @@
 
 #include <legion.h>
 
-#include "DistributedCOOMatrix.hpp"
+#include "KokkosUtilities.hpp"
 #include "TaskBaseClasses.hpp"
 #include "TaskIDs.hpp"
 

@@ -38,36 +38,6 @@ namespace LegionSolvers {
                   "to support the specified value for LEGION_SOLVERS_MAX_DIM");
 
 
-    #ifndef LEGION_SOLVERS_DEFAULT_VECTOR_FID
-    constexpr Legion::FieldID
-    LEGION_SOLVERS_DEFAULT_VECTOR_FID = 101;
-    #endif
-
-
-    #ifndef LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_I
-    constexpr Legion::FieldID
-    LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_I = 102;
-    #endif
-
-
-    #ifndef LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_J
-    constexpr Legion::FieldID
-    LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_J = 103;
-    #endif
-
-
-    #ifndef LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_ENTRY
-    constexpr Legion::FieldID
-    LEGION_SOLVERS_DEFAULT_COO_MATRIX_FID_ENTRY = 104;
-    #endif
-
-
-    #ifndef LEGION_SOLVERS_DEFAULT_TILE_PARTITION_COLOR
-    constexpr Legion::Color
-    LEGION_SOLVERS_DEFAULT_TILE_PARTITION_COLOR = 777;
-    #endif
-
-
     using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
 
 

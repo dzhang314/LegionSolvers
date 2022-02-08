@@ -205,35 +205,35 @@ namespace LegionSolvers {
     }; // struct ProjectionOneLevel
 
 
-    struct ProjectionTwoLevel final : public Legion::ProjectionFunctor {
+    // struct ProjectionTwoLevel final : public Legion::ProjectionFunctor {
 
-        Legion::coord_t i;
-        Legion::coord_t j;
+    //     Legion::coord_t i;
+    //     Legion::coord_t j;
 
-        explicit ProjectionTwoLevel(Legion::coord_t i, Legion::coord_t j)
-            noexcept : i(i), j(j) {}
+    //     explicit ProjectionTwoLevel(Legion::coord_t i, Legion::coord_t j)
+    //         noexcept : i(i), j(j) {}
 
-        virtual bool is_functional() const noexcept { return true; }
+    //     virtual bool is_functional() const noexcept { return true; }
 
-        virtual unsigned get_depth() const noexcept { return 1; }
+    //     virtual unsigned get_depth() const noexcept { return 1; }
 
-        using Legion::ProjectionFunctor::project;
+    //     using Legion::ProjectionFunctor::project;
 
-        virtual Legion::LogicalRegion project(
-            Legion::LogicalPartition upper_bound,
-            const Legion::DomainPoint &point,
-            const Legion::Domain &launch_domain
-        ) override {
-            const auto column = runtime->get_logical_subregion_by_color(
-                upper_bound, point[i]
-            );
-            const auto partition = runtime->get_logical_partition_by_color(
-                column, LEGION_SOLVERS_DEFAULT_TILE_PARTITION_COLOR
-            );
-            return runtime->get_logical_subregion_by_color(partition, point[j]);
-        }
+    //     virtual Legion::LogicalRegion project(
+    //         Legion::LogicalPartition upper_bound,
+    //         const Legion::DomainPoint &point,
+    //         const Legion::Domain &launch_domain
+    //     ) override {
+    //         const auto column = runtime->get_logical_subregion_by_color(
+    //             upper_bound, point[i]
+    //         );
+    //         const auto partition = runtime->get_logical_partition_by_color(
+    //             column, LEGION_SOLVERS_DEFAULT_TILE_PARTITION_COLOR
+    //         );
+    //         return runtime->get_logical_subregion_by_color(partition, point[j]);
+    //     }
 
-    }; // struct ProjectionTwoLevel
+    // }; // struct ProjectionTwoLevel
 
 
     class RectIteratorSentinel {};
