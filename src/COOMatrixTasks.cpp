@@ -66,8 +66,8 @@ KokkosTaskTemplate<ExecutionSpace>::task_body(
             for (const auto &range_rect :
                  Rects<RANGE_DIM, RANGE_COORD_T>{output_vec}) {
                 Kokkos::parallel_for(
-                    KokkosRangeFactory<ExecutionSpace, KERNEL_DIM>::create(
-                        kernel_rect, ctx, rt
+                    KokkosRangeFactory<ExecutionSpace, KERNEL_DIM, KERNEL_COORD_T>::create(ctx, rt,
+                        kernel_rect
                     ),
                     KokkosCOOMatvecFunctor<
                         ExecutionSpace, ENTRY_T,

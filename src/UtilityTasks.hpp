@@ -171,9 +171,9 @@ namespace LegionSolvers {
     }; // struct AssertSmallTask
 
 
-    template <typename T, int DIM>
-    struct RandomFillTask : public TaskTD<RANDOM_FILL_TASK_BLOCK_ID,
-                                          RandomFillTask, T, DIM> {
+    template <typename T, int DIM, typename COORD_T>
+    struct RandomFillTask : public TaskTDI<RANDOM_FILL_TASK_BLOCK_ID,
+                                           RandomFillTask, T, DIM, COORD_T> {
 
         static constexpr const char *task_base_name = "random_fill";
 
@@ -194,9 +194,9 @@ namespace LegionSolvers {
     }; // struct RandomFillTask
 
 
-    template <typename T, int DIM>
-    struct PrintVectorTask : public TaskTD<PRINT_VECTOR_TASK_BLOCK_ID,
-                                           PrintVectorTask, T, DIM> {
+    template <typename T, int DIM, typename COORD_T>
+    struct PrintVectorTask : public TaskTDI<PRINT_VECTOR_TASK_BLOCK_ID,
+                                            PrintVectorTask, T, DIM, COORD_T> {
 
         static constexpr const char *task_base_name = "print_vector";
 

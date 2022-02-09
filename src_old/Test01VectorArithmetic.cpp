@@ -68,25 +68,7 @@ enum TaskIDs : Legion::TaskID {
 };
 
 
-template <int DIM, typename COORD_T>
-Legion::Rect<DIM, COORD_T> create_rect(std::size_t size) {
-    if constexpr (DIM == 1) {
-        return {0, static_cast<COORD_T>(size) - 1};
-    }
-    if constexpr (DIM == 2) {
-        return {{0, 0}, {
-            static_cast<COORD_T>(std::floor(std::sqrt(size))) - 1,
-            static_cast<COORD_T>(std::ceil(std::sqrt(size))) - 1
-        }};
-    }
-    if constexpr (DIM == 3) {
-        return {{0, 0, 0}, {
-            static_cast<COORD_T>(std::floor(std::cbrt(size))) - 1,
-            static_cast<COORD_T>(std::ceil(std::cbrt(size))) - 1,
-            static_cast<COORD_T>(std::ceil(std::cbrt(size))) - 1,
-        }};
-    }
-}
+
 
 
 template <typename ENTRY_T, int VECTOR_DIM, int VECTOR_COLOR_DIM,

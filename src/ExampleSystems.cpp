@@ -37,8 +37,8 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     for (Legion::RectInDomainIterator<1> it{matrix_domain}; it(); ++it) {
         const Legion::Rect<1> rect = *it;
         Kokkos::parallel_for(
-            KokkosRangeFactory<KokkosExecutionSpace, 1>::create(
-                rect, ctx, rt
+            KokkosRangeFactory<KokkosExecutionSpace, 1, Legion::coord_t>::create(ctx, rt,
+                rect
             ),
             KokkosFillCOONegativeLaplacian1DFunctor<KokkosExecutionSpace, T>{
                 i_writer.accessor, j_writer.accessor, entry_writer.accessor
@@ -83,8 +83,8 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     for (Legion::RectInDomainIterator<1> it{matrix_domain}; it(); ++it) {
         const Legion::Rect<1> rect = *it;
         Kokkos::parallel_for(
-            KokkosRangeFactory<KokkosExecutionSpace, 1>::create(
-                rect, ctx, rt
+            KokkosRangeFactory<KokkosExecutionSpace, 1, Legion::coord_t>::create(ctx, rt,
+                rect
             ),
             KokkosFillCSRNegativeLaplacian1DFunctor<KokkosExecutionSpace, T>{
                 col_writer.accessor, entry_writer.accessor
@@ -127,8 +127,8 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     for (Legion::RectInDomainIterator<1> it{rowptr_domain}; it(); ++it) {
         const Legion::Rect<1> rect = *it;
         Kokkos::parallel_for(
-            KokkosRangeFactory<KokkosExecutionSpace, 1>::create(
-                rect, ctx, rt
+            KokkosRangeFactory<KokkosExecutionSpace, 1, Legion::coord_t>::create(ctx, rt,
+                rect
             ),
             KokkosFillCSRNegativeLaplacian1DRowptrFunctor<KokkosExecutionSpace, T>{
                 rowptr_writer.accessor, args.grid_length

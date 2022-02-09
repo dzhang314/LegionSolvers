@@ -14,43 +14,46 @@
 namespace LegionSolvers {
 
 
-    template <typename ExecutionSpace, typename T, int N>
+    template <typename ExecutionSpace,
+              typename ENTRY_T, int DIM, typename COORD_T>
     struct KokkosScalFunctor {
 
-        const KokkosMutableOffsetView<ExecutionSpace, T, N> x_view;
-        const T alpha;
+        const KokkosMutableOffsetView<ExecutionSpace, ENTRY_T, DIM> x_view;
+        const ENTRY_T alpha;
 
         explicit KokkosScalFunctor(
-            Realm::AffineAccessor<T, N, Legion::coord_t> x_accessor,
-            const T &a
+            Realm::AffineAccessor<ENTRY_T, DIM, COORD_T> x_accessor,
+            const ENTRY_T &a
         ) : x_view{x_accessor}, alpha{a} {}
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a) const {
+        KOKKOS_INLINE_FUNCTION void operator()(COORD_T a) const {
             x_view(a) *= alpha;
         }
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, int b) const {
+        KOKKOS_INLINE_FUNCTION void operator()(COORD_T a, COORD_T b) const {
             x_view(a, b) *= alpha;
         }
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, int b, int c) const {
+        KOKKOS_INLINE_FUNCTION void operator()(
+            COORD_T a, COORD_T b, COORD_T c
+        ) const {
             x_view(a, b, c) *= alpha;
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d
         ) const {
             x_view(a, b, c, d) *= alpha;
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e
         ) const {
             x_view(a, b, c, d, e) *= alpha;
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e, int f
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e, COORD_T f
         ) const {
             x_view(a, b, c, d, e, f) *= alpha;
         }
@@ -58,8 +61,9 @@ namespace LegionSolvers {
     }; // struct KokkosScalFunctor
 
 
-    template <typename T, int N>
-    struct ScalTask : public TaskTD<SCAL_TASK_BLOCK_ID, ScalTask, T, N> {
+    template <typename ENTRY_T, int DIM, typename COORD_T>
+    struct ScalTask : public TaskTDI<SCAL_TASK_BLOCK_ID, ScalTask,
+                                     ENTRY_T, DIM, COORD_T> {
 
         static constexpr const char *task_base_name = "scal";
 
@@ -85,20 +89,21 @@ namespace LegionSolvers {
     }; // struct ScalTask
 
 
-    template <typename ExecutionSpace, typename T, int N>
+    template <typename ExecutionSpace,
+              typename ENTRY_T, int DIM, typename COORD_T>
     struct KokkosAxpyFunctor {
 
-        const KokkosMutableOffsetView<ExecutionSpace, T, N> y_view;
-        const T alpha;
-        const KokkosConstOffsetView<ExecutionSpace, T, N> x_view;
+        const KokkosMutableOffsetView<ExecutionSpace, ENTRY_T, DIM> y_view;
+        const ENTRY_T alpha;
+        const KokkosConstOffsetView<ExecutionSpace, ENTRY_T, DIM> x_view;
 
         explicit KokkosAxpyFunctor(
-            Realm::AffineAccessor<T, N, Legion::coord_t> y_accessor,
-            const T &a,
-            Realm::AffineAccessor<T, N, Legion::coord_t> x_accessor
+            Realm::AffineAccessor<ENTRY_T, DIM, COORD_T> y_accessor,
+            const ENTRY_T &a,
+            Realm::AffineAccessor<ENTRY_T, DIM, COORD_T> x_accessor
         ) : y_view{y_accessor}, alpha{a}, x_view{x_accessor} {}
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a) const {
+        KOKKOS_INLINE_FUNCTION void operator()(COORD_T a) const {
             using std::fma;
             y_view(a) = fma(
                 alpha,
@@ -107,7 +112,7 @@ namespace LegionSolvers {
             );
         }
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, int b) const {
+        KOKKOS_INLINE_FUNCTION void operator()(COORD_T a, COORD_T b) const {
             using std::fma;
             y_view(a, b) = fma(
                 alpha,
@@ -116,7 +121,9 @@ namespace LegionSolvers {
             );
         }
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, int b, int c) const {
+        KOKKOS_INLINE_FUNCTION void operator()(
+            COORD_T a, COORD_T b, COORD_T c
+        ) const {
             using std::fma;
             y_view(a, b, c) = fma(
                 alpha,
@@ -126,7 +133,7 @@ namespace LegionSolvers {
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d
         ) const {
             using std::fma;
             y_view(a, b, c, d) = fma(
@@ -137,7 +144,7 @@ namespace LegionSolvers {
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e
         ) const {
             using std::fma;
             y_view(a, b, c, d, e) = fma(
@@ -148,7 +155,7 @@ namespace LegionSolvers {
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e, int f
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e, COORD_T f
         ) const {
             using std::fma;
             y_view(a, b, c, d, e, f) = fma(
@@ -161,8 +168,9 @@ namespace LegionSolvers {
     }; // struct KokkosAxpyFunctor
 
 
-    template <typename T, int N>
-    struct AxpyTask : public TaskTD<AXPY_TASK_BLOCK_ID, AxpyTask, T, N> {
+    template <typename ENTRY_T, int DIM, typename COORD_T>
+    struct AxpyTask : public TaskTDI<AXPY_TASK_BLOCK_ID, AxpyTask,
+                                     ENTRY_T, DIM, COORD_T> {
 
         static constexpr const char *task_base_name = "axpy";
 
@@ -188,20 +196,21 @@ namespace LegionSolvers {
     }; // struct AxpyTask
 
 
-    template <typename ExecutionSpace, typename T, int N>
+    template <typename ExecutionSpace,
+              typename ENTRY_T, int DIM, typename COORD_T>
     struct KokkosXpayFunctor {
 
-        const KokkosMutableOffsetView<ExecutionSpace, T, N> y_view;
-        const T alpha;
-        const KokkosConstOffsetView<ExecutionSpace, T, N> x_view;
+        const KokkosMutableOffsetView<ExecutionSpace, ENTRY_T, DIM> y_view;
+        const ENTRY_T alpha;
+        const KokkosConstOffsetView<ExecutionSpace, ENTRY_T, DIM> x_view;
 
         explicit KokkosXpayFunctor(
-            Realm::AffineAccessor<T, N, Legion::coord_t> y_accessor,
-            const T &a,
-            Realm::AffineAccessor<T, N, Legion::coord_t> x_accessor
+            Realm::AffineAccessor<ENTRY_T, DIM, COORD_T> y_accessor,
+            const ENTRY_T &a,
+            Realm::AffineAccessor<ENTRY_T, DIM, COORD_T> x_accessor
         ) : y_view{y_accessor}, alpha{a}, x_view{x_accessor} {}
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a) const {
+        KOKKOS_INLINE_FUNCTION void operator()(COORD_T a) const {
             using std::fma;
             y_view(a) = fma(
                 alpha,
@@ -210,7 +219,7 @@ namespace LegionSolvers {
             );
         }
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, int b) const {
+        KOKKOS_INLINE_FUNCTION void operator()(COORD_T a, COORD_T b) const {
             using std::fma;
             y_view(a, b) = fma(
                 alpha,
@@ -219,7 +228,9 @@ namespace LegionSolvers {
             );
         }
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, int b, int c) const {
+        KOKKOS_INLINE_FUNCTION void operator()(
+            COORD_T a, COORD_T b, COORD_T c
+        ) const {
             using std::fma;
             y_view(a, b, c) = fma(
                 alpha,
@@ -229,7 +240,7 @@ namespace LegionSolvers {
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d
         ) const {
             using std::fma;
             y_view(a, b, c, d) = fma(
@@ -240,7 +251,7 @@ namespace LegionSolvers {
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e
         ) const {
             using std::fma;
             y_view(a, b, c, d, e) = fma(
@@ -251,7 +262,7 @@ namespace LegionSolvers {
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e, int f
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e, COORD_T f
         ) const {
             using std::fma;
             y_view(a, b, c, d, e, f) = fma(
@@ -264,8 +275,9 @@ namespace LegionSolvers {
     }; // struct KokkosXpayFunctor
 
 
-    template <typename T, int N>
-    struct XpayTask : public TaskTD<XPAY_TASK_BLOCK_ID, XpayTask, T, N> {
+    template <typename ENTRY_T, int DIM, typename COORD_T>
+    struct XpayTask : public TaskTDI<XPAY_TASK_BLOCK_ID, XpayTask,
+                                     ENTRY_T, DIM, COORD_T> {
 
         static constexpr const char *task_base_name = "xpay";
 
@@ -291,47 +303,51 @@ namespace LegionSolvers {
     }; // struct XpayTask
 
 
-    template <typename ExecutionSpace, typename T, int N>
+    template <typename ExecutionSpace,
+              typename ENTRY_T, int DIM, typename COORD_T>
     struct KokkosDotFunctor {
 
-        using value_type = T;
+        using value_type = ENTRY_T;
 
-        const KokkosConstOffsetView<ExecutionSpace, T, N> v_view;
-        const KokkosConstOffsetView<ExecutionSpace, T, N> w_view;
+        const KokkosConstOffsetView<ExecutionSpace, ENTRY_T, DIM> v_view;
+        const KokkosConstOffsetView<ExecutionSpace, ENTRY_T, DIM> w_view;
 
         explicit KokkosDotFunctor(
-            Realm::AffineAccessor<T, N, Legion::coord_t> v_accessor,
-            Realm::AffineAccessor<T, N, Legion::coord_t> w_accessor
+            Realm::AffineAccessor<ENTRY_T, DIM, COORD_T> v_accessor,
+            Realm::AffineAccessor<ENTRY_T, DIM, COORD_T> w_accessor
         ) : v_view{v_accessor}, w_view{w_accessor} {}
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, T &acc) const {
+        KOKKOS_INLINE_FUNCTION void operator()(COORD_T a, ENTRY_T &acc) const {
             acc += v_view(a) * w_view(a);
         }
 
-        KOKKOS_INLINE_FUNCTION void operator()(int a, int b, T &acc) const {
+        KOKKOS_INLINE_FUNCTION void operator()(
+            COORD_T a, COORD_T b, ENTRY_T &acc
+        ) const {
             acc += v_view(a, b) * w_view(a, b);
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, T &acc
+            COORD_T a, COORD_T b, COORD_T c, ENTRY_T &acc
         ) const {
             acc += v_view(a, b, c) * w_view(a, b, c);
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, T &acc
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, ENTRY_T &acc
         ) const {
             acc += v_view(a, b, c, d) * w_view(a, b, c, d);
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e, T &acc
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e, ENTRY_T &acc
         ) const {
             acc += v_view(a, b, c, d, e) * w_view(a, b, c, d, e);
         }
 
         KOKKOS_INLINE_FUNCTION void operator()(
-            int a, int b, int c, int d, int e, int f, T &acc
+            COORD_T a, COORD_T b, COORD_T c, COORD_T d, COORD_T e, COORD_T f,
+            ENTRY_T &acc
         ) const {
             acc += v_view(a, b, c, d, e, f) * w_view(a, b, c, d, e, f);
         }
@@ -339,8 +355,9 @@ namespace LegionSolvers {
     }; // struct KokkosDotFunctor
 
 
-    template <typename T, int N>
-    struct DotTask : public TaskTD<DOT_TASK_BLOCK_ID, DotTask, T, N> {
+    template <typename ENTRY_T, int DIM, typename COORD_T>
+    struct DotTask : public TaskTDI<DOT_TASK_BLOCK_ID, DotTask,
+                                    ENTRY_T, DIM, COORD_T> {
 
         static constexpr const char *task_base_name = "dot_product";
 
@@ -350,12 +367,12 @@ namespace LegionSolvers {
 
         static constexpr bool is_leaf = true;
 
-        using return_type = T;
+        using return_type = ENTRY_T;
 
         template <typename KokkosExecutionSpace>
         struct KokkosTaskTemplate {
 
-            static T task_body(
+            static ENTRY_T task_body(
                 const Legion::Task *task,
                 const std::vector<Legion::PhysicalRegion> &regions,
                 Legion::Context ctx, Legion::Runtime *rt

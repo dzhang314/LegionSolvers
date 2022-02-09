@@ -4,9 +4,9 @@
 #include <typeinfo>
 
 
-template <typename T, int N>
+template <typename ENTRY_T, int DIM, typename COORD_T>
 template <typename KokkosExecutionSpace>
-void LegionSolvers::ScalTask<T, N>::
+void LegionSolvers::ScalTask<ENTRY_T, DIM, COORD_T>::
 KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
@@ -26,24 +26,21 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
 
     assert(task->futures.size() == 1);
-    const T alpha = task->futures[0].get_result<T>();
+    const ENTRY_T alpha = task->futures[0].get_result<ENTRY_T>();
 
-    Legion::FieldAccessor<
-        LEGION_READ_WRITE, T, N, Legion::coord_t,
-        Realm::AffineAccessor<T, N, Legion::coord_t>
-    > x_writer{x, x_fid};
+    AffineWriter<ENTRY_T, DIM, COORD_T> x_writer{x, x_fid};
 
     const Legion::Domain x_domain = rt->get_index_space_domain(
         ctx, x_req.region.get_index_space()
     );
 
-    for (Legion::RectInDomainIterator<N> it{x_domain}; it(); ++it) {
-        const Legion::Rect<N> rect = *it;
+    for (Legion::RectInDomainIterator<DIM, COORD_T> it{x_domain}; it(); ++it) {
+        const Legion::Rect<DIM, COORD_T> rect = *it;
         Kokkos::parallel_for(
-            KokkosRangeFactory<KokkosExecutionSpace, N>::create(
-                rect, ctx, rt
+            KokkosRangeFactory<KokkosExecutionSpace, DIM, COORD_T>::create(ctx, rt,
+                rect
             ),
-            KokkosScalFunctor<KokkosExecutionSpace, T, N>{
+            KokkosScalFunctor<KokkosExecutionSpace, ENTRY_T, DIM, COORD_T>{
                 x_writer.accessor, alpha
             }
         );
@@ -51,9 +48,9 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
 }
 
 
-template <typename T, int N>
+template <typename ENTRY_T, int DIM, typename COORD_T>
 template <typename KokkosExecutionSpace>
-void LegionSolvers::AxpyTask<T, N>::
+void LegionSolvers::AxpyTask<ENTRY_T, DIM, COORD_T>::
 KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
@@ -78,17 +75,10 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
 
     assert(task->futures.size() == 1);
-    const T alpha = task->futures[0].get_result<T>();
+    const ENTRY_T alpha = task->futures[0].get_result<ENTRY_T>();
 
-    Legion::FieldAccessor<
-        LEGION_READ_WRITE, T, N, Legion::coord_t,
-        Realm::AffineAccessor<T, N, Legion::coord_t>
-    > y_writer{y, y_fid};
-
-    Legion::FieldAccessor<
-        LEGION_READ_ONLY, T, N, Legion::coord_t,
-        Realm::AffineAccessor<T, N, Legion::coord_t>
-    > x_reader{x, x_fid};
+    AffineWriter<ENTRY_T, DIM, COORD_T> y_writer{y, y_fid};
+    AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
 
     const Legion::Domain y_domain = rt->get_index_space_domain(
         ctx, y_req.region.get_index_space()
@@ -100,13 +90,13 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
 
     assert(y_domain == x_domain);
 
-    for (Legion::RectInDomainIterator<N> it{y_domain}; it(); ++it) {
-        const Legion::Rect<N> rect = *it;
+    for (Legion::RectInDomainIterator<DIM, COORD_T> it{y_domain}; it(); ++it) {
+        const Legion::Rect<DIM, COORD_T> rect = *it;
         Kokkos::parallel_for(
-            KokkosRangeFactory<KokkosExecutionSpace, N>::create(
-                rect, ctx, rt
+            KokkosRangeFactory<KokkosExecutionSpace, DIM, COORD_T>::create(ctx, rt,
+                rect
             ),
-            KokkosAxpyFunctor<KokkosExecutionSpace, T, N>{
+            KokkosAxpyFunctor<KokkosExecutionSpace, ENTRY_T, DIM, COORD_T>{
                 y_writer.accessor, alpha, x_reader.accessor
             }
         );
@@ -114,9 +104,9 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
 }
 
 
-template <typename T, int N>
+template <typename ENTRY_T, int DIM, typename COORD_T>
 template <typename KokkosExecutionSpace>
-void LegionSolvers::XpayTask<T, N>::
+void LegionSolvers::XpayTask<ENTRY_T, DIM, COORD_T>::
 KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
@@ -141,17 +131,10 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
 
     assert(task->futures.size() == 1);
-    const T alpha = task->futures[0].get_result<T>();
+    const ENTRY_T alpha = task->futures[0].get_result<ENTRY_T>();
 
-    Legion::FieldAccessor<
-        LEGION_READ_WRITE, T, N, Legion::coord_t,
-        Realm::AffineAccessor<T, N, Legion::coord_t>
-    > y_writer{y, y_fid};
-
-    Legion::FieldAccessor<
-        LEGION_READ_ONLY, T, N, Legion::coord_t,
-        Realm::AffineAccessor<T, N, Legion::coord_t>
-    > x_reader{x, x_fid};
+    AffineWriter<ENTRY_T, DIM, COORD_T> y_writer{y, y_fid};
+    AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
 
     const Legion::Domain y_domain = rt->get_index_space_domain(
         ctx, y_req.region.get_index_space()
@@ -163,22 +146,22 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
 
     assert(y_domain == x_domain);
 
-    for (Legion::RectInDomainIterator<N> it{y_domain}; it(); ++it) {
-        const Legion::Rect<N> rect = *it;
+    for (Legion::RectInDomainIterator<DIM, COORD_T> it{y_domain}; it(); ++it) {
+        const Legion::Rect<DIM, COORD_T> rect = *it;
         Kokkos::parallel_for(
-            KokkosRangeFactory<KokkosExecutionSpace, N>::create(
-                rect, ctx, rt
+            KokkosRangeFactory<KokkosExecutionSpace, DIM, COORD_T>::create(ctx, rt,
+                rect
             ),
-            KokkosXpayFunctor<KokkosExecutionSpace, T, N>{
+            KokkosXpayFunctor<KokkosExecutionSpace, ENTRY_T, DIM, COORD_T>{
                 y_writer.accessor, alpha, x_reader.accessor
             }
         );
     }
 }
 
-template <typename T, int N>
+template <typename ENTRY_T, int DIM, typename COORD_T>
 template <typename KokkosExecutionSpace>
-T LegionSolvers::DotTask<T, N>::
+ENTRY_T LegionSolvers::DotTask<ENTRY_T, DIM, COORD_T>::
 KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     const Legion::Task *task,
     const std::vector<Legion::PhysicalRegion> &regions,
@@ -202,10 +185,7 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
     assert(w_req.privilege_fields.size() == 1);
     const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
 
-    Legion::FieldAccessor<
-        LEGION_READ_ONLY, T, N, Legion::coord_t,
-        Realm::AffineAccessor<T, N, Legion::coord_t>
-    > v_reader{v, v_fid}, w_reader{w, w_fid};
+    AffineReader<ENTRY_T, DIM, COORD_T> v_reader{v, v_fid}, w_reader{w, w_fid};
 
     const Legion::Domain v_domain = rt->get_index_space_domain(
         ctx, v_req.region.get_index_space()
@@ -217,15 +197,15 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
 
     assert(v_domain == w_domain);
 
-    T result = static_cast<T>(0);
-    for (Legion::RectInDomainIterator<N> it{v_domain}; it(); ++it) {
-        const Legion::Rect<N> rect = *it;
-        T temp = static_cast<T>(0);
+    ENTRY_T result = static_cast<ENTRY_T>(0);
+    for (Legion::RectInDomainIterator<DIM, COORD_T> it{v_domain}; it(); ++it) {
+        const Legion::Rect<DIM, COORD_T> rect = *it;
+        ENTRY_T temp = static_cast<ENTRY_T>(0);
         Kokkos::parallel_reduce(
-            KokkosRangeFactory<KokkosExecutionSpace, N>::create(
-                rect, ctx, rt
+            KokkosRangeFactory<KokkosExecutionSpace, DIM, COORD_T>::create(ctx, rt,
+                rect
             ),
-            KokkosDotFunctor<KokkosExecutionSpace, T, N>{
+            KokkosDotFunctor<KokkosExecutionSpace, ENTRY_T, DIM, COORD_T>{
                 v_reader.accessor, w_reader.accessor
             },
             temp
@@ -236,75 +216,222 @@ KokkosTaskTemplate<KokkosExecutionSpace>::task_body(
 }
 
 
-template void LegionSolvers::ScalTask<float, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<float, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::ScalTask<double, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<float, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::AxpyTask<double, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<float, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::XpayTask<double, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template float LegionSolvers::DotTask<float, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 1>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 1>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 1>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 2>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 2>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 2>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 3>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 3>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template double LegionSolvers::DotTask<double, 3>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::ScalTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+
+template void LegionSolvers::AxpyTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::AxpyTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+
+template void LegionSolvers::XpayTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::XpayTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+
+template float  LegionSolvers::DotTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template float  LegionSolvers::DotTask<float , 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 1, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 2, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, int      >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, unsigned >::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template double LegionSolvers::DotTask<double, 3, long long>::KokkosTaskTemplate<Kokkos::Cuda  >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);

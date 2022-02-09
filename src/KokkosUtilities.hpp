@@ -11,35 +11,36 @@
 namespace LegionSolvers {
 
 
-    template <typename KokkosExecutionSpace, typename T, int N>
+    template <typename KokkosExecutionSpace, typename ENTRY_T, int DIM>
     using KokkosConstOffsetView = Kokkos::Experimental::OffsetView<
-        typename NestedPointer<const T, N>::type,
+        typename NestedPointer<const ENTRY_T, DIM>::type,
         Kokkos::LayoutStride,
         typename KokkosExecutionSpace::memory_space
     >;
 
 
-    template <typename KokkosExecutionSpace, typename T, int N>
+    template <typename KokkosExecutionSpace, typename ENTRY_T, int DIM>
     using KokkosMutableOffsetView = Kokkos::Experimental::OffsetView<
-        typename NestedPointer<T, N>::type,
+        typename NestedPointer<ENTRY_T, DIM>::type,
         Kokkos::LayoutStride,
         typename KokkosExecutionSpace::memory_space
     >;
 
 
-    template <typename KokkosExecutionSpace, int N>
+    template <typename KokkosExecutionSpace, int DIM, typename COORD_T>
     struct KokkosRangeFactory {
 
         using ResultType = Kokkos::Experimental::MDRangePolicy<
-            Kokkos::Experimental::Rank<N>,
+            Kokkos::Experimental::Rank<DIM>,
+            Kokkos::IndexType<COORD_T>,
             KokkosExecutionSpace
         >;
 
-        static ResultType create(Legion::Rect<N> rect,
-                                 Legion::Context ctx, Legion::Runtime *rt) {
-            Kokkos::Array<typename ResultType::index_type, N>
+        static ResultType create(Legion::Context ctx, Legion::Runtime *rt,
+                                 Legion::Rect<DIM, COORD_T> rect) {
+            Kokkos::Array<typename ResultType::index_type, DIM>
             lower_bounds{}, upper_bounds{};
-            for (int i = 0; i < N; ++i) {
+            for (int i = 0; i < DIM; ++i) {
                 lower_bounds[i] = rect.lo[i];
                 upper_bounds[i] = rect.hi[i] + 1;
             }
@@ -52,13 +53,16 @@ namespace LegionSolvers {
     }; // struct KokkosRangeFactory
 
 
-    template <typename KokkosExecutionSpace>
-    struct KokkosRangeFactory<KokkosExecutionSpace, 1> {
+    template <typename KokkosExecutionSpace, typename COORD_T>
+    struct KokkosRangeFactory<KokkosExecutionSpace, 1, COORD_T> {
 
-        using ResultType = Kokkos::RangePolicy<KokkosExecutionSpace>;
+        using ResultType = Kokkos::RangePolicy<
+            Kokkos::IndexType<COORD_T>,
+            KokkosExecutionSpace
+        >;
 
-        static ResultType create(Legion::Rect<1> rect,
-                                 Legion::Context ctx, Legion::Runtime *rt) {
+        static ResultType create(Legion::Context ctx, Legion::Runtime *rt,
+                                 Legion::Rect<1, COORD_T> rect) {
             return ResultType{
                 rt->get_executing_processor(ctx).kokkos_work_space(),
                 static_cast<typename ResultType::index_type>(rect.lo.x),
@@ -66,7 +70,7 @@ namespace LegionSolvers {
             };
         }
 
-    }; // struct KokkosRangeFactory<KokkosExecutionSpace, 1>
+    }; // struct KokkosRangeFactory<KokkosExecutionSpace, 1, COORD_T>
 
 
 } // namespace LegionSolvers

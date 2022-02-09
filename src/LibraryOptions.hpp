@@ -33,12 +33,16 @@ namespace LegionSolvers {
     #endif
 
 
+    static_assert(LEGION_MAX_DIM >= 3,
+                  "LegionSolvers requires Legion to be compiled with the "
+                  "preprocessor macro LEGION_MAX_DIM set to 3 or higher");
     static_assert(LEGION_SOLVERS_MAX_DIM <= LEGION_MAX_DIM,
                   "Legion was not compiled with LEGION_MAX_DIM large enough "
                   "to support the specified value for LEGION_SOLVERS_MAX_DIM");
 
 
-    using LEGION_SOLVERS_SUPPORTED_TYPES = TypeList<float, double>;
+    using LEGION_SOLVERS_SUPPORTED_INDEX_TYPES = TypeList<int, unsigned, long long>;
+    using LEGION_SOLVERS_SUPPORTED_ENTRY_TYPES = TypeList<float, double>;
 
 
     #ifdef NDEBUG
