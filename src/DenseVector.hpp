@@ -25,6 +25,7 @@ namespace LegionSolvers {
 
     public:
 
+        DenseVector() = delete;
         DenseVector(DenseVector &&) = delete;
         DenseVector(const DenseVector &) = delete;
         DenseVector &operator=(DenseVector &&) = delete;
@@ -36,7 +37,7 @@ namespace LegionSolvers {
         ) : ctx(ctx), rt(rt),
             name(name),
             index_space(rt->create_index_space(ctx,
-                Legion::Rect<1>{0, n - 1}
+                Legion::Rect<1, Legion::coord_t>{0, n - 1}
             )),
             fid(0),
             field_space(LegionSolvers::create_field_space(ctx, rt,
@@ -60,7 +61,7 @@ namespace LegionSolvers {
         ) : ctx(ctx), rt(rt),
             name(name),
             index_space(rt->create_index_space(ctx,
-                Legion::Rect<2>{{0, 0}, {m - 1, n - 1}}
+                Legion::Rect<2, Legion::coord_t>{{0, 0}, {m - 1, n - 1}}
             )),
             fid(0),
             field_space(LegionSolvers::create_field_space(ctx, rt,
@@ -84,7 +85,10 @@ namespace LegionSolvers {
         ) : ctx(ctx), rt(rt),
             name(name),
             index_space(rt->create_index_space(ctx,
-                Legion::Rect<3>{{0, 0, 0}, {x - 1, y - 1, z - 1}}
+                Legion::Rect<3, Legion::coord_t>{
+                    {0, 0, 0},
+                    {x - 1, y - 1, z - 1}
+                }
             )),
             fid(0),
             field_space(LegionSolvers::create_field_space(ctx, rt,
@@ -128,6 +132,9 @@ namespace LegionSolvers {
             rt->destroy_index_space   (ctx, index_space   );
         }
 
+        Legion::Context       get_ctx           () const { return ctx           ; }
+        Legion::Runtime *     get_rt            () const { return rt            ; }
+        const std::string &   get_name          () const { return name          ; }
         Legion::IndexSpace    get_index_space   () const { return index_space   ; }
         Legion::FieldID       get_fid           () const { return fid           ; }
         Legion::FieldSpace    get_field_space   () const { return field_space   ; }

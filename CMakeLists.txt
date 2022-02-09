@@ -20,18 +20,18 @@ add_executable(Test01DenseVectorArithmetic
 
 target_link_libraries(Test01DenseVectorArithmetic Kokkos::kokkoscore Legion::Legion)
 
-# add_executable(Test02CGLaplacian1D
-#     src/COOMatrixTasks.cpp
-#     src/ExampleSystems.cpp
-#     src/LegionSolversMapper.cpp
-#     src/LegionUtilities.cpp
-#     src/LinearAlgebraTasks.cpp
-#     src/TaskRegistration.cpp
-#     src/Test02CGLaplacian1D.cpp
-#     src/UtilityTasks.cpp
-# )
+add_executable(Test02DenseDistributedVectorArithmetic
+    src/COOMatrixTasks.cpp
+    src/ExampleSystems.cpp
+    src/LegionSolversMapper.cpp
+    src/LegionUtilities.cpp
+    src/LinearAlgebraTasks.cpp
+    src/TaskRegistration.cpp
+    src/Test02DenseDistributedVectorArithmetic.cpp
+    src/UtilityTasks.cpp
+)
 
-# target_link_libraries(Test02CGLaplacian1D Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test02DenseDistributedVectorArithmetic Kokkos::kokkoscore Legion::Legion)
 
 add_executable(Test03COO1DPartitioning
     src/COOMatrixTasks.cpp
