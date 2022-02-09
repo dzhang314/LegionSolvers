@@ -7,18 +7,18 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-but-set-variable -Wno-u
 find_package(Legion REQUIRED)
 find_package(Kokkos REQUIRED)
 
-# add_executable(Test01VectorArithmetic
-#     src/COOMatrixTasks.cpp
-#     src/ExampleSystems.cpp
-#     src/LegionSolversMapper.cpp
-#     src/LegionUtilities.cpp
-#     src/LinearAlgebraTasks.cpp
-#     src/TaskRegistration.cpp
-#     src/Test01VectorArithmetic.cpp
-#     src/UtilityTasks.cpp
-# )
+add_executable(Test01DenseVectorArithmetic
+    src/COOMatrixTasks.cpp
+    src/ExampleSystems.cpp
+    src/LegionSolversMapper.cpp
+    src/LegionUtilities.cpp
+    src/LinearAlgebraTasks.cpp
+    src/TaskRegistration.cpp
+    src/Test01DenseVectorArithmetic.cpp
+    src/UtilityTasks.cpp
+)
 
-# target_link_libraries(Test01VectorArithmetic Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test01DenseVectorArithmetic Kokkos::kokkoscore Legion::Legion)
 
 # add_executable(Test02CGLaplacian1D
 #     src/COOMatrixTasks.cpp
@@ -71,16 +71,3 @@ target_link_libraries(Test04CSR1DPartitioning Kokkos::kokkoscore Legion::Legion)
 # )
 
 # target_link_libraries(Test05COO1DSolveCGExact Kokkos::kokkoscore Legion::Legion)
-
-add_executable(Test06VectorArithmetic
-    src/COOMatrixTasks.cpp
-    src/ExampleSystems.cpp
-    src/LegionSolversMapper.cpp
-    src/LegionUtilities.cpp
-    src/LinearAlgebraTasks.cpp
-    src/TaskRegistration.cpp
-    src/Test06VectorArithmetic.cpp
-    src/UtilityTasks.cpp
-)
-
-target_link_libraries(Test06VectorArithmetic Kokkos::kokkoscore Legion::Legion)
