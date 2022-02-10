@@ -6,7 +6,8 @@
 #include <legion.h>
 
 #include "COOMatrix.hpp"
-#include "DistributedVector.hpp"
+#include "COOMatrixTasks.hpp"
+#include "DenseDistributedVector.hpp"
 #include "ExampleSystems.hpp"
 #include "LegionUtilities.hpp"
 #include "LibraryOptions.hpp"
@@ -39,9 +40,6 @@ void top_level_task(const Legion::Task *,
     using VECTOR_COLOR_COORD_T = Legion::coord_t; // TODO: vary this!
     using VectorColorRect = Legion::Rect<VECTOR_COLOR_DIM,
                                          VECTOR_COLOR_COORD_T>;
-    using DistributedVector = LegionSolvers::DistributedVectorT<
-        ENTRY_T, VECTOR_DIM, VECTOR_COLOR_DIM,
-        VECTOR_COORD_T, VECTOR_COLOR_COORD_T>;
 
     VECTOR_COORD_T grid_size = 100;
     VECTOR_COLOR_COORD_T num_vector_pieces = 4;
@@ -121,15 +119,15 @@ void top_level_task(const Legion::Task *,
                 vector_index_space, matrix_partition);
 
         {
-            DistributedVector rhs{"rhs", disjoint_vector_partition, ctx, rt};
-            DistributedVector sol{"sol", disjoint_vector_partition, ctx, rt};
+            LegionSolvers::DenseDistributedVector<ENTRY_T> rhs{ctx, rt, "rhs", disjoint_vector_partition};
+            LegionSolvers::DenseDistributedVector<ENTRY_T> sol{ctx, rt, "sol", disjoint_vector_partition};
 
             rhs.constant_fill(1.0);
             sol.zero_fill();
 
-            DistributedVector P{"P", disjoint_vector_partition, ctx, rt};
-            DistributedVector Q{"Q", disjoint_vector_partition, ctx, rt};
-            DistributedVector R{"R", disjoint_vector_partition, ctx, rt};
+            LegionSolvers::DenseDistributedVector<ENTRY_T> P{ctx, rt, "P", disjoint_vector_partition};
+            LegionSolvers::DenseDistributedVector<ENTRY_T> Q{ctx, rt, "Q", disjoint_vector_partition};
+            LegionSolvers::DenseDistributedVector<ENTRY_T> R{ctx, rt, "R", disjoint_vector_partition};
 
             P = rhs;
             R = rhs;
@@ -138,7 +136,10 @@ void top_level_task(const Legion::Task *,
 
             residual_norm_squared.push_back(R.dot(R));
 
-            for (int i = 0; i < 20; ++i) {
+            const auto P_ghost = rt->get_logical_partition(
+                P.get_logical_region(), ghost_vector_partition);
+
+            for (std::size_t i = 0; i < num_iterations; ++i) {
                 rt->begin_trace(ctx, 51);
                 Q.zero_fill();
                 {
@@ -152,11 +153,11 @@ void top_level_task(const Legion::Task *,
                     launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
 
                     launcher.add_region_requirement(Legion::RegionRequirement{
-                        Q.logical_partition, 0,
+                        Q.get_logical_partition(), 0,
                         LegionSolvers::LEGION_REDOP_SUM<ENTRY_T>,
-                        LEGION_SIMULTANEOUS, Q.logical_region
+                        LEGION_SIMULTANEOUS, Q.get_logical_region()
                     });
-                    launcher.add_field(0, Q.fid);
+                    launcher.add_field(0, Q.get_fid());
 
                     launcher.add_region_requirement(Legion::RegionRequirement{
                         matrix_logical_partition, 0,
@@ -167,10 +168,10 @@ void top_level_task(const Legion::Task *,
                     launcher.add_field(1, FID_ENTRY);
 
                     launcher.add_region_requirement(Legion::RegionRequirement{
-                        rt->get_logical_partition(P.logical_region, ghost_vector_partition), 0,
-                        LEGION_READ_ONLY, LEGION_EXCLUSIVE, P.logical_region
+                        P_ghost, 0,
+                        LEGION_READ_ONLY, LEGION_EXCLUSIVE, P.get_logical_region()
                     });
-                    launcher.add_field(2, P.fid);
+                    launcher.add_field(2, P.get_fid());
 
                     rt->execute_index_space(ctx, launcher);
                 }
@@ -186,7 +187,7 @@ void top_level_task(const Legion::Task *,
             }
 
             Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
-            for (std::size_t i = 0; i <= 20; ++i) {
+            for (std::size_t i = 0; i <= num_iterations; ++i) {
                 dummy = residual_norm_squared[i].print(dummy);
             }
 

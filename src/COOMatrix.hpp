@@ -4,6 +4,7 @@
 #include <legion.h>
 
 #include "AbstractMatrix.hpp"
+#include "LibraryOptions.hpp"
 
 
 namespace LegionSolvers {
@@ -57,7 +58,10 @@ namespace LegionSolvers {
                 kernel_region,
                 kernel_region,
                 fid_j,
-                rt->get_index_partition_color_space_name(domain_partition)
+                rt->get_index_partition_color_space_name(domain_partition),
+                LEGION_COMPUTE_KIND,
+                LEGION_AUTO_GENERATE_ID,
+                LEGION_SOLVERS_MAPPER_ID
             );
         }
 
@@ -69,7 +73,10 @@ namespace LegionSolvers {
                 kernel_region,
                 kernel_region,
                 fid_i,
-                rt->get_index_partition_color_space_name(range_partition)
+                rt->get_index_partition_color_space_name(range_partition),
+                LEGION_COMPUTE_KIND,
+                LEGION_AUTO_GENERATE_ID,
+                LEGION_SOLVERS_MAPPER_ID
             );
         }
 
@@ -82,7 +89,10 @@ namespace LegionSolvers {
                 rt->get_logical_partition(kernel_region, kernel_partition),
                 kernel_region,
                 fid_j,
-                rt->get_index_partition_color_space_name(kernel_partition)
+                rt->get_index_partition_color_space_name(kernel_partition),
+                LEGION_COMPUTE_KIND,
+                LEGION_AUTO_GENERATE_ID,
+                LEGION_SOLVERS_MAPPER_ID
             );
         }
 
@@ -95,7 +105,10 @@ namespace LegionSolvers {
                 rt->get_logical_partition(kernel_region, kernel_partition),
                 kernel_region,
                 fid_i,
-                rt->get_index_partition_color_space_name(kernel_partition)
+                rt->get_index_partition_color_space_name(kernel_partition),
+                LEGION_COMPUTE_KIND,
+                LEGION_AUTO_GENERATE_ID,
+                LEGION_SOLVERS_MAPPER_ID
             );
         }
 
