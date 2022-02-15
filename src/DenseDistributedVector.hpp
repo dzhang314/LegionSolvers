@@ -224,6 +224,64 @@ namespace LegionSolvers {
             axpy(Scalar<ENTRY_T>{ctx, rt, alpha}, x);
         }
 
+        void axpy(
+            const Scalar<ENTRY_T> &numer,
+            const Scalar<ENTRY_T> &denom,
+            const DenseDistributedVector &x
+        ) {
+            assert(index_space     == x.get_index_space    ());
+            assert(color_space     == x.get_color_space    ());
+            assert(index_partition == x.get_index_partition());
+            Legion::IndexTaskLauncher launcher{
+                AxpyTask<ENTRY_T, 0, void>::task_id(index_space), color_space,
+                Legion::UntypedBuffer{}, Legion::ArgumentMap{}
+            };
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                logical_partition, 0,
+                LEGION_READ_WRITE, LEGION_EXCLUSIVE, logical_region
+            });
+            launcher.add_field(0, fid);
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                x.get_logical_partition(), 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, x.get_logical_region()
+            });
+            launcher.add_field(1, x.get_fid());
+            launcher.add_future(numer.get_future());
+            launcher.add_future(denom.get_future());
+            rt->execute_index_space(ctx, launcher);
+        }
+
+        void axpy(
+            const Scalar<ENTRY_T> &numer0,
+            const Scalar<ENTRY_T> &numer1,
+            const Scalar<ENTRY_T> &denom,
+            const DenseDistributedVector &x
+        ) {
+            assert(index_space     == x.get_index_space    ());
+            assert(color_space     == x.get_color_space    ());
+            assert(index_partition == x.get_index_partition());
+            Legion::IndexTaskLauncher launcher{
+                AxpyTask<ENTRY_T, 0, void>::task_id(index_space), color_space,
+                Legion::UntypedBuffer{}, Legion::ArgumentMap{}
+            };
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                logical_partition, 0,
+                LEGION_READ_WRITE, LEGION_EXCLUSIVE, logical_region
+            });
+            launcher.add_field(0, fid);
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                x.get_logical_partition(), 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, x.get_logical_region()
+            });
+            launcher.add_field(1, x.get_fid());
+            launcher.add_future(numer0.get_future());
+            launcher.add_future(numer1.get_future());
+            launcher.add_future(denom.get_future());
+            rt->execute_index_space(ctx, launcher);
+        }
+
         void xpay(
             const Scalar<ENTRY_T> &alpha,
             const DenseDistributedVector &x
@@ -247,6 +305,34 @@ namespace LegionSolvers {
             });
             launcher.add_field(1, x.get_fid());
             launcher.add_future(alpha.get_future());
+            rt->execute_index_space(ctx, launcher);
+        }
+
+        void xpay(
+            const Scalar<ENTRY_T> &numer,
+            const Scalar<ENTRY_T> &denom,
+            const DenseDistributedVector &x
+        ) {
+            assert(index_space     == x.get_index_space    ());
+            assert(color_space     == x.get_color_space    ());
+            assert(index_partition == x.get_index_partition());
+            Legion::IndexTaskLauncher launcher{
+                XpayTask<ENTRY_T, 0, void>::task_id(index_space), color_space,
+                Legion::UntypedBuffer{}, Legion::ArgumentMap{}
+            };
+            launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                logical_partition, 0,
+                LEGION_READ_WRITE, LEGION_EXCLUSIVE, logical_region
+            });
+            launcher.add_field(0, fid);
+            launcher.add_region_requirement(Legion::RegionRequirement{
+                x.get_logical_partition(), 0,
+                LEGION_READ_ONLY, LEGION_EXCLUSIVE, x.get_logical_region()
+            });
+            launcher.add_field(1, x.get_fid());
+            launcher.add_future(numer.get_future());
+            launcher.add_future(denom.get_future());
             rt->execute_index_space(ctx, launcher);
         }
 
