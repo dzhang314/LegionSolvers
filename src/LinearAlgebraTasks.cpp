@@ -28,6 +28,7 @@ inline ENTRY_T get_alpha(const std::vector<Legion::Future> &futures) {
         return f0 * f1 / (f2 * f3);
     } else {
         assert(false);
+        return static_cast<ENTRY_T>(1);
     }
 }
 
