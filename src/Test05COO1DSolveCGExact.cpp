@@ -11,6 +11,7 @@
 #include "ExampleSystems.hpp"
 #include "LegionUtilities.hpp"
 #include "LibraryOptions.hpp"
+#include "SquarePlanner.hpp"
 #include "TaskRegistration.hpp"
 
 
@@ -107,82 +108,45 @@ void top_level_task(const Legion::Task *,
         LegionSolvers::COOMatrix<ENTRY_T> coo_matrix{
             ctx, rt, matrix_region, FID_I, FID_J, FID_ENTRY};
 
-        const auto matrix_partition =
-            coo_matrix.kernel_partition_from_range_partition(
-                disjoint_vector_partition);
-
-        const auto matrix_logical_partition = rt->get_logical_partition(
-            matrix_region, matrix_partition);
-
-        const auto ghost_vector_partition =
-            coo_matrix.domain_partition_from_kernel_partition(
-                vector_index_space, matrix_partition);
-
         {
-            LegionSolvers::DenseDistributedVector<ENTRY_T> rhs{ctx, rt, "rhs", disjoint_vector_partition};
-            LegionSolvers::DenseDistributedVector<ENTRY_T> sol{ctx, rt, "sol", disjoint_vector_partition};
+            LegionSolvers::DenseDistributedVector<ENTRY_T> rhs{
+                ctx, rt, "rhs", disjoint_vector_partition
+            };
+            LegionSolvers::DenseDistributedVector<ENTRY_T> sol{
+                ctx, rt, "sol", disjoint_vector_partition
+            };
 
             rhs.constant_fill(1.0);
             sol.zero_fill();
 
-            LegionSolvers::DenseDistributedVector<ENTRY_T> P{ctx, rt, "P", disjoint_vector_partition};
-            LegionSolvers::DenseDistributedVector<ENTRY_T> Q{ctx, rt, "Q", disjoint_vector_partition};
-            LegionSolvers::DenseDistributedVector<ENTRY_T> R{ctx, rt, "R", disjoint_vector_partition};
+            LegionSolvers::SquarePlanner<ENTRY_T> planner{ctx, rt};
+            planner.add_sol_vector(sol);
+            planner.add_rhs_vector(rhs);
+            planner.add_row_partitioned_matrix(coo_matrix, 0, 0);
 
-            P = rhs;
-            R = rhs;
+            planner.allocate_workspace(3);
+            const std::size_t SOL = 0;
+            const std::size_t RHS = 1;
+            const std::size_t P = 2;
+            const std::size_t Q = 3;
+            const std::size_t R = 4;
+
+            planner.copy(P, RHS);
+            planner.copy(R, RHS);
 
             std::vector<LegionSolvers::Scalar<ENTRY_T>> residual_norm_squared;
-
-            residual_norm_squared.push_back(R.dot(R));
-
-            const auto P_ghost = rt->get_logical_partition(
-                P.get_logical_region(), ghost_vector_partition);
+            residual_norm_squared.push_back(planner.dot(R, R));
 
             for (std::size_t i = 0; i < num_iterations; ++i) {
                 rt->begin_trace(ctx, 51);
-                Q.zero_fill();
-                {
-                    const Legion::FieldID fids[3] = {FID_I, FID_J, FID_ENTRY};
-                    Legion::IndexLauncher launcher{
-                        LegionSolvers::COOMatvecTask<ENTRY_T, 1, 1, 1>::task_id,
-                        vector_color_space,
-                        Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
-                        Legion::ArgumentMap{}
-                    };
-                    launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
-
-                    launcher.add_region_requirement(Legion::RegionRequirement{
-                        Q.get_logical_partition(), 0,
-                        LegionSolvers::LEGION_REDOP_SUM<ENTRY_T>,
-                        LEGION_SIMULTANEOUS, Q.get_logical_region()
-                    });
-                    launcher.add_field(0, Q.get_fid());
-
-                    launcher.add_region_requirement(Legion::RegionRequirement{
-                        matrix_logical_partition, 0,
-                        LEGION_READ_ONLY, LEGION_EXCLUSIVE, matrix_region
-                    });
-                    launcher.add_field(1, FID_I);
-                    launcher.add_field(1, FID_J);
-                    launcher.add_field(1, FID_ENTRY);
-
-                    launcher.add_region_requirement(Legion::RegionRequirement{
-                        P_ghost, 0,
-                        LEGION_READ_ONLY, LEGION_EXCLUSIVE, P.get_logical_region()
-                    });
-                    launcher.add_field(2, P.get_fid());
-
-                    rt->execute_index_space(ctx, launcher);
-                }
-                LegionSolvers::Scalar<ENTRY_T> p_norm = P.dot(Q);
-                LegionSolvers::Scalar<ENTRY_T> alpha = residual_norm_squared.back() / p_norm;
-                sol.axpy(alpha, P);
-                R.axpy(-alpha, Q);
-                LegionSolvers::Scalar<ENTRY_T> r_norm2_new = R.dot(R);
-                LegionSolvers::Scalar<ENTRY_T> beta = r_norm2_new / residual_norm_squared.back();
+                planner.matvec(FID_I, FID_J, FID_ENTRY, Q, P);
+                LegionSolvers::Scalar<ENTRY_T> p_norm = planner.dot(P, Q);
+                LegionSolvers::Scalar<ENTRY_T> r_norm2_old = residual_norm_squared.back();
+                planner.axpy(SOL, r_norm2_old, p_norm, P);
+                planner.axpy(R, -r_norm2_old / p_norm, Q);
+                LegionSolvers::Scalar<ENTRY_T> r_norm2_new = planner.dot(R, R);
                 residual_norm_squared.push_back(r_norm2_new);
-                P.xpay(beta, R);
+                planner.xpay(P, r_norm2_new, r_norm2_old, R);
                 rt->end_trace(ctx, 51);
             }
 
@@ -193,8 +157,6 @@ void top_level_task(const Legion::Task *,
 
         }
 
-        rt->destroy_index_partition(ctx, ghost_vector_partition);
-        rt->destroy_index_partition(ctx, matrix_partition);
         rt->destroy_index_partition(ctx, disjoint_vector_partition);
         rt->destroy_index_partition(ctx, temp_matrix_partition);
         rt->destroy_logical_region(ctx, matrix_region);

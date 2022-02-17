@@ -31,7 +31,6 @@ namespace LegionSolvers {
 
         DenseDistributedVector() = delete;
         DenseDistributedVector(DenseDistributedVector &&) = delete;
-        DenseDistributedVector(const DenseDistributedVector &) = delete;
         DenseDistributedVector &operator=(DenseDistributedVector &&) = delete;
 
         explicit DenseDistributedVector(
@@ -95,6 +94,51 @@ namespace LegionSolvers {
             rt->attach_name(field_space      , field_space_name      .c_str());
             rt->attach_name(logical_region   , logical_region_name   .c_str());
             rt->attach_name(logical_partition, logical_partition_name.c_str());
+        }
+
+        explicit DenseDistributedVector(
+            Legion::Context ctx, Legion::Runtime *rt,
+            const std::string &name,
+            Legion::LogicalPartition logical_partition,
+            Legion::FieldID fid
+        ) : ctx(ctx), rt(rt),
+            name(name),
+            index_space(rt->get_parent_index_space(
+                logical_partition.get_index_partition()
+            )),
+            fid(fid),
+            field_space(logical_partition.get_field_space()),
+            logical_region(rt->get_parent_logical_region(logical_partition)),
+            color_space(rt->get_index_partition_color_space_name(
+                logical_partition.get_index_partition()
+            )),
+            index_partition(logical_partition.get_index_partition()),
+            logical_partition(logical_partition) {
+            assert(rt->is_index_partition_disjoint(index_partition));
+            assert(rt->is_index_partition_complete(index_partition));
+            rt->create_shared_ownership(ctx, index_space    );
+            rt->create_shared_ownership(ctx, field_space    );
+            rt->create_shared_ownership(ctx, logical_region );
+            rt->create_shared_ownership(ctx, color_space    );
+            rt->create_shared_ownership(ctx, index_partition);
+        }
+
+        DenseDistributedVector(
+            const DenseDistributedVector &v
+        ) : ctx(v.ctx), rt(v.rt),
+            name(v.name),
+            index_space(v.index_space),
+            fid(v.fid),
+            field_space(v.field_space),
+            logical_region(v.logical_region),
+            color_space(v.color_space),
+            index_partition(v.index_partition),
+            logical_partition(v.logical_partition) {
+            rt->create_shared_ownership(ctx, index_space    );
+            rt->create_shared_ownership(ctx, field_space    );
+            rt->create_shared_ownership(ctx, logical_region );
+            rt->create_shared_ownership(ctx, color_space    );
+            rt->create_shared_ownership(ctx, index_partition);
         }
 
         ~DenseDistributedVector() {
@@ -253,8 +297,8 @@ namespace LegionSolvers {
         }
 
         void axpy(
-            const Scalar<ENTRY_T> &numer0,
             const Scalar<ENTRY_T> &numer1,
+            const Scalar<ENTRY_T> &numer2,
             const Scalar<ENTRY_T> &denom,
             const DenseDistributedVector &x
         ) {
@@ -276,8 +320,8 @@ namespace LegionSolvers {
                 LEGION_READ_ONLY, LEGION_EXCLUSIVE, x.get_logical_region()
             });
             launcher.add_field(1, x.get_fid());
-            launcher.add_future(numer0.get_future());
             launcher.add_future(numer1.get_future());
+            launcher.add_future(numer2.get_future());
             launcher.add_future(denom.get_future());
             rt->execute_index_space(ctx, launcher);
         }
