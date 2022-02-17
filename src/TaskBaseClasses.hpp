@@ -20,7 +20,7 @@ namespace LegionSolvers {
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<float      >() { return "float"         ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<double     >() { return "double"        ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<long double>() { return "longdouble"    ; }
-    template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__float128 >() { return "float128"      ; }
+    // template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<__float128 >() { return "float128"      ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<int        >() { return "int"           ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<unsigned   >() { return "unsigned"      ; }
     template <> constexpr const char *LEGION_SOLVERS_TYPE_NAME<long long  >() { return "longlong"      ; }
