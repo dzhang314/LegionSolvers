@@ -107,6 +107,15 @@ namespace LegionSolvers {
             );
         }
 
+        virtual void matvec_exclusive(
+            DenseDistributedVector<ENTRY_T> &dst_vector,
+            const DenseDistributedVector<ENTRY_T> &src_vector,
+            Legion::LogicalPartition kernel_partition,
+            Legion::IndexPartition ghost_partition
+        ) const override {
+            // TODO
+        }
+
     }; // class CSCMatrix
 
 
