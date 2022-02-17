@@ -397,6 +397,23 @@ namespace LegionSolvers {
     }; // struct TaskTDDD
 
 
+    template <Legion::TaskID BLOCK_ID,
+              template <typename, int, int, int> typename TaskClass,
+              typename T>
+    struct TaskTDDD<BLOCK_ID, TaskClass, T, 0, 0, 0> {
+
+        static constexpr Legion::TaskID task_id(int N1, int N2, int N3) {
+            return (LEGION_SOLVERS_TASK_ID_ORIGIN +
+                    LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+                    LEGION_SOLVERS_MAX_DIM_2 * LEGION_SOLVERS_NUM_ENTRY_TYPES * (N1 - 1) +
+                    LEGION_SOLVERS_MAX_DIM_1 * LEGION_SOLVERS_NUM_ENTRY_TYPES * (N2 - 1) +
+                    LEGION_SOLVERS_MAX_DIM_0 * LEGION_SOLVERS_NUM_ENTRY_TYPES * (N3 - 1) +
+                    LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>);
+        }
+
+    }; // struct TaskTDDD
+
+
 } // namespace LegionSolvers
 
 

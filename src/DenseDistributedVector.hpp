@@ -149,16 +149,17 @@ namespace LegionSolvers {
             rt->destroy_index_space    (ctx, index_space    );
         }
 
-        Legion::Context          get_ctx              () const { return ctx              ; }
-        Legion::Runtime *        get_rt               () const { return rt               ; }
-        const std::string &      get_name             () const { return name             ; }
-        Legion::IndexSpace       get_index_space      () const { return index_space      ; }
-        Legion::FieldID          get_fid              () const { return fid              ; }
-        Legion::FieldSpace       get_field_space      () const { return field_space      ; }
-        Legion::LogicalRegion    get_logical_region   () const { return logical_region   ; }
-        Legion::IndexSpace       get_color_space      () const { return color_space      ; }
-        Legion::IndexPartition   get_index_partition  () const { return index_partition  ; }
-        Legion::LogicalPartition get_logical_partition() const { return logical_partition; }
+        Legion::Context          get_ctx              () const { return ctx                  ; }
+        Legion::Runtime *        get_rt               () const { return rt                   ; }
+        const std::string &      get_name             () const { return name                 ; }
+        Legion::IndexSpace       get_index_space      () const { return index_space          ; }
+        int                      get_dim              () const { return index_space.get_dim(); }
+        Legion::FieldID          get_fid              () const { return fid                  ; }
+        Legion::FieldSpace       get_field_space      () const { return field_space          ; }
+        Legion::LogicalRegion    get_logical_region   () const { return logical_region       ; }
+        Legion::IndexSpace       get_color_space      () const { return color_space          ; }
+        Legion::IndexPartition   get_index_partition  () const { return index_partition      ; }
+        Legion::LogicalPartition get_logical_partition() const { return logical_partition    ; }
 
         void constant_fill(ENTRY_T value) {
             Legion::IndexFillLauncher launcher{

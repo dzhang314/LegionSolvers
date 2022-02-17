@@ -6,6 +6,7 @@
 #include <legion.h>
 
 #include "AbstractLinearOperator.hpp"
+#include "DenseDistributedVector.hpp"
 
 
 namespace LegionSolvers {
@@ -39,6 +40,13 @@ namespace LegionSolvers {
         virtual Legion::IndexPartition range_partition_from_kernel_partition(
             Legion::IndexSpace range_space,
             Legion::IndexPartition kernel_partition
+        ) const = 0;
+
+        virtual void matvec_exclusive(
+            DenseDistributedVector<ENTRY_T> &dst_vector,
+            const DenseDistributedVector<ENTRY_T> &src_vector,
+            Legion::LogicalPartition kernel_partition,
+            Legion::IndexPartition ghost_partition
         ) const = 0;
 
         virtual Legion::IndexPartition domain_partition_from_range_partition(

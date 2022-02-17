@@ -80,6 +80,9 @@ namespace LegionSolvers {
             }
         }
 
+        Legion::Context get_context() const { return ctx; }
+        Legion::Runtime *get_runtime() const { return rt; }
+
         std::size_t add_sol_vector(const DenseDistributedVector<ENTRY_T> &v) {
             assert(workspace_fields == Legion::FieldSpace::NO_SPACE);
             assert(workspace_regions.empty());
@@ -278,6 +281,21 @@ namespace LegionSolvers {
             }
         }
 
+        void axpy(
+            std::size_t dst_index,
+            Scalar<ENTRY_T> numer1,
+            Scalar<ENTRY_T> numer2,
+            Scalar<ENTRY_T> denom,
+            std::size_t src_index
+        ) {
+            const std::size_t num_spaces = get_num_spaces();
+            for (std::size_t i = 0; i < num_spaces; ++i) {
+                get_vector(dst_index, i).axpy(
+                    numer1, numer2, denom, get_vector(src_index, i)
+                );
+            }
+        }
+
         void xpay(
             std::size_t dst_index,
             Scalar<ENTRY_T> alpha,
@@ -318,64 +336,21 @@ namespace LegionSolvers {
         }
 
         void matvec(
-            Legion::FieldID FID_I,
-            Legion::FieldID FID_J,
-            Legion::FieldID FID_ENTRY,
             std::size_t dst_idx,
             std::size_t src_idx
         ) {
-
             zero_fill(dst_idx);
-
             // TODO: count range index; request reduction privileges if > 1
-
             for (const auto &[
                 matrix, domain_index, range_index, kernel_index_partition,
                 kernel_logical_partition, ghost_partition
             ] : row_partitioned_matrices) {
-
-                DenseDistributedVector<ENTRY_T> &dst_vector =
-                    get_vector(dst_idx, range_index);
-                DenseDistributedVector<ENTRY_T> &src_vector =
-                    get_vector(src_idx, domain_index);
-                const Legion::FieldID fids[3] = {FID_I, FID_J, FID_ENTRY}; // TODO
-
-                Legion::IndexLauncher launcher{
-                    LegionSolvers::COOMatvecTask<ENTRY_T, 1, 1, 1>::task_id, // TODO: dim?
-                    rt->get_index_partition_color_space_name(
-                        canonical_index_partitions[range_index]
-                    ),
-                    Legion::TaskArgument{&fids, sizeof(Legion::FieldID[3])},
-                    Legion::ArgumentMap{}
-                };
-                launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
-
-                launcher.add_region_requirement(Legion::RegionRequirement{
-                    dst_vector.get_logical_partition(),
-                    0, LEGION_READ_WRITE, LEGION_EXCLUSIVE,
-                    dst_vector.get_logical_region()
-                });
-                launcher.add_field(0, dst_vector.get_fid());
-
-                launcher.add_region_requirement(Legion::RegionRequirement{
+                matrix->matvec_exclusive(
+                    get_vector(dst_idx, range_index),
+                    get_vector(src_idx, domain_index),
                     kernel_logical_partition,
-                    0, LEGION_READ_ONLY, LEGION_EXCLUSIVE,
-                    matrix->get_kernel_region()
-                });
-                launcher.add_field(1, FID_I);
-                launcher.add_field(1, FID_J);
-                launcher.add_field(1, FID_ENTRY);
-
-                launcher.add_region_requirement(Legion::RegionRequirement{
-                    rt->get_logical_partition(
-                        src_vector.get_logical_region(), ghost_partition
-                    ),
-                    0, LEGION_READ_ONLY, LEGION_EXCLUSIVE,
-                    src_vector.get_logical_region()
-                });
-                launcher.add_field(2, src_vector.get_fid());
-
-                rt->execute_index_space(ctx, launcher);
+                    ghost_partition
+                );
             }
         }
 

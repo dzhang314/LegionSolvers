@@ -5,8 +5,8 @@
 #include <realm/cmdline.h>
 #include <legion.h>
 
+#include "CGSolver.hpp"
 #include "COOMatrix.hpp"
-#include "COOMatrixTasks.hpp"
 #include "DenseDistributedVector.hpp"
 #include "ExampleSystems.hpp"
 #include "LegionUtilities.hpp"
@@ -124,35 +124,17 @@ void top_level_task(const Legion::Task *,
             planner.add_rhs_vector(rhs);
             planner.add_row_partitioned_matrix(coo_matrix, 0, 0);
 
-            planner.allocate_workspace(3);
-            const std::size_t SOL = 0;
-            const std::size_t RHS = 1;
-            const std::size_t P = 2;
-            const std::size_t Q = 3;
-            const std::size_t R = 4;
-
-            planner.copy(P, RHS);
-            planner.copy(R, RHS);
-
-            std::vector<LegionSolvers::Scalar<ENTRY_T>> residual_norm_squared;
-            residual_norm_squared.push_back(planner.dot(R, R));
+            LegionSolvers::CGSolver<ENTRY_T> solver{planner};
 
             for (std::size_t i = 0; i < num_iterations; ++i) {
                 rt->begin_trace(ctx, 51);
-                planner.matvec(FID_I, FID_J, FID_ENTRY, Q, P);
-                LegionSolvers::Scalar<ENTRY_T> p_norm = planner.dot(P, Q);
-                LegionSolvers::Scalar<ENTRY_T> r_norm2_old = residual_norm_squared.back();
-                planner.axpy(SOL, r_norm2_old, p_norm, P);
-                planner.axpy(R, -r_norm2_old / p_norm, Q);
-                LegionSolvers::Scalar<ENTRY_T> r_norm2_new = planner.dot(R, R);
-                residual_norm_squared.push_back(r_norm2_new);
-                planner.xpay(P, r_norm2_new, r_norm2_old, R);
+                solver.step();
                 rt->end_trace(ctx, 51);
             }
 
             Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
             for (std::size_t i = 0; i <= num_iterations; ++i) {
-                dummy = residual_norm_squared[i].print(dummy);
+                dummy = solver.residual_norm_squared[i].print(dummy);
             }
 
         }
