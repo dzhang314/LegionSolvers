@@ -45,12 +45,14 @@ void top_level_task(const Legion::Task *,
     VECTOR_COORD_T grid_size = 100;
     VECTOR_COLOR_COORD_T num_vector_pieces = 4;
     std::size_t num_iterations = 10;
+    bool no_print_results = false;
 
     const Legion::InputArgs &args = Legion::Runtime::get_input_args();
     bool ok = Realm::CommandLineParser()
         .add_option_int("-n", grid_size)
         .add_option_int("-vp", num_vector_pieces)
         .add_option_int("-it", num_iterations)
+        .add_option_bool("-np", no_print_results)
         .parse_command_line(args.argc, (const char **) args.argv);
     assert(ok);
 
@@ -132,9 +134,11 @@ void top_level_task(const Legion::Task *,
                 rt->end_trace(ctx, 51);
             }
 
-            Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
-            for (std::size_t i = 0; i <= num_iterations; ++i) {
-                dummy = solver.residual_norm_squared[i].print(dummy);
+            if (!no_print_results) {
+                Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
+                for (std::size_t i = 0; i <= num_iterations; ++i) {
+                    dummy = solver.residual_norm_squared[i].print(dummy);
+                }
             }
 
         }

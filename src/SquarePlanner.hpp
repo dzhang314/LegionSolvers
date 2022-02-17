@@ -44,6 +44,13 @@ namespace LegionSolvers {
             Legion::IndexPartition // ghost index partition
         >> row_partitioned_matrices;
 
+        std::vector<std::tuple<
+            const AbstractMatrix<ENTRY_T> *,
+            std::size_t, // domain index
+            std::size_t, // range index
+            Legion::IndexSpace // sparse index launch domain
+        >> tile_partitioned_matrices;
+
     public:
 
         explicit SquarePlanner(
@@ -56,7 +63,8 @@ namespace LegionSolvers {
             sol_vectors(),
             rhs_vectors(),
             workspace_vectors(),
-            row_partitioned_matrices() {}
+            row_partitioned_matrices(),
+            tile_partitioned_matrices() {}
 
         ~SquarePlanner() {
             for (const auto &[
@@ -360,16 +368,6 @@ namespace LegionSolvers {
             // for each operator: index subspace of V x V of nonempty tiles
             // subregion of each vector piece
         // mode 3: overapproximated launch K x V x V
-
-        // axpy to sol
-        // axpy from sol
-        // xpay to sol
-        // xpay from sol
-
-        // add coo matrix
-        // add csr matrix
-        // add csc matrix
-
 
     }; // class SquarePlanner
 

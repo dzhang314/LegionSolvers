@@ -114,10 +114,8 @@ void LegionSolvers::mapper_registration_callback(
     for (const Legion::Processor &proc : local_procs) {
         rt->add_mapper(
             LEGION_SOLVERS_MAPPER_ID,
-            new Legion::Mapping::LoggingWrapper(
-                new LegionSolversMapper(
-                    rt->get_mapper_runtime(), machine, proc
-                )
+            new LegionSolversMapper(
+                rt->get_mapper_runtime(), machine, proc
             ),
             proc
         );
