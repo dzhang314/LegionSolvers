@@ -20,8 +20,6 @@ def main():
                 remove_directory(build_name)
                 cmake(build_name, {
                     "CMAKE_BUILD_TYPE": build_type,
-                    "CMAKE_C_COMPILER": "gcc",
-                    "CMAKE_CXX_COMPILER": "g++",
                     "GASNet_INCLUDE_DIR": GASNET_DIR,
                     "Kokkos_DIR": KOKKOS_DIR,
                     "Legion_DIR": os.path.join(LIB_PREFIX, lib_name, "share", "Legion", "cmake"),
