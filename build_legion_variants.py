@@ -78,12 +78,14 @@ def main():
                         "KOKKOS_CXX_COMPILER": KOKKOS_CXX_COMPILER,
                         "Legion_USE_OpenMP": True,
                         "Legion_USE_CUDA": True,
-                        # "Legion_USE_GASNet": True,
                         "Legion_USE_Kokkos": True,
-                        # "Legion_MAX_DIM": 3,
-                        # "Legion_MAX_FIELDS": 1024,
+                        "Legion_MAX_NUM_NODES": 2048,
+                        "Legion_MAX_NUM_PROCS": 256,
                         network_key: network_val,
                     }
+                    if MACHINE in {Machines.SAPLING, Machines.LASSEN}:
+                        defines["CMAKE_C_COMPILER"] = "gcc"
+                        defines["CMAKE_CXX_COMPILER"] = "g++"
                     cmake(join("build", dir_name, network_tag, build_type.lower()), defines)
 
 

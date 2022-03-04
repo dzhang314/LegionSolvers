@@ -18,12 +18,16 @@ def main():
                 build_name = join("build", dir_name, network_tag, build_type.lower())
                 lib_name = join("legion", dir_name, network_tag, build_type.lower())
                 remove_directory(build_name)
-                cmake(build_name, {
+                defines = {
                     "CMAKE_BUILD_TYPE": build_type,
                     "GASNet_INCLUDE_DIR": GASNET_DIR,
                     "Kokkos_DIR": KOKKOS_DIR,
                     "Legion_DIR": os.path.join(LIB_PREFIX, lib_name, "share", "Legion", "cmake"),
-                }, build=False, test=False, install=False)
+                }
+                if MACHINE in {Machines.SAPLING, Machines.LASSEN}:
+                    defines["CMAKE_C_COMPILER"] = "gcc"
+                    defines["CMAKE_CXX_COMPILER"] = "g++"
+                cmake(build_name, defines, build=False, test=False, install=False)
 
 
 ################################################################################

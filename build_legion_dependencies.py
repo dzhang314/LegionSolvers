@@ -85,7 +85,7 @@ if HOSTNAME.startswith("lassen"):
 elif HOSTNAME in ["g0001.stanford.edu", "g0002.stanford.edu",
                   "g0003.stanford.edu", "g0004.stanford.edu"]:
     MACHINE = Machines.SAPLING
-elif "daint" in HOSTNAME or HOSTNAME.startswith("nid"):
+elif HOSTNAME.startswith("daint") or HOSTNAME.startswith("nid"):
     MACHINE = Machines.PIZDAINT
 else:
     print("WARNING: Running on unknown machine with hostname: " + HOSTNAME)
@@ -110,6 +110,9 @@ else:
 
 
 def main():
+
+    assert MACHINE != Machines.PIZDAINT # rebuilding dependencies on Piz Daint
+    # requires manual modification of some CMake files; don't do it here
 
     if os.path.exists(LIB_PREFIX):
         print("ERROR: Library directory already exists: " + LIB_PREFIX)
@@ -138,8 +141,8 @@ def main():
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_C_COMPILER": kokkos_compiler,
             "CMAKE_CXX_COMPILER": kokkos_compiler,
-            "CMAKE_C_FLAGS": "${CMAKE_C_FLAGS} -DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_CXX_FLAGS": "${CMAKE_CXX_FLAGS} -DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
             "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.5.00"),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
@@ -163,8 +166,8 @@ def main():
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_C_COMPILER": kokkos_compiler,
             "CMAKE_CXX_COMPILER": kokkos_compiler,
-            "CMAKE_C_FLAGS": "${CMAKE_C_FLAGS} -DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_CXX_FLAGS": "${CMAKE_CXX_FLAGS} -DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
             "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.0.00"),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
@@ -178,7 +181,8 @@ def main():
         elif MACHINE == Machines.LASSEN:
             defines["Kokkos_ARCH_VOLTA70"] = True
             defines["Kokkos_ARCH_POWER9"] = True
-        cmake("build", defines, test=True, install=True)
+        cmake("build", defines, test=(MACHINE != Machines.PIZDAINT), install=True)
+        # tests are known to fail on Piz Daint
 
 
 ################################################################################
