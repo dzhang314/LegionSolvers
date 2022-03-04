@@ -60,7 +60,7 @@ def cmake(build_dir="build", defines={}, build=True, test=False, install=True):
                 raise TypeError("Unsupported type: {0}".format(type(value)))
         run(*cmake_cmd)
         if build:
-            run("cmake", "--build", ".", "--parallel", "40")
+            run("cmake", "--build", ".", "--parallel", "20")
         if test:
             run("make", "test")
         if install:
@@ -74,6 +74,7 @@ class Machines(Enum):
     UNKNOWN = 0
     SAPLING = 1
     LASSEN = 2
+    PIZDAINT = 3
 
 
 HOSTNAME = socket.gethostname()
@@ -84,6 +85,8 @@ if HOSTNAME.startswith("lassen"):
 elif HOSTNAME in ["g0001.stanford.edu", "g0002.stanford.edu",
                   "g0003.stanford.edu", "g0004.stanford.edu"]:
     MACHINE = Machines.SAPLING
+elif "daint" in HOSTNAME or HOSTNAME.startswith("nid"):
+    MACHINE = Machines.PIZDAINT
 else:
     print("WARNING: Running on unknown machine with hostname: " + HOSTNAME)
     MACHINE = Machines.UNKNOWN
@@ -95,6 +98,9 @@ if MACHINE == Machines.LASSEN:
 elif MACHINE == Machines.SAPLING:
     SCRATCH_DIR = "/scratch2/dkzhang"
     LIB_PREFIX = "/scratch2/dkzhang/lib"
+elif MACHINE == Machines.PIZDAINT:
+    SCRATCH_DIR = "/users/dzhang"
+    LIB_PREFIX = "/users/dzhang/lib"
 else:
     SCRATCH_DIR = "/home/dkzhang"
     LIB_PREFIX = "/home/dkzhang/lib"
@@ -140,8 +146,8 @@ def main():
             "Kokkos_ENABLE_CUDA": True,
             "Kokkos_ENABLE_CUDA_LAMBDA": True,
             "Kokkos_ENABLE_TESTS": True,
-        }, test=(MACHINE != Machines.SAPLING), install=True)
-        # one test is known to fail on Sapling
+        }, test=(MACHINE == Machines.LASSEN), install=True)
+        # tests are known to fail on Sapling and Piz Daint
 
     remove_file("3.0.00.zip")
     download("https://github.com/kokkos/kokkos/archive/refs/tags/3.0.00.zip")
@@ -167,7 +173,7 @@ def main():
             "Kokkos_ENABLE_TESTS": True,
         }
         # Kokkos 3.0.00 does not auto-detect compute capability
-        if MACHINE == Machines.SAPLING:
+        if MACHINE in [Machines.SAPLING, Machines.PIZDAINT]:
             defines["Kokkos_ARCH_PASCAL60"] = True
         elif MACHINE == Machines.LASSEN:
             defines["Kokkos_ARCH_VOLTA70"] = True

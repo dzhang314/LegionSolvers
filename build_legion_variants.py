@@ -34,7 +34,7 @@ NETWORK_TYPES = [
 
 KOKKOS_DIR = os.path.join(
     LIB_PREFIX, "kokkos-3.5.00",
-    "lib64" if MACHINE == Machines.LASSEN else "lib",
+    "lib64" if MACHINE != Machines.SAPLING else "lib",
     "cmake", "Kokkos"
 )
 
@@ -69,21 +69,19 @@ def main():
                     lib_name = join("legion", dir_name, network_tag, build_type.lower())
                     remove_directory(os.path.join(LIB_PREFIX, lib_name))
                     defines = {
-                        "CMAKE_CXX_STANDARD": 17,
+                        "CUDA_NVCC_FLAGS": "-allow-unsupported-compiler",
                         "CMAKE_CXX_EXTENSIONS": True,
                         "CMAKE_BUILD_TYPE": build_type,
-                        "CMAKE_C_COMPILER": "gcc",
-                        "CMAKE_CXX_COMPILER": "g++",
                         "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, lib_name),
                         "GASNet_INCLUDE_DIR": GASNET_DIR,
                         "Kokkos_DIR": KOKKOS_DIR,
                         "KOKKOS_CXX_COMPILER": KOKKOS_CXX_COMPILER,
                         "Legion_USE_OpenMP": True,
                         "Legion_USE_CUDA": True,
-                        "Legion_USE_GASNet": True,
+                        # "Legion_USE_GASNet": True,
                         "Legion_USE_Kokkos": True,
-                        "Legion_MAX_DIM": 9,
-                        "Legion_MAX_FIELDS": 1024,
+                        # "Legion_MAX_DIM": 3,
+                        # "Legion_MAX_FIELDS": 1024,
                         network_key: network_val,
                     }
                     cmake(join("build", dir_name, network_tag, build_type.lower()), defines)
