@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-from build_legion_dependencies import remove_directory, cmake, LIB_PREFIX
+from build_legion_dependencies import (
+    remove_directory, cmake, Machines, MACHINE, LIB_PREFIX
+)
 from build_legion_variants import (
     LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES,
     GASNET_DIR, KOKKOS_DIR, join
