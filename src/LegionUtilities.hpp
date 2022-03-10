@@ -186,9 +186,9 @@ namespace LegionSolvers {
         explicit ProjectionOneLevel(Legion::coord_t index) noexcept :
             index(index) {}
 
-        virtual bool is_functional() const noexcept { return true; }
+        virtual bool is_functional() const noexcept override { return true; }
 
-        virtual unsigned get_depth() const noexcept { return 0; }
+        virtual unsigned get_depth() const noexcept override { return 0; }
 
         using Legion::ProjectionFunctor::project;
 
