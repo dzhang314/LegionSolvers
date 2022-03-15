@@ -5,8 +5,7 @@ from build_legion_dependencies import (
     remove_directory, cmake, Machines, MACHINE, LIB_PREFIX
 )
 from build_legion_variants import (
-    LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES,
-    GASNET_DIR, KOKKOS_DIR, join
+    LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES, KOKKOS_DIR, join
 )
 
 
@@ -21,14 +20,13 @@ def main():
                 lib_name = join("legion", dir_name, network_tag, build_type.lower())
                 remove_directory(build_name)
                 defines = {
+                    "CMAKE_CXX_STANDARD": 17,
                     "CMAKE_BUILD_TYPE": build_type,
-                    "GASNet_INCLUDE_DIR": GASNET_DIR,
                     "Kokkos_DIR": KOKKOS_DIR,
                     "Legion_DIR": os.path.join(LIB_PREFIX, lib_name, "share", "Legion", "cmake"),
                 }
-                if MACHINE in {Machines.SAPLING, Machines.LASSEN}:
-                    defines["CMAKE_C_COMPILER"] = "gcc"
-                    defines["CMAKE_CXX_COMPILER"] = "g++"
+                if MACHINE == Machines.LASSEN:
+                    defines["CMAKE_CXX_FLAGS"] = "-maltivec -mabi=altivec"
                 cmake(build_name, defines, build=False, test=False, install=False)
 
 

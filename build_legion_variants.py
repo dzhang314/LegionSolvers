@@ -16,7 +16,7 @@ LEGION_GIT_URL = "https://gitlab.com/StanfordLegion/legion.git"
 
 LEGION_BRANCHES = [
     ("master", "master"),
-    ("cr", "control_replication"),
+    ("cr", "control_replication")
 ]
 
 
@@ -44,11 +44,6 @@ KOKKOS_CXX_COMPILER = os.path.join(
 )
 
 
-GASNET_DIR = os.path.join(
-    LIB_PREFIX, "gasnet", "release", "include"
-)
-
-
 ################################################################################
 
 
@@ -69,23 +64,20 @@ def main():
                     lib_name = join("legion", dir_name, network_tag, build_type.lower())
                     remove_directory(os.path.join(LIB_PREFIX, lib_name))
                     defines = {
-                        "CUDA_NVCC_FLAGS": "-allow-unsupported-compiler",
-                        "CMAKE_CXX_EXTENSIONS": True,
+                        "CMAKE_CXX_STANDARD": 17,
                         "CMAKE_BUILD_TYPE": build_type,
                         "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, lib_name),
-                        "GASNet_INCLUDE_DIR": GASNET_DIR,
+                        "Legion_EMBED_GASNet": True,
+                        "GASNet_CONDUIT": "ibv",
                         "Kokkos_DIR": KOKKOS_DIR,
                         "KOKKOS_CXX_COMPILER": KOKKOS_CXX_COMPILER,
                         "Legion_USE_OpenMP": True,
                         "Legion_USE_CUDA": True,
                         "Legion_USE_Kokkos": True,
-                        "Legion_MAX_NUM_NODES": 2048,
-                        "Legion_MAX_NUM_PROCS": 256,
                         network_key: network_val,
                     }
-                    if MACHINE in {Machines.SAPLING, Machines.LASSEN}:
-                        defines["CMAKE_C_COMPILER"] = "gcc"
-                        defines["CMAKE_CXX_COMPILER"] = "g++"
+                    if MACHINE == Machines.PIZDAINT:
+                        defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
                     cmake(join("build", dir_name, network_tag, build_type.lower()), defines)
 
 
