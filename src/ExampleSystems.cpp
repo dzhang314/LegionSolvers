@@ -200,26 +200,36 @@ void LegionSolvers::FillCOONegativeLaplacian2DTask<T>::task_body(
               << std::endl;
 }
 
+
+#ifdef KOKKOS_ENABLE_SERIAL
 template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-
 template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-
 template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
-template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<double>::KokkosTaskTemplate<Kokkos::Serial>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+#endif // KOKKOS_ENABLE_SERIAL
+
+
+#ifdef KOKKOS_ENABLE_OPENMP
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<double>::KokkosTaskTemplate<Kokkos::OpenMP>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+#endif // KOKKOS_ENABLE_OPENMP
+
+
+#ifdef KOKKOS_ENABLE_CUDA
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCOONegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<float >::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCSRNegativeLaplacian1DRowptrTask<double>::KokkosTaskTemplate<Kokkos::Cuda>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+#endif // KOKKOS_ENABLE_CUDA
+
 
 template void LegionSolvers::FillCOONegativeLaplacian2DTask<float >::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
 template void LegionSolvers::FillCOONegativeLaplacian2DTask<double>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
