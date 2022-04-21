@@ -16,11 +16,14 @@ LEGION_GIT_URL = "https://gitlab.com/StanfordLegion/legion.git"
 
 LEGION_BRANCHES = [
     ("master", "master"),
-    ("cr", "control_replication")
+    ("cr", "control_replication"),
 ]
 
 
-BUILD_TYPES = ["Debug", "Release"]
+BUILD_TYPES = [
+    "Debug",
+    "Release",
+]
 
 
 NETWORK_TYPES = [
@@ -31,7 +34,7 @@ NETWORK_TYPES = [
 
 CUDA_TYPES = [
     ("cuda", True),
-    ("nocuda", False)
+    ("nocuda", False),
 ]
 
 
@@ -105,4 +108,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main
