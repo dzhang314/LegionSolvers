@@ -22,5 +22,6 @@ build_master_gex_nocuda_debug/
 build_master_gex_nocuda_release/
 build_master_nocuda_debug/
 build_master_nocuda_release/
+include/
 __pycache__/
 .vscode/
