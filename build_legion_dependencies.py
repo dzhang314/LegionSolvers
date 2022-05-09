@@ -127,6 +127,40 @@ def main():
 
     os.chdir(SCRATCH_DIR)
 
+    remove_file("3.6.00.zip")
+    download("https://github.com/kokkos/kokkos/archive/refs/tags/3.6.00.zip")
+    remove_directory("kokkos-3.6.00")
+    run("unzip", "3.6.00.zip")
+    kokkos_compiler = os.path.join(
+        SCRATCH_DIR, "kokkos-3.6.00", "bin", "nvcc_wrapper"
+    )
+    with pushd("kokkos-3.6.00"):
+        cmake("build-cuda", {
+            "CMAKE_CXX_STANDARD": 17,
+            "CMAKE_BUILD_TYPE": "Release",
+            "CMAKE_C_COMPILER": kokkos_compiler,
+            "CMAKE_CXX_COMPILER": kokkos_compiler,
+            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.6.00-cuda"),
+            "Kokkos_ENABLE_SERIAL": True,
+            "Kokkos_ENABLE_OPENMP": True,
+            "Kokkos_ENABLE_CUDA": True,
+            "Kokkos_ENABLE_CUDA_LAMBDA": True,
+            "Kokkos_ENABLE_TESTS": True,
+        }, test=(MACHINE == Machines.LASSEN), install=True)
+        cmake("build-nocuda", {
+            "CMAKE_CXX_STANDARD": 17,
+            "CMAKE_BUILD_TYPE": "Release",
+            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
+            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.6.00-nocuda"),
+            "Kokkos_ENABLE_SERIAL": True,
+            "Kokkos_ENABLE_OPENMP": True,
+            "Kokkos_ENABLE_TESTS": True,
+        }, test=(MACHINE == Machines.LASSEN), install=True)
+        # tests are known to fail on Sapling and Piz Daint
+
     remove_file("3.5.00.zip")
     download("https://github.com/kokkos/kokkos/archive/refs/tags/3.5.00.zip")
     remove_directory("kokkos-3.5.00")
