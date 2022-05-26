@@ -30,8 +30,8 @@ namespace LegionSolvers {
     template <typename KokkosExecutionSpace, int DIM, typename COORD_T>
     struct KokkosRangeFactory {
 
-        using ResultType = Kokkos::Experimental::MDRangePolicy<
-            Kokkos::Experimental::Rank<DIM>,
+        using ResultType = Kokkos::MDRangePolicy<
+            Kokkos::Rank<DIM>,
             Kokkos::IndexType<COORD_T>,
             KokkosExecutionSpace
         >;
