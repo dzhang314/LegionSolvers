@@ -43,12 +43,12 @@ CUDA_TYPES = [
 
 KOKKOS_DIR = {
     True: os.path.join(
-        LIB_PREFIX, "kokkos-3.5.00-cuda",
+        LIB_PREFIX, "kokkos-3.6.00-cuda",
         "lib64" if MACHINE != Machines.SAPLING else "lib",
         "cmake", "Kokkos"
     ),
     False: os.path.join(
-        LIB_PREFIX, "kokkos-3.5.00-nocuda",
+        LIB_PREFIX, "kokkos-3.6.00-nocuda",
         "lib64" if MACHINE != Machines.SAPLING else "lib",
         "cmake", "Kokkos"
     )
@@ -57,10 +57,10 @@ KOKKOS_DIR = {
 
 KOKKOS_CXX_COMPILER = {
     True: os.path.join(
-        LIB_PREFIX, "kokkos-3.5.00-cuda", "bin", "nvcc_wrapper"
+        LIB_PREFIX, "kokkos-3.6.00-cuda", "bin", "nvcc_wrapper"
     ),
     False: os.path.join(
-        LIB_PREFIX, "kokkos-3.5.00-nocuda", "bin", "nvcc_wrapper"
+        LIB_PREFIX, "kokkos-3.6.00-nocuda", "bin", "nvcc_wrapper"
     )
 }
 
