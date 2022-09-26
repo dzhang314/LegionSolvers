@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.13)
 project(LegionSolvers)
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Legion REQUIRED)
 find_package(Kokkos REQUIRED)
+find_package(Legion REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 
 add_executable(Test01DenseVectorArithmetic
     src/COOMatrixTasks.cpp
@@ -16,7 +17,7 @@ add_executable(Test01DenseVectorArithmetic
     src/UtilityTasks.cpp
 )
 
-target_link_libraries(Test01DenseVectorArithmetic Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test01DenseVectorArithmetic Kokkos::kokkoscore Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
 add_executable(Test02DenseDistributedVectorArithmetic
     src/COOMatrixTasks.cpp
@@ -29,7 +30,7 @@ add_executable(Test02DenseDistributedVectorArithmetic
     src/UtilityTasks.cpp
 )
 
-target_link_libraries(Test02DenseDistributedVectorArithmetic Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test02DenseDistributedVectorArithmetic Kokkos::kokkoscore Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
 add_executable(Test03COO1DPartitioning
     src/COOMatrixTasks.cpp
@@ -42,7 +43,7 @@ add_executable(Test03COO1DPartitioning
     src/UtilityTasks.cpp
 )
 
-target_link_libraries(Test03COO1DPartitioning Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test03COO1DPartitioning Kokkos::kokkoscore Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
 add_executable(Test04CSR1DPartitioning
     src/COOMatrixTasks.cpp
@@ -55,7 +56,7 @@ add_executable(Test04CSR1DPartitioning
     src/UtilityTasks.cpp
 )
 
-target_link_libraries(Test04CSR1DPartitioning Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test04CSR1DPartitioning Kokkos::kokkoscore Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
 add_executable(Test05COO1DSolveCGExact
     src/COOMatrixTasks.cpp
@@ -68,7 +69,7 @@ add_executable(Test05COO1DSolveCGExact
     src/UtilityTasks.cpp
 )
 
-target_link_libraries(Test05COO1DSolveCGExact Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test05COO1DSolveCGExact Kokkos::kokkoscore Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
 add_executable(Test06FillMatrix
     src/COOMatrixTasks.cpp
@@ -81,4 +82,4 @@ add_executable(Test06FillMatrix
     src/UtilityTasks.cpp
 )
 
-target_link_libraries(Test06FillMatrix Kokkos::kokkoscore Legion::Legion)
+target_link_libraries(Test06FillMatrix Kokkos::kokkoscore Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
