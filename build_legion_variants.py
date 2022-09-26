@@ -8,7 +8,7 @@ from build_legion_dependencies import (
 )
 
 
-############################################################## LEGION PROPERTIES
+# LEGION PROPERTIES
 
 
 LEGION_GIT_URL = "https://gitlab.com/StanfordLegion/legion.git"
@@ -43,12 +43,12 @@ CUDA_TYPES = [
 
 KOKKOS_DIR = {
     True: os.path.join(
-        LIB_PREFIX, "kokkos-3.6.00-cuda",
+        LIB_PREFIX, "kokkos-3.7.00-cuda",
         "lib64" if MACHINE != Machines.SAPLING else "lib",
         "cmake", "Kokkos"
     ),
     False: os.path.join(
-        LIB_PREFIX, "kokkos-3.6.00-nocuda",
+        LIB_PREFIX, "kokkos-3.7.00-nocuda",
         "lib64" if MACHINE != Machines.SAPLING else "lib",
         "cmake", "Kokkos"
     )
@@ -57,10 +57,10 @@ KOKKOS_DIR = {
 
 KOKKOS_CXX_COMPILER = {
     True: os.path.join(
-        LIB_PREFIX, "kokkos-3.6.00-cuda", "bin", "nvcc_wrapper"
+        LIB_PREFIX, "kokkos-3.7.00-cuda", "bin", "nvcc_wrapper"
     ),
     False: os.path.join(
-        LIB_PREFIX, "kokkos-3.6.00-nocuda", "bin", "nvcc_wrapper"
+        LIB_PREFIX, "kokkos-3.7.00-nocuda", "bin", "nvcc_wrapper"
     )
 }
 
@@ -83,7 +83,8 @@ def main():
             for build_type in BUILD_TYPES:
                 for network_tag, (network_key, network_val) in NETWORK_TYPES:
                     for cuda_tag, use_cuda in CUDA_TYPES:
-                        lib_name = join("legion", dir_name, network_tag, cuda_tag, build_type.lower())
+                        lib_name = join(
+                            "legion", dir_name, network_tag, cuda_tag, build_type.lower())
                         remove_directory(os.path.join(LIB_PREFIX, lib_name))
                         defines = {
                             "CMAKE_CXX_STANDARD": 17,
@@ -101,7 +102,8 @@ def main():
                             defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
                         if MACHINE == Machines.PIZDAINT:
                             defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
-                        cmake(join("build", dir_name, network_tag, cuda_tag, build_type.lower()), defines)
+                        cmake(join("build", dir_name, network_tag,
+                              cuda_tag, build_type.lower()), defines)
 
 
 ################################################################################
