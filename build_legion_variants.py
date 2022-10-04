@@ -26,6 +26,12 @@ BUILD_TYPES = [
 ]
 
 
+KOKKOS_TYPES = [
+    ("kokkos", True),
+    ("nokokkos", False),
+]
+
+
 NETWORK_TYPES = [
     ("", ("Legion_USE_GASNet", True)),
     ("gex", ("Legion_NETWORKS", "gasnetex")),
@@ -83,27 +89,35 @@ def main():
             for build_type in BUILD_TYPES:
                 for network_tag, (network_key, network_val) in NETWORK_TYPES:
                     for cuda_tag, use_cuda in CUDA_TYPES:
-                        lib_name = join(
-                            "legion", dir_name, network_tag, cuda_tag, build_type.lower())
-                        remove_directory(os.path.join(LIB_PREFIX, lib_name))
-                        defines = {
-                            "CMAKE_CXX_STANDARD": 17,
-                            "CMAKE_BUILD_TYPE": build_type,
-                            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, lib_name),
-                            "Legion_EMBED_GASNet": True,
-                            "GASNet_CONDUIT": "ibv",
-                            "Kokkos_DIR": KOKKOS_DIR[use_cuda],
-                            "Legion_USE_OpenMP": True,
-                            "Legion_USE_Kokkos": True,
-                            network_key: network_val,
-                        }
-                        if use_cuda:
-                            defines["Legion_USE_CUDA"] = True
-                            defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
-                        if MACHINE == Machines.PIZDAINT:
-                            defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
-                        cmake(join("build", dir_name, network_tag,
-                              cuda_tag, build_type.lower()), defines)
+                        for kokkos_tag, use_kokkos in KOKKOS_TYPES:
+                            lib_name = join(
+                                "legion", dir_name, network_tag,
+                                cuda_tag, kokkos_tag, build_type.lower()
+                            )
+                            remove_directory(
+                                os.path.join(LIB_PREFIX, lib_name)
+                            )
+                            defines = {
+                                "CMAKE_CXX_STANDARD": 17,
+                                "CMAKE_BUILD_TYPE": build_type,
+                                "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, lib_name),
+                                "Legion_EMBED_GASNet": True,
+                                "GASNet_CONDUIT": "ibv",
+                                "Legion_USE_OpenMP": True,
+                                network_key: network_val,
+                            }
+                            if use_cuda:
+                                defines["Legion_USE_CUDA"] = True
+                                defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
+                            if use_kokkos:
+                                defines["Legion_USE_Kokkos"] = True
+                                defines["Kokkos_DIR"] = KOKKOS_DIR[use_cuda]
+                            if MACHINE == Machines.PIZDAINT:
+                                defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
+                            cmake(join(
+                                "build", dir_name, network_tag,
+                                cuda_tag, kokkos_tag, build_type.lower()
+                            ), defines)
 
 
 ################################################################################
