@@ -24,14 +24,17 @@ def remove_directory(path):
 @contextmanager
 def pushd(path):
     prev_path = os.getcwd()
+    print("NOTE: Changing directory to", path)
     os.chdir(path)
     try:
         yield
     finally:
+        print("NOTE: Changing directory to", prev_path)
         os.chdir(prev_path)
 
 
 def run(*command, check=True):
+    print("NOTE: Running command", ' '.join(command))
     subprocess.run(command, check=check)
 
 
@@ -46,10 +49,12 @@ def clone(url, branch=None):
         run("git", "clone", url)
 
 
-def cmake(build_dir="build", defines={}, build=True, test=False, install=True):
+def cmake(build_dir="build", defines={}, build=True, test=False, install=True,
+          cmake_cmd=("cmake", "..")):
+    print("NOTE: Creating directory", build_dir)
     os.mkdir(build_dir)
     with pushd(build_dir):
-        cmake_cmd = ["cmake", ".."]
+        cmake_cmd = list(cmake_cmd)
         for key, value in defines.items():
             assert isinstance(key, str)
             if isinstance(value, bool):

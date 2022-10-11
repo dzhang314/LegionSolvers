@@ -26,12 +26,6 @@ BUILD_TYPES = [
 ]
 
 
-KOKKOS_TYPES = [
-    ("kokkos", True),
-    ("nokokkos", False),
-]
-
-
 NETWORK_TYPES = [
     ("", ("Legion_USE_GASNet", True)),
     ("gex", ("Legion_NETWORKS", "gasnetex")),
@@ -41,6 +35,12 @@ NETWORK_TYPES = [
 CUDA_TYPES = [
     ("cuda", True),
     ("nocuda", False),
+]
+
+
+KOKKOS_TYPES = [
+    ("kokkos", True),
+    ("nokokkos", False),
 ]
 
 
@@ -108,10 +108,10 @@ def main():
                             }
                             if use_cuda:
                                 defines["Legion_USE_CUDA"] = True
-                                defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
                             if use_kokkos:
                                 defines["Legion_USE_Kokkos"] = True
                                 defines["Kokkos_DIR"] = KOKKOS_DIR[use_cuda]
+                                defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
                             if MACHINE == Machines.PIZDAINT:
                                 defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
                             cmake(join(
