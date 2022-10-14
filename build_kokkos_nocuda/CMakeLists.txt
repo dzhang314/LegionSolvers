@@ -11,6 +11,12 @@ add_executable(Test00Build
 
 target_link_libraries(Test00Build Kokkos::kokkoscore Legion::Legion)
 
+add_executable(Test01ScalarOperations
+    ../src/Test01ScalarOperations.cpp
+)
+
+target_link_libraries(Test01ScalarOperations Kokkos::kokkoscore Legion::Legion)
+
 # add_executable(Test01DenseVectorArithmetic
 #     ../src/COOMatrixTasks.cpp
 #     ../src/ExampleSystems.cpp

@@ -11,6 +11,12 @@ add_executable(Test00Build
 
 target_link_libraries(Test00Build Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
+add_executable(Test01ScalarOperations
+    ../src/Test01ScalarOperations.cpp
+)
+
+target_link_libraries(Test01ScalarOperations Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
+
 # add_executable(Test01DenseVectorArithmetic
 #     ../src/COOMatrixTasks.cpp
 #     ../src/ExampleSystems.cpp
