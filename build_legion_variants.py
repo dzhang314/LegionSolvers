@@ -104,10 +104,9 @@ def main():
                                 "Legion_EMBED_GASNet": True,
                                 "GASNet_CONDUIT": "ibv",
                                 "Legion_USE_OpenMP": True,
+                                "Legion_USE_CUDA": use_cuda,
                                 network_key: network_val,
                             }
-                            if use_cuda:
-                                defines["Legion_USE_CUDA"] = True
                             if use_kokkos:
                                 defines["Legion_USE_Kokkos"] = True
                                 defines["Kokkos_DIR"] = KOKKOS_DIR[use_cuda]
