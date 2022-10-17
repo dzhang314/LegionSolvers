@@ -76,7 +76,7 @@ struct ToString<IntList<N, NS...>> {
 template <typename T, typename... TS>
 struct ToString<TypeList<T, TS...>> {
     static std::string value() {
-        return std::string{"_"} + std::to_string(T) +
+        return std::string{"_"} + ToString<T>::value() +
                ToString<TypeList<TS...>>::value();
     }
 };
