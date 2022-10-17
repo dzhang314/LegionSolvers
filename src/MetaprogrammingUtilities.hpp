@@ -15,7 +15,39 @@ struct IntList {};
 
 
 template <typename T>
-struct ToString;
+struct ToString {
+    static std::string value() { return std::string{typeid(T).name()}; }
+};
+
+template <>
+struct ToString<float> {
+    static std::string value() { return std::string{"float"}; }
+};
+
+template <>
+struct ToString<double> {
+    static std::string value() { return std::string{"double"}; }
+};
+
+template <>
+struct ToString<long double> {
+    static std::string value() { return std::string{"longdouble"}; }
+};
+
+template <>
+struct ToString<int> {
+    static std::string value() { return std::string{"int"}; }
+};
+
+template <>
+struct ToString<unsigned> {
+    static std::string value() { return std::string{"unsigned"}; }
+};
+
+template <>
+struct ToString<long long> {
+    static std::string value() { return std::string{"longlong"}; }
+};
 
 template <>
 struct ToString<IntList<>> {
