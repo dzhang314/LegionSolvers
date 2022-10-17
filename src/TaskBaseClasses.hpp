@@ -36,36 +36,34 @@ constexpr int LEGION_SOLVERS_MAX_DIM_2 =
     LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_MAX_DIM_1;
 constexpr int LEGION_SOLVERS_MAX_DIM_3 =
     LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_MAX_DIM_2;
-constexpr int LEGION_SOLVERS_TASK_BLOCK_SIZE = (
-    LEGION_SOLVERS_NUM_ENTRY_TYPES *
-    LEGION_SOLVERS_MAX_DIM_3 *
-    LEGION_SOLVERS_NUM_INDEX_TYPES_3
-);
+constexpr int LEGION_SOLVERS_TASK_BLOCK_SIZE =
+    (LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM_3 *
+     LEGION_SOLVERS_NUM_INDEX_TYPES_3);
 
 
-template <Legion::TaskID BLOCK_ID,
-          template <typename> typename TaskClass,
-          typename T>
+template <
+    Legion::TaskID BLOCK_ID,
+    template <typename>
+    typename TaskClass,
+    typename T>
 struct TaskT {
 
-    static constexpr Legion::TaskID task_id = (
+    static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
         LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-        LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>
-    );
+        LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
 
     static std::string task_name() {
         return (
-            std::string{TaskClass<T>::task_base_name} +
-            '_' + ToString<T>::value()
+            std::string{TaskClass<T>::task_base_name} + '_' +
+            ToString<T>::value()
         );
     }
 
     static void preregister() {
         preregister_task<
             typename TaskClass<T>::return_type,
-            TaskClass<T>::task_body
-        >(task_id, task_name(), TaskClass<T>::flags);
+            TaskClass<T>::task_body>(task_id, task_name(), TaskClass<T>::flags);
     }
 
     static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {

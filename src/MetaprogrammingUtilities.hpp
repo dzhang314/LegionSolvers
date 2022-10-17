@@ -6,12 +6,15 @@
 namespace LegionSolvers {
 
 
-template <typename... TS>
-struct TypeList {};
+template <typename T, int N>
+struct NestedPointer {
+    typedef typename NestedPointer<T, N - 1>::type *type;
+};
 
-
-template <int... NS>
-struct IntList {};
+template <typename T>
+struct NestedPointer<T, 0> {
+    typedef T type;
+};
 
 
 template <typename T>
@@ -49,6 +52,14 @@ struct ToString<long long> {
     static std::string value() { return std::string{"longlong"}; }
 };
 
+
+template <int... NS>
+struct IntList {};
+
+template <typename... TS>
+struct TypeList {};
+
+
 template <>
 struct ToString<IntList<>> {
     static std::string value() { return std::string{""}; }
@@ -57,8 +68,16 @@ struct ToString<IntList<>> {
 template <int N, int... NS>
 struct ToString<IntList<N, NS...>> {
     static std::string value() {
-        return std::string{"_"} + std::to_string(N)
-                                + ToString<IntList<NS...>>::value();
+        return std::string{"_"} + std::to_string(N) +
+               ToString<IntList<NS...>>::value();
+    }
+};
+
+template <typename T, typename... TS>
+struct ToString<TypeList<T, TS...>> {
+    static std::string value() {
+        return std::string{"_"} + std::to_string(T) +
+               ToString<TypeList<TS...>>::value();
     }
 };
 
@@ -98,17 +117,6 @@ struct ListIndex<TypeList<L, LS...>, T> {
 template <typename L, typename... LS>
 struct ListIndex<TypeList<L, LS...>, L> {
     static constexpr int value = 0;
-};
-
-
-template <typename T, int N>
-struct NestedPointer {
-    typedef typename NestedPointer<T, N - 1>::type *type;
-};
-
-template <typename T>
-struct NestedPointer<T, 0> {
-    typedef T type;
 };
 
 

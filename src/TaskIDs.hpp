@@ -19,10 +19,13 @@ enum TaskBlockID : Legion::TaskID {
 // }; // enum ProjectionFunctorID
 
 
-template <typename T> constexpr Legion::ReductionOpID LEGION_REDOP_SUM = -1;
-template <> constexpr Legion::ReductionOpID LEGION_REDOP_SUM<float> =
+template <typename T>
+constexpr Legion::ReductionOpID LEGION_REDOP_SUM = -1;
+template <>
+constexpr Legion::ReductionOpID LEGION_REDOP_SUM<float> =
     LEGION_REDOP_SUM_FLOAT32;
-template <> constexpr Legion::ReductionOpID LEGION_REDOP_SUM<double> =
+template <>
+constexpr Legion::ReductionOpID LEGION_REDOP_SUM<double> =
     LEGION_REDOP_SUM_FLOAT64;
 
 

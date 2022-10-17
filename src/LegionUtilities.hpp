@@ -9,13 +9,15 @@
 #include <legion.h>
 
 #ifdef REALM_USE_KOKKOS
-#include <Kokkos_Core.hpp>
+    #include <Kokkos_Core.hpp>
 #endif // REALM_USE_KOKKOS
 
 #include "LibraryOptions.hpp"
 
 namespace LegionSolvers {
 
+
+// clang-format off
 
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineReader = Legion::FieldAccessor<
@@ -24,7 +26,6 @@ using AffineReader = Legion::FieldAccessor<
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
 
-
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineWriter = Legion::FieldAccessor<
     LEGION_WRITE_ONLY, FIELD_TYPE, DIM, COORD_T,
@@ -32,13 +33,14 @@ using AffineWriter = Legion::FieldAccessor<
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
 
-
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineSumAccessor = Legion::ReductionAccessor<
     Legion::SumReduction<FIELD_TYPE>, false, // non-exclusive
     DIM, COORD_T, Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
+
+// clang-format on
 
 
 enum class TaskFlags : std::uint8_t {
@@ -63,6 +65,8 @@ constexpr bool operator&(TaskFlags lhs, TaskFlags rhs) {
 }
 
 
+// clang-format off
+
 template <void (*TASK_PTR)(const Legion::Task *,
                            const std::vector<Legion::PhysicalRegion> &,
                            Legion::Context, Legion::Runtime *)>
@@ -78,7 +82,6 @@ void preregister_task(Legion::TaskID task_id,
         registrar, task_name.c_str()
     );
 }
-
 
 template <void (*TASK_PTR)(const Legion::Task *,
                            const std::vector<Legion::PhysicalRegion> &,
@@ -100,7 +103,6 @@ void preregister_task(Legion::TaskID task_id,
         registrar, task_name.c_str()
     );
 }
-
 
 template <typename RETURN_T,
           RETURN_T (*TASK_PTR)(const Legion::Task *,
@@ -125,7 +127,6 @@ void preregister_task(Legion::TaskID task_id,
     }
 }
 
-
 template <typename RETURN_T,
           RETURN_T (*TASK_PTR)(const Legion::Task *,
                                const std::vector<Legion::PhysicalRegion> &,
@@ -153,6 +154,8 @@ void preregister_task(Legion::TaskID task_id,
         );
     }
 }
+
+// clang-format on
 
 
 // Legion::FieldSpace create_field_space(
