@@ -60,10 +60,12 @@ struct TaskT {
         );
     }
 
-    static void preregister() {
+    static void preregister(bool verbose = true) {
         preregister_task<
             typename TaskClass<T>::return_type,
-            TaskClass<T>::task_body>(task_id, task_name(), TaskClass<T>::flags);
+            TaskClass<T>::task_body>(
+            task_id, task_name(), TaskClass<T>::flags, verbose
+        );
     }
 
     static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {

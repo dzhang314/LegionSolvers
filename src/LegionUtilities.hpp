@@ -71,9 +71,12 @@ template <void (*TASK_PTR)(const Legion::Task *,
                            const std::vector<Legion::PhysicalRegion> &,
                            Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
-                      const std::string &task_name) {
-    std::cout << "[LegionSolvers] Registering task " << task_name
-              << " with ID " << task_id << "." << std::endl;
+                      const std::string &task_name,
+                      bool verbose = true) {
+    if (verbose) {
+        std::cout << "[LegionSolvers] Registering task " << task_name
+                  << " with ID " << task_id << "." << std::endl;
+    }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
     registrar.add_constraint(
         Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
@@ -88,9 +91,12 @@ template <void (*TASK_PTR)(const Legion::Task *,
                            Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
-                      TaskFlags task_flags) {
-    std::cout << "[LegionSolvers] Registering task " << task_name
-              << " with ID " << task_id << "." << std::endl;
+                      TaskFlags task_flags,
+                      bool verbose = true) {
+    if (verbose) {
+        std::cout << "[LegionSolvers] Registering task " << task_name
+                  << " with ID " << task_id << "." << std::endl;
+    }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
     registrar.add_constraint(
         Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
@@ -109,9 +115,12 @@ template <typename RETURN_T,
                                const std::vector<Legion::PhysicalRegion> &,
                                Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
-                      const std::string &task_name) {
-    std::cout << "[LegionSolvers] Registering task " << task_name
-              << " with ID " << task_id << "." << std::endl;
+                      const std::string &task_name,
+                      bool verbose = true) {
+    if (verbose) {
+        std::cout << "[LegionSolvers] Registering task " << task_name
+                  << " with ID " << task_id << "." << std::endl;
+    }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
     registrar.add_constraint(
         Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}
@@ -133,9 +142,12 @@ template <typename RETURN_T,
                                Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
-                      TaskFlags task_flags) {
-    std::cout << "[LegionSolvers] Registering task " << task_name
-              << " with ID " << task_id << "." << std::endl;
+                      TaskFlags task_flags,
+                      bool verbose = true) {
+    if (verbose) {
+        std::cout << "[LegionSolvers] Registering task " << task_name
+                  << " with ID " << task_id << "." << std::endl;
+    }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
     registrar.add_constraint(
         Legion::ProcessorConstraint{Legion::Processor::LOC_PROC}

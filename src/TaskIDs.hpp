@@ -8,6 +8,11 @@ namespace LegionSolvers {
 
 enum TaskBlockID : Legion::TaskID {
     PRINT_SCALAR_TASK_BLOCK_ID,
+    NEGATE_SCALAR_TASK_BLOCK_ID,
+    ADD_SCALAR_TASK_BLOCK_ID,
+    SUBTRACT_SCALAR_TASK_BLOCK_ID,
+    MULTIPLY_SCALAR_TASK_BLOCK_ID,
+    DIVIDE_SCALAR_TASK_BLOCK_ID,
 }; // enum TaskBlockID
 
 
