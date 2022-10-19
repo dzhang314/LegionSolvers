@@ -2,6 +2,7 @@
 
 #include <legion.h>
 
+#include "LegionSolversMapper.hpp"
 #include "LegionUtilities.hpp"
 #include "Scalar.hpp"
 #include "TaskRegistration.hpp"
@@ -39,5 +40,8 @@ int main(int argc, char **argv) {
         TOP_LEVEL_TASK_ID, "top_level", TaskFlags::REPLICABLE | TaskFlags::INNER
     );
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
+    Legion::Runtime::add_registration_callback(
+        LegionSolvers::mapper_registration_callback
+    );
     return Legion::Runtime::start(argc, argv);
 }

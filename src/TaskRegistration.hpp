@@ -5,7 +5,6 @@
 
 #include "UtilityTasks.hpp"
 
-
 namespace LegionSolvers {
 
 
@@ -26,6 +25,5 @@ void preregister_tasks(bool verbose = true) {
 
 
 } // namespace LegionSolvers
-
 
 #endif // LEGION_SOLVERS_TASK_REGISTRATION_HPP_INCLUDED

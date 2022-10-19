@@ -44,6 +44,8 @@ static_assert(
     "LegionSolvers requires Legion to be compiled with the "
     "preprocessor macro LEGION_MAX_DIM set to 3 or higher."
 );
+
+
 static_assert(
     LEGION_SOLVERS_MAX_DIM <= LEGION_MAX_DIM,
     "Legion was not compiled with LEGION_MAX_DIM large enough to "
