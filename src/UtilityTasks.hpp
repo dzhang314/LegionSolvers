@@ -1,13 +1,11 @@
 #ifndef LEGION_SOLVERS_UTILITY_TASKS_HPP_INCLUDED
 #define LEGION_SOLVERS_UTILITY_TASKS_HPP_INCLUDED
 
-#include <iostream>
-
 #include <legion.h>
 
-#include "LegionUtilities.hpp"
-#include "TaskBaseClasses.hpp"
-#include "TaskIDs.hpp"
+#include "LegionUtilities.hpp" // for TaskFlags
+#include "TaskBaseClasses.hpp" // for TaskT
+#include "TaskIDs.hpp"         // for *_TASK_BLOCK_ID
 
 namespace LegionSolvers {
 
@@ -22,17 +20,12 @@ struct PrintScalarTask
 
     using return_type = int;
 
-    static int task_body(
+    static return_type task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
-    ) {
-        assert((task->futures.size() == 1) || (task->futures.size() == 2));
-        Legion::Future x = task->futures[0];
-        std::cout << x.get_result<T>() << std::endl;
-        return 0;
-    }
+    );
 
 }; // struct PrintScalarTask
 
@@ -48,16 +41,12 @@ struct NegateScalarTask
 
     using return_type = T;
 
-    static T task_body(
+    static return_type task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
-    ) {
-        assert(task->futures.size() == 1);
-        Legion::Future x = task->futures[0];
-        return -x.get_result<T>();
-    }
+    );
 
 }; // struct NegateScalarTask
 
@@ -73,17 +62,12 @@ struct AddScalarTask
 
     using return_type = T;
 
-    static T task_body(
+    static return_type task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
-    ) {
-        assert(task->futures.size() == 2);
-        Legion::Future x = task->futures[0];
-        Legion::Future y = task->futures[1];
-        return x.get_result<T>() + y.get_result<T>();
-    }
+    );
 
 }; // struct AddScalarTask
 
@@ -99,17 +83,12 @@ struct SubtractScalarTask
 
     using return_type = T;
 
-    static T task_body(
+    static return_type task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
-    ) {
-        assert(task->futures.size() == 2);
-        Legion::Future x = task->futures[0];
-        Legion::Future y = task->futures[1];
-        return x.get_result<T>() - y.get_result<T>();
-    }
+    );
 
 }; // struct SubtractScalarTask
 
@@ -125,17 +104,12 @@ struct MultiplyScalarTask
 
     using return_type = T;
 
-    static T task_body(
+    static return_type task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
-    ) {
-        assert(task->futures.size() == 2);
-        Legion::Future x = task->futures[0];
-        Legion::Future y = task->futures[1];
-        return x.get_result<T>() * y.get_result<T>();
-    }
+    );
 
 }; // struct MultiplyScalarTask
 
@@ -151,17 +125,12 @@ struct DivideScalarTask
 
     using return_type = T;
 
-    static T task_body(
+    static return_type task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
-    ) {
-        assert(task->futures.size() == 2);
-        Legion::Future x = task->futures[0];
-        Legion::Future y = task->futures[1];
-        return x.get_result<T>() / y.get_result<T>();
-    }
+    );
 
 }; // struct DivideScalarTask
 

@@ -8,8 +8,13 @@
 namespace LegionSolvers {
 
 
-using LEGION_SOLVERS_SUPPORTED_INDEX_TYPES = TypeList<int, unsigned, long long>;
-using LEGION_SOLVERS_SUPPORTED_ENTRY_TYPES = TypeList<float, double>;
+#define LEGION_SOLVERS_USE_FLOAT true
+#define LEGION_SOLVERS_USE_DOUBLE true
+
+
+#define LEGION_SOLVERS_USE_S32_INDICES true
+#define LEGION_SOLVERS_USE_U32_INDICES true
+#define LEGION_SOLVERS_USE_S64_INDICES true
 
 
 #ifdef NDEBUG

@@ -8,10 +8,6 @@
 
 #include <legion.h>
 
-#ifdef REALM_USE_KOKKOS
-    #include <Kokkos_Core.hpp>
-#endif // REALM_USE_KOKKOS
-
 #include "LibraryOptions.hpp"
 
 namespace LegionSolvers {
@@ -50,15 +46,13 @@ enum class TaskFlags : std::uint8_t {
     REPLICABLE = 0x08,
 }; // enum class TaskFlags
 
-
-constexpr TaskFlags operator|(TaskFlags lhs, TaskFlags rhs) {
+constexpr TaskFlags operator|(TaskFlags lhs, TaskFlags rhs) noexcept {
     return static_cast<TaskFlags>(
         static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs)
     );
 }
 
-
-constexpr bool operator&(TaskFlags lhs, TaskFlags rhs) {
+constexpr bool operator&(TaskFlags lhs, TaskFlags rhs) noexcept {
     return static_cast<bool>(
         static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs)
     );
@@ -170,11 +164,12 @@ void preregister_task(Legion::TaskID task_id,
 // clang-format on
 
 
-// Legion::FieldSpace create_field_space(
-//     Legion::Context ctx, Legion::Runtime *rt,
-//     const std::vector<std::size_t> &field_sizes,
-//     const std::vector<Legion::FieldID> &field_ids
-// );
+Legion::FieldSpace create_field_space(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    const std::vector<std::size_t> &field_sizes,
+    const std::vector<Legion::FieldID> &field_ids
+);
 
 
 // void print_index_partition(

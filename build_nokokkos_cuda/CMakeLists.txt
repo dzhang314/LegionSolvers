@@ -7,6 +7,9 @@ find_package(CUDAToolkit REQUIRED)
 
 add_executable(Test00Build
     ../src/LegionSolversMapper.cpp
+    ../src/LegionUtilities.cpp
+    ../src/Scalar.cpp
+    ../src/UtilityTasks.cpp
     ../src/Test00Build.cpp
 )
 
@@ -14,6 +17,9 @@ target_link_libraries(Test00Build Legion::Legion CUDA::cudart CUDA::cublas CUDA:
 
 add_executable(Test01ScalarOperations
     ../src/LegionSolversMapper.cpp
+    ../src/LegionUtilities.cpp
+    ../src/Scalar.cpp
+    ../src/UtilityTasks.cpp
     ../src/Test01ScalarOperations.cpp
 )
 
@@ -21,6 +27,9 @@ target_link_libraries(Test01ScalarOperations Legion::Legion CUDA::cudart CUDA::c
 
 add_executable(Test02VectorOperations
     ../src/LegionSolversMapper.cpp
+    ../src/LegionUtilities.cpp
+    ../src/Scalar.cpp
+    ../src/UtilityTasks.cpp
     ../src/Test02VectorOperations.cpp
 )
 

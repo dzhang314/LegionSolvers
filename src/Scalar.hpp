@@ -3,8 +3,6 @@
 
 #include <legion.h>
 
-#include "UtilityTasks.hpp"
-
 namespace LegionSolvers {
 
 
@@ -37,75 +35,21 @@ class Scalar {
 
     T get_value() const { return future.get_result<T>(); }
 
-    Scalar operator+() const { return *this; }
+    Scalar operator+() const;
 
-    Scalar operator-() const {
-        Legion::TaskLauncher launcher(
-            NegateScalarTask<T>::task_id, Legion::TaskArgument{nullptr, 0}
-        );
-        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_future(future);
-        return Scalar{ctx, rt, rt->execute_task(ctx, launcher)};
-    }
+    Scalar operator-() const;
 
-    Scalar operator+(const Scalar &rhs) const {
-        Legion::TaskLauncher launcher(
-            AddScalarTask<T>::task_id, Legion::TaskArgument{nullptr, 0}
-        );
-        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_future(future);
-        launcher.add_future(rhs.future);
-        return Scalar{ctx, rt, rt->execute_task(ctx, launcher)};
-    }
+    Scalar operator+(const Scalar &rhs) const;
 
-    Scalar operator-(const Scalar &rhs) const {
-        Legion::TaskLauncher launcher(
-            SubtractScalarTask<T>::task_id, Legion::TaskArgument{nullptr, 0}
-        );
-        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_future(future);
-        launcher.add_future(rhs.future);
-        return Scalar{ctx, rt, rt->execute_task(ctx, launcher)};
-    }
+    Scalar operator-(const Scalar &rhs) const;
 
-    Scalar operator*(const Scalar &rhs) const {
-        Legion::TaskLauncher launcher(
-            MultiplyScalarTask<T>::task_id, Legion::TaskArgument{nullptr, 0}
-        );
-        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_future(future);
-        launcher.add_future(rhs.future);
-        return Scalar{ctx, rt, rt->execute_task(ctx, launcher)};
-    }
+    Scalar operator*(const Scalar &rhs) const;
 
-    Scalar operator/(const Scalar &rhs) const {
-        Legion::TaskLauncher launcher(
-            DivideScalarTask<T>::task_id, Legion::TaskArgument{nullptr, 0}
-        );
-        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_future(future);
-        launcher.add_future(rhs.future);
-        return Scalar{ctx, rt, rt->execute_task(ctx, launcher)};
-    }
+    Scalar operator/(const Scalar &rhs) const;
 
-    Legion::Future print() const {
-        Legion::TaskLauncher launcher(
-            PrintScalarTask<T>::task_id, Legion::TaskArgument{nullptr, 0}
-        );
-        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_future(future);
-        return rt->execute_task(ctx, launcher);
-    }
+    Legion::Future print() const;
 
-    Legion::Future print(Legion::Future dummy) const {
-        Legion::TaskLauncher launcher(
-            PrintScalarTask<T>::task_id, Legion::TaskArgument{nullptr, 0}
-        );
-        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-        launcher.add_future(future);
-        launcher.add_future(dummy);
-        return rt->execute_task(ctx, launcher);
-    }
+    Legion::Future print(Legion::Future dummy) const;
 
 }; // class Scalar
 

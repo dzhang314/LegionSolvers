@@ -8,6 +8,9 @@ find_package(CUDAToolkit REQUIRED)
 
 add_executable(Test00Build
     ../src/LegionSolversMapper.cpp
+    ../src/LegionUtilities.cpp
+    ../src/Scalar.cpp
+    ../src/UtilityTasks.cpp
     ../src/Test00Build.cpp
 )
 
@@ -15,6 +18,9 @@ target_link_libraries(Test00Build Kokkos::kokkoscore Legion::Legion CUDA::cudart
 
 add_executable(Test01ScalarOperations
     ../src/LegionSolversMapper.cpp
+    ../src/LegionUtilities.cpp
+    ../src/Scalar.cpp
+    ../src/UtilityTasks.cpp
     ../src/Test01ScalarOperations.cpp
 )
 
@@ -22,6 +28,9 @@ target_link_libraries(Test01ScalarOperations Kokkos::kokkoscore Legion::Legion C
 
 add_executable(Test02VectorOperations
     ../src/LegionSolversMapper.cpp
+    ../src/LegionUtilities.cpp
+    ../src/Scalar.cpp
+    ../src/UtilityTasks.cpp
     ../src/Test02VectorOperations.cpp
 )
 
