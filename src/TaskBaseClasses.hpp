@@ -129,7 +129,7 @@ struct TaskTDI {
                ToString<I>::value();
     }
 
-    static void preregister_cpu(bool verbose) {
+    static void preregister(bool verbose) {
         preregister_task<
             typename TaskClass<T, N, I>::return_type,
             TaskClass<T, N, I>::task_body>(
