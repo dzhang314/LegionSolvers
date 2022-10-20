@@ -30,6 +30,7 @@ build_nokokkos_nocuda/master_debug/
 build_nokokkos_nocuda/master_gex_debug/
 build_nokokkos_nocuda/master_gex_release/
 build_nokokkos_nocuda/master_release/
+build/
 include/
 __pycache__/
 .vscode/
