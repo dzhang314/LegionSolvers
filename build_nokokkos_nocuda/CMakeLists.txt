@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Legion REQUIRED)
 
 add_executable(Test00Build
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp
@@ -16,6 +17,7 @@ add_executable(Test00Build
 target_link_libraries(Test00Build Legion::Legion)
 
 add_executable(Test01ScalarOperations
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp
@@ -27,6 +29,7 @@ add_executable(Test01ScalarOperations
 target_link_libraries(Test01ScalarOperations Legion::Legion)
 
 add_executable(Test02VectorOperations
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp

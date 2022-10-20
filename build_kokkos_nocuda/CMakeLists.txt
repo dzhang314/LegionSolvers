@@ -6,6 +6,7 @@ find_package(Kokkos REQUIRED)
 find_package(Legion REQUIRED)
 
 add_executable(Test00Build
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp
@@ -17,6 +18,7 @@ add_executable(Test00Build
 target_link_libraries(Test00Build Kokkos::kokkoscore Legion::Legion)
 
 add_executable(Test01ScalarOperations
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp
@@ -28,6 +30,7 @@ add_executable(Test01ScalarOperations
 target_link_libraries(Test01ScalarOperations Kokkos::kokkoscore Legion::Legion)
 
 add_executable(Test02VectorOperations
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp

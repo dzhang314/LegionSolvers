@@ -6,6 +6,7 @@ find_package(Legion REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
 add_executable(Test00Build
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp
@@ -17,6 +18,7 @@ add_executable(Test00Build
 target_link_libraries(Test00Build Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
 add_executable(Test01ScalarOperations
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp
@@ -28,6 +30,7 @@ add_executable(Test01ScalarOperations
 target_link_libraries(Test01ScalarOperations Legion::Legion CUDA::cudart CUDA::cublas CUDA::cusparse)
 
 add_executable(Test02VectorOperations
+    ../src/Initialize.cpp
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
     ../src/LinearAlgebraTasks.cpp

@@ -1,9 +1,9 @@
 #include <legion.h> // for Legion::*
 
+#include "Initialize.hpp"          // for initialize
 #include "LegionSolversMapper.hpp" // for mapper_registration_callback
 #include "LegionUtilities.hpp"     // for preregister_task
 #include "Scalar.hpp"              // for Scalar
-#include "TaskRegistration.hpp"    // for register_tasks
 
 enum TaskIDs : Legion::TaskID { TOP_LEVEL_TASK_ID };
 
@@ -33,7 +33,7 @@ void top_level_task(
 
 int main(int argc, char **argv) {
     using LegionSolvers::TaskFlags;
-    LegionSolvers::preregister_tasks(false);
+    LegionSolvers::initialize(false);
     LegionSolvers::preregister_task<top_level_task>(
         TOP_LEVEL_TASK_ID, "top_level", TaskFlags::REPLICABLE | TaskFlags::INNER
     );
