@@ -31,7 +31,7 @@ struct ScalTask
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
 struct AxpyTask
-    : public TaskTDI<AXPY_TASK_BLOCK_ID, ScalTask, ENTRY_T, DIM, COORD_T> {
+    : public TaskTDI<AXPY_TASK_BLOCK_ID, AxpyTask, ENTRY_T, DIM, COORD_T> {
 
     static constexpr const char *task_base_name = "axpy";
 
@@ -52,7 +52,7 @@ struct AxpyTask
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
 struct XpayTask
-    : public TaskTDI<XPAY_TASK_BLOCK_ID, ScalTask, ENTRY_T, DIM, COORD_T> {
+    : public TaskTDI<XPAY_TASK_BLOCK_ID, XpayTask, ENTRY_T, DIM, COORD_T> {
 
     static constexpr const char *task_base_name = "xpay";
 

@@ -1,11 +1,16 @@
 #include "Initialize.hpp"
 
-#include "LibraryOptions.hpp"     // for LEGION_SOLVERS_USE_*
-#include "LinearAlgebraTasks.hpp" // for ScalTask, AxpyTask, XpayTask, DotTask
-#include "UtilityTasks.hpp"       // for *ScalarTask
+#include "LegionSolversMapper.hpp" // for mapper_registration_callback
+#include "LibraryOptions.hpp"      // for LEGION_SOLVERS_USE_*
+#include "LinearAlgebraTasks.hpp"  // for ScalTask, AxpyTask, XpayTask, DotTask
+#include "UtilityTasks.hpp"        // for *ScalarTask
 
 // clang-format off
 void LegionSolvers::initialize(bool verbose) {
+
+    Legion::Runtime::add_registration_callback(
+        LegionSolvers::mapper_registration_callback
+    );
 
     #ifdef LEGION_SOLVERS_USE_FLOAT
         PrintScalarTask<float>::preregister(verbose);
@@ -149,5 +154,6 @@ void LegionSolvers::initialize(bool verbose) {
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_DOUBLE
+
 }
 // clang-format on

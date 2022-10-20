@@ -17,6 +17,8 @@ class LegionSolversMapper : public Legion::Mapping::DefaultMapper {
         Legion::Processor local_proc
     );
 
+    // TODO: add rest of LegionSolversMapper + thermodynamic mapping strategy
+
 }; // class LegionSolversMapper
 
 

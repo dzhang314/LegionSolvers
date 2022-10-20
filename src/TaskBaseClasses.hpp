@@ -185,6 +185,26 @@ struct TaskTDI {
 
 template <
     Legion::TaskID BLOCK_ID,
+    template <typename, int, typename>
+    typename TaskClass,
+    typename T,
+    typename I>
+struct TaskTDI<BLOCK_ID, TaskClass, T, 0, I> {
+
+    static constexpr Legion::TaskID task_id(int N) {
+        return LEGION_SOLVERS_TASK_ID_ORIGIN +
+               LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+               LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM *
+                   LEGION_SOLVERS_INDEX_TYPE_INDEX<I> +
+               LEGION_SOLVERS_NUM_ENTRY_TYPES * (N - 1) +
+               LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
+    }
+
+}; // struct TaskTDI
+
+
+template <
+    Legion::TaskID BLOCK_ID,
     template <typename, int, int, int, typename, typename, typename>
     typename TaskClass,
     typename T,

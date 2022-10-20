@@ -3,6 +3,9 @@
 
 #include <legion.h> // for Legion::*
 
+#include "LinearAlgebraTasks.hpp" // for ScalTask, AxpyTask, XpayTask, DotTask
+#include "Scalar.hpp"             // for Scalar
+
 namespace LegionSolvers {
 
 
@@ -105,6 +108,309 @@ class PartitionedVector {
         rt->destroy_logical_region(ctx, logical_region);
         rt->destroy_field_space(ctx, field_space);
         rt->destroy_index_space(ctx, index_space);
+    }
+
+    Legion::Context get_ctx() const { return ctx; }
+
+    Legion::Runtime *get_rt() const { return rt; }
+
+    const std::string &get_name() const { return name; }
+
+    Legion::IndexSpace get_index_space() const { return index_space; }
+
+    int get_dim() const { return index_space.get_dim(); }
+
+    Legion::FieldID get_fid() const { return fid; }
+
+    Legion::FieldSpace get_field_space() const { return field_space; }
+
+    Legion::LogicalRegion get_logical_region() const { return logical_region; }
+
+    Legion::IndexSpace get_color_space() const { return color_space; }
+
+    Legion::IndexPartition get_index_partition() const {
+        return index_partition;
+    }
+
+    Legion::LogicalPartition get_logical_partition() const {
+        return logical_partition;
+    }
+
+    void constant_fill(ENTRY_T value) {
+        Legion::IndexFillLauncher launcher(
+            color_space,
+            logical_partition,
+            logical_region,
+            Legion::UntypedBuffer(&value, sizeof(ENTRY_T))
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_field(fid);
+        rt->fill_fields(ctx, launcher);
+    }
+
+    void constant_fill(const Scalar<ENTRY_T> &value) {
+        Legion::IndexFillLauncher launcher(
+            color_space, logical_partition, logical_region, value.get_future()
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_field(fid);
+        rt->fill_fields(ctx, launcher);
+    }
+
+    void zero_fill() { constant_fill(static_cast<ENTRY_T>(0)); }
+
+    ENTRY_T operator=(ENTRY_T value) {
+        constant_fill(value);
+        return value;
+    }
+
+    const Scalar<ENTRY_T> &operator=(const Scalar<ENTRY_T> &value) {
+        constant_fill(value);
+        return value;
+    }
+
+    const PartitionedVector &operator=(const PartitionedVector &x) {
+        assert(index_space == x.get_index_space());
+        assert(color_space == x.get_color_space());
+        assert(index_partition == x.get_index_partition());
+        Legion::IndexCopyLauncher launcher(color_space);
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_copy_requirements(
+            Legion::RegionRequirement(
+                x.get_logical_partition(),
+                0,
+                LEGION_READ_ONLY,
+                LEGION_EXCLUSIVE,
+                x.get_logical_region()
+            ),
+            Legion::RegionRequirement(
+                logical_partition,
+                0,
+                LEGION_WRITE_DISCARD,
+                LEGION_EXCLUSIVE,
+                logical_region
+            )
+        );
+        launcher.add_src_field(0, x.get_fid());
+        launcher.add_dst_field(0, fid);
+        rt->issue_copy_operation(ctx, launcher);
+        return x;
+    }
+
+    // TODO: operator*=(Scalar) should call ScalTask
+
+    void axpy(const Scalar<ENTRY_T> &alpha, const PartitionedVector &x) {
+        assert(index_space == x.get_index_space());
+        assert(color_space == x.get_color_space());
+        assert(index_partition == x.get_index_partition());
+        Legion::IndexTaskLauncher launcher(
+            AxpyTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            color_space,
+            Legion::UntypedBuffer(),
+            Legion::ArgumentMap()
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            logical_partition,
+            0,
+            LEGION_READ_WRITE,
+            LEGION_EXCLUSIVE,
+            logical_region
+        ));
+        launcher.add_field(0, fid);
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            x.get_logical_partition(),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            x.get_logical_region()
+        ));
+        launcher.add_field(1, x.get_fid());
+        launcher.add_future(alpha.get_future());
+        rt->execute_index_space(ctx, launcher);
+    }
+
+    void axpy(ENTRY_T alpha, const PartitionedVector &x) {
+        axpy(Scalar<ENTRY_T>(ctx, rt, alpha), x);
+    }
+
+    void axpy(
+        const Scalar<ENTRY_T> &numer,
+        const Scalar<ENTRY_T> &denom,
+        const PartitionedVector &x
+    ) {
+        assert(index_space == x.get_index_space());
+        assert(color_space == x.get_color_space());
+        assert(index_partition == x.get_index_partition());
+        Legion::IndexTaskLauncher launcher(
+            AxpyTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            color_space,
+            Legion::UntypedBuffer(),
+            Legion::ArgumentMap()
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            logical_partition,
+            0,
+            LEGION_READ_WRITE,
+            LEGION_EXCLUSIVE,
+            logical_region
+        ));
+        launcher.add_field(0, fid);
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            x.get_logical_partition(),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            x.get_logical_region()
+        ));
+        launcher.add_field(1, x.get_fid());
+        launcher.add_future(numer.get_future());
+        launcher.add_future(denom.get_future());
+        rt->execute_index_space(ctx, launcher);
+    }
+
+    void axpy(
+        const Scalar<ENTRY_T> &numer1,
+        const Scalar<ENTRY_T> &numer2,
+        const Scalar<ENTRY_T> &denom,
+        const PartitionedVector &x
+    ) {
+        assert(index_space == x.get_index_space());
+        assert(color_space == x.get_color_space());
+        assert(index_partition == x.get_index_partition());
+        Legion::IndexTaskLauncher launcher(
+            AxpyTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            color_space,
+            Legion::UntypedBuffer(),
+            Legion::ArgumentMap()
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            logical_partition,
+            0,
+            LEGION_READ_WRITE,
+            LEGION_EXCLUSIVE,
+            logical_region
+        ));
+        launcher.add_field(0, fid);
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            x.get_logical_partition(),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            x.get_logical_region()
+        ));
+        launcher.add_field(1, x.get_fid());
+        launcher.add_future(numer1.get_future());
+        launcher.add_future(numer2.get_future());
+        launcher.add_future(denom.get_future());
+        rt->execute_index_space(ctx, launcher);
+    }
+
+    void xpay(const Scalar<ENTRY_T> &alpha, const PartitionedVector &x) {
+        assert(index_space == x.get_index_space());
+        assert(color_space == x.get_color_space());
+        assert(index_partition == x.get_index_partition());
+        Legion::IndexTaskLauncher launcher(
+            XpayTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            color_space,
+            Legion::UntypedBuffer(),
+            Legion::ArgumentMap()
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            logical_partition,
+            0,
+            LEGION_READ_WRITE,
+            LEGION_EXCLUSIVE,
+            logical_region
+        ));
+        launcher.add_field(0, fid);
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            x.get_logical_partition(),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            x.get_logical_region()
+        ));
+        launcher.add_field(1, x.get_fid());
+        launcher.add_future(alpha.get_future());
+        rt->execute_index_space(ctx, launcher);
+    }
+
+    void xpay(
+        const Scalar<ENTRY_T> &numer,
+        const Scalar<ENTRY_T> &denom,
+        const PartitionedVector &x
+    ) {
+        assert(index_space == x.get_index_space());
+        assert(color_space == x.get_color_space());
+        assert(index_partition == x.get_index_partition());
+        Legion::IndexTaskLauncher launcher(
+            XpayTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            color_space,
+            Legion::UntypedBuffer(),
+            Legion::ArgumentMap()
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            logical_partition,
+            0,
+            LEGION_READ_WRITE,
+            LEGION_EXCLUSIVE,
+            logical_region
+        ));
+        launcher.add_field(0, fid);
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            x.get_logical_partition(),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            x.get_logical_region()
+        ));
+        launcher.add_field(1, x.get_fid());
+        launcher.add_future(numer.get_future());
+        launcher.add_future(denom.get_future());
+        rt->execute_index_space(ctx, launcher);
+    }
+
+    void xpay(ENTRY_T alpha, const PartitionedVector &x) {
+        xpay(Scalar<ENTRY_T>(ctx, rt, alpha), x);
+    }
+
+    Scalar<ENTRY_T> dot(const PartitionedVector &x) const {
+        assert(index_space == x.get_index_space());
+        assert(color_space == x.get_color_space());
+        assert(index_partition == x.get_index_partition());
+        Legion::IndexTaskLauncher launcher(
+            DotTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            color_space,
+            Legion::UntypedBuffer(),
+            Legion::ArgumentMap()
+        );
+        launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            logical_partition,
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            logical_region
+        ));
+        launcher.add_field(0, fid);
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            x.get_logical_partition(),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            x.get_logical_region()
+        ));
+        launcher.add_field(1, x.get_fid());
+        return Scalar<ENTRY_T>{
+            ctx,
+            rt,
+            rt->execute_index_space(ctx, launcher, LEGION_REDOP_SUM<ENTRY_T>),
+        };
     }
 
 }; // class PartitionedVector
