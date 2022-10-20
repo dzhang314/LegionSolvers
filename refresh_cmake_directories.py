@@ -12,6 +12,8 @@ from build_legion_variants import (
 
 ################################################################################
 
+# TODO (rohany, dkzhang): This script should be repurposed to a more general
+#  installation script that sets the right cmake flags for the target machine etc.
 
 def main():
     for dir_name, branch_name in LEGION_BRANCHES:
