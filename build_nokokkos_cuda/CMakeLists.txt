@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(LegionSolvers)
+project(LegionSolvers LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Legion REQUIRED)
@@ -12,6 +12,7 @@ add_executable(Test00Build
     ../src/LinearAlgebraTasks.cpp
     ../src/Scalar.cpp
     ../src/UtilityTasks.cpp
+    ../src/CudaLibs.cu
     ../src/Test00Build.cpp
 )
 
@@ -24,6 +25,7 @@ add_executable(Test01ScalarOperations
     ../src/LinearAlgebraTasks.cpp
     ../src/Scalar.cpp
     ../src/UtilityTasks.cpp
+    ../src/CudaLibs.cu
     ../src/Test01ScalarOperations.cpp
 )
 
@@ -36,6 +38,7 @@ add_executable(Test02VectorOperations
     ../src/LinearAlgebraTasks.cpp
     ../src/Scalar.cpp
     ../src/UtilityTasks.cpp
+    ../src/CudaLibs.cu
     ../src/Test02VectorOperations.cpp
 )
 
