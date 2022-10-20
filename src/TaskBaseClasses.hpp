@@ -77,7 +77,7 @@ struct TaskT {
 
     static std::string task_name() {
         return (
-            std::string{TaskClass<T>::task_base_name} + '_' +
+            std::string(TaskClass<T>::task_base_name) + '_' +
             ToString<T>::value()
         );
     }
@@ -124,7 +124,7 @@ struct TaskTDI {
         LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
 
     static std::string task_name() {
-        return std::string{TaskClass<T, N, I>::task_base_name} + '_' +
+        return std::string(TaskClass<T, N, I>::task_base_name) + '_' +
                ToString<T>::value() + '_' + std::to_string(N) + '_' +
                ToString<I>::value();
     }
@@ -181,6 +181,59 @@ struct TaskTDI {
     // }
 
 }; // struct TaskTDI
+
+
+template <
+    Legion::TaskID BLOCK_ID,
+    template <typename, int, int, int, typename, typename, typename>
+    typename TaskClass,
+    typename T,
+    int N1,
+    int N2,
+    int N3,
+    typename I1,
+    typename I2,
+    typename I3>
+struct TaskTDDDIII {
+
+    static constexpr Legion::TaskID task_id =
+        LEGION_SOLVERS_TASK_ID_ORIGIN +
+        LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+        LEGION_SOLVERS_NUM_INDEX_TYPES_3 * LEGION_SOLVERS_NUM_ENTRY_TYPES *
+            LEGION_SOLVERS_MAX_DIM_2 * (N1 - 1) +
+        LEGION_SOLVERS_NUM_INDEX_TYPES_3 * LEGION_SOLVERS_NUM_ENTRY_TYPES *
+            LEGION_SOLVERS_MAX_DIM_1 * (N2 - 1) +
+        LEGION_SOLVERS_NUM_INDEX_TYPES_3 * LEGION_SOLVERS_NUM_ENTRY_TYPES *
+            LEGION_SOLVERS_MAX_DIM_0 * (N3 - 1) +
+        LEGION_SOLVERS_NUM_INDEX_TYPES_2 * LEGION_SOLVERS_NUM_ENTRY_TYPES *
+            LEGION_SOLVERS_INDEX_TYPE_INDEX<I1> +
+        LEGION_SOLVERS_NUM_INDEX_TYPES_1 * LEGION_SOLVERS_NUM_ENTRY_TYPES *
+            LEGION_SOLVERS_INDEX_TYPE_INDEX<I2> +
+        LEGION_SOLVERS_NUM_INDEX_TYPES_0 * LEGION_SOLVERS_NUM_ENTRY_TYPES *
+            LEGION_SOLVERS_INDEX_TYPE_INDEX<I3> +
+        LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
+
+    static std::string task_name() {
+        return std::string(TaskClass<T, N1, N2, N3, I1, I2, I3>::task_base_name
+               ) +
+               '_' + ToString<T>::value() + '_' + std::to_string(N1) +
+               std::to_string(N2) + std::to_string(N3) + '_' +
+               ToString<I1>::value() + '_' + ToString<I2>::value() + '_' +
+               ToString<I3>::value();
+    }
+
+    static void preregister(bool verbose) {
+        preregister_task<
+            typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
+            TaskClass<T, N1, N2, N3, I1, I2, I3>::task_body>(
+            task_id,
+            task_name(),
+            TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
+            verbose
+        );
+    }
+
+}; // struct TaskTDDDIII
 
 
 } // namespace LegionSolvers
