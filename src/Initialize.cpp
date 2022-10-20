@@ -4,7 +4,7 @@
 #include "LinearAlgebraTasks.hpp" // for ScalTask, AxpyTask, XpayTask, DotTask
 #include "UtilityTasks.hpp"       // for *ScalarTask
 
-void LegionSolvers::initialize(bool verbose = true) {
+void LegionSolvers::initialize(bool verbose) {
 
 #ifdef LEGION_SOLVERS_USE_FLOAT
     LegionSolvers::PrintScalarTask<float>::preregister(verbose);
