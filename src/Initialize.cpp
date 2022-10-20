@@ -5,6 +5,10 @@
 #include "LinearAlgebraTasks.hpp"  // for ScalTask, AxpyTask, XpayTask, DotTask
 #include "UtilityTasks.hpp"        // for *ScalarTask
 
+#ifdef LEGION_USE_CUDA
+#include "CudaLibs.hpp"
+#endif
+
 // clang-format off
 void LegionSolvers::initialize(bool verbose) {
 
@@ -155,5 +159,10 @@ void LegionSolvers::initialize(bool verbose) {
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_DOUBLE
 
+    #ifdef LEGION_USE_CUDA
+      #ifndef REALM_USE_KOKKOS
+        LoadCUDALibsTask::preregister(verbose);
+      #endif
+    #endif
 }
 // clang-format on
