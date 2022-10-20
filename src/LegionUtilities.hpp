@@ -30,6 +30,13 @@ using AffineWriter = Legion::FieldAccessor<
 >;
 
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
+using AffineReaderWriter = Legion::FieldAccessor<
+    LEGION_READ_WRITE, FIELD_TYPE, DIM, COORD_T,
+    Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
+    LEGION_SOLVERS_CHECK_BOUNDS
+>;
+
+template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineSumAccessor = Legion::ReductionAccessor<
     Legion::SumReduction<FIELD_TYPE>, false, // non-exclusive
     DIM, COORD_T, Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,

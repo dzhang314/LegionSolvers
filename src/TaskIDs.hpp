@@ -16,7 +16,7 @@ enum TaskBlockID : Legion::TaskID {
     SCAL_TASK_BLOCK_ID,
     AXPY_TASK_BLOCK_ID,
     XPAY_TASK_BLOCK_ID,
-    AXPBY_TASK_BLOCK_ID,
+    DOT_TASK_BLOCK_ID,
 }; // enum TaskBlockID
 
 

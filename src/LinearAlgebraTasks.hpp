@@ -72,15 +72,15 @@ struct XpayTask
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
-struct AxpbyTask
-    : public TaskTDI<AXPBY_TASK_BLOCK_ID, ScalTask, ENTRY_T, DIM, COORD_T> {
+struct DotTask
+    : public TaskTDI<DOT_TASK_BLOCK_ID, DotTask, ENTRY_T, DIM, COORD_T> {
 
-    static constexpr const char *task_base_name = "axpby";
+    static constexpr const char *task_base_name = "dot_product";
 
     static constexpr const TaskFlags flags =
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
 
-    using return_type = void;
+    using return_type = ENTRY_T;
 
     static return_type task_body(
         const Legion::Task *task,
@@ -89,7 +89,7 @@ struct AxpbyTask
         Legion::Runtime *rt
     );
 
-}; // struct AxpbyTask
+}; // struct DotTask
 
 
 } // namespace LegionSolvers

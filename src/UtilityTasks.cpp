@@ -2,6 +2,8 @@
 
 #include <iostream> // for std::cout, std::endl
 
+#include "LibraryOptions.hpp" // for LEGION_SOLVERS_USE_*
+
 using LegionSolvers::AddScalarTask;
 using LegionSolvers::DivideScalarTask;
 using LegionSolvers::MultiplyScalarTask;

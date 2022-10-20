@@ -7,6 +7,7 @@ find_package(Legion REQUIRED)
 add_executable(Test00Build
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
+    ../src/LinearAlgebraTasks.cpp
     ../src/Scalar.cpp
     ../src/UtilityTasks.cpp
     ../src/Test00Build.cpp
@@ -17,6 +18,7 @@ target_link_libraries(Test00Build Legion::Legion)
 add_executable(Test01ScalarOperations
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
+    ../src/LinearAlgebraTasks.cpp
     ../src/Scalar.cpp
     ../src/UtilityTasks.cpp
     ../src/Test01ScalarOperations.cpp
@@ -27,6 +29,7 @@ target_link_libraries(Test01ScalarOperations Legion::Legion)
 add_executable(Test02VectorOperations
     ../src/LegionSolversMapper.cpp
     ../src/LegionUtilities.cpp
+    ../src/LinearAlgebraTasks.cpp
     ../src/Scalar.cpp
     ../src/UtilityTasks.cpp
     ../src/Test02VectorOperations.cpp

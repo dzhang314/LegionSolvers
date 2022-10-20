@@ -38,7 +38,7 @@ constexpr Legion::ProjectionID LEGION_SOLVERS_PROJECTION_ID_ORIGIN = 10'000;
 
 
 #ifndef LEGION_SOLVERS_MAX_DIM
-constexpr int LEGION_SOLVERS_MAX_DIM = 3;
+    #define LEGION_SOLVERS_MAX_DIM 3
 #endif // LEGION_SOLVERS_MAX_DIM
 
 
