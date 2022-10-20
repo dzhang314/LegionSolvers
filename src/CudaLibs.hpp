@@ -8,76 +8,80 @@
 #include <cusparse.h>
 #include <legion.h>
 
-#define CHECK_CUDA(expr)                                      \
-  do {                                                        \
-    cudaError_t __result__ = (expr);                          \
-    LegionSolvers::check_cuda(__result__, __FILE__, __LINE__); \
-  } while (false)
+#define CHECK_CUDA(expr)                                                       \
+    do {                                                                       \
+        cudaError_t __result__ = (expr);                                       \
+        LegionSolvers::check_cuda(__result__, __FILE__, __LINE__);             \
+    } while (false)
 
-#define CHECK_CUDA_STREAM(stream)              \
-  do {                                         \
-    CHECK_CUDA(cudaStreamSynchronize(stream)); \
-    CHECK_CUDA(cudaPeekAtLastError());         \
-  } while (false)
+#define CHECK_CUDA_STREAM(stream)                                              \
+    do {                                                                       \
+        CHECK_CUDA(cudaStreamSynchronize(stream));                             \
+        CHECK_CUDA(cudaPeekAtLastError());                                     \
+    } while (false)
 
-#define CHECK_CUSPARSE(expr)                    \
-  do {                                          \
-    cusparseStatus_t result = (expr);           \
-    checkCuSparse(result, __FILE__, __LINE__);  \
-  } while (false)
+#define CHECK_CUSPARSE(expr)                                                   \
+    do {                                                                       \
+        cusparseStatus_t result = (expr);                                      \
+        checkCuSparse(result, __FILE__, __LINE__);                             \
+    } while (false)
 
 namespace LegionSolvers {
 
-__host__ inline void check_cuda(cudaError_t error, const char* file, int line)
-{
-  if (error != cudaSuccess) {
-    fprintf(stderr,
+__host__ inline void check_cuda(cudaError_t error, const char *file, int line) {
+    if (error != cudaSuccess) {
+        fprintf(
+            stderr,
             "CUDA failure with error %s (%s) in file %s at line %d\n",
             cudaGetErrorString(error),
             cudaGetErrorName(error),
             file,
-            line);
+            line
+        );
 #ifndef NDEBUG
-    assert(false);
+        assert(false);
 #else
-    exit(error);
+        exit(error);
 #endif
-  }
+    }
 }
 
-__host__ inline void checkCuSparse(cusparseStatus_t status, const char* file, int line) {
-  if (status != CUSPARSE_STATUS_SUCCESS) {
-    fprintf(stderr,
+__host__ inline void
+checkCuSparse(cusparseStatus_t status, const char *file, int line) {
+    if (status != CUSPARSE_STATUS_SUCCESS) {
+        fprintf(
+            stderr,
             "CUSPARSE failure with error code %d (%s) in file %s at line %d\n",
             status,
             cusparseGetErrorString(status),
             file,
-            line);
-    assert(false);
-  }
+            line
+        );
+        assert(false);
+    }
 }
 
 // StreamView is a managed view of a CUDA stream. This code is
 // inspired from Legate's CUDA StreamView.
 struct StreamView {
-public:
-  StreamView(cudaStream_t stream) : valid_(true), stream_(stream) {}
-  ~StreamView();
+  public:
+    StreamView(cudaStream_t stream) : valid_(true), stream_(stream) {}
+    ~StreamView();
 
-public:
-  StreamView(const StreamView&)            = delete;
-  StreamView& operator=(const StreamView&) = delete;
+  public:
+    StreamView(const StreamView &) = delete;
+    StreamView &operator=(const StreamView &) = delete;
 
-public:
-  StreamView(StreamView&&);
-  StreamView& operator=(StreamView&&);
+  public:
+    StreamView(StreamView &&);
+    StreamView &operator=(StreamView &&);
 
-public:
-  operator cudaStream_t() const { return stream_; }
+  public:
+    operator cudaStream_t() const { return stream_; }
 
-private:
-  bool valid_;
-  cudaStream_t stream_;
+  private:
+    bool valid_;
+    cudaStream_t stream_;
 };
 
 // Return a cached stream for the current GPU.
@@ -89,42 +93,43 @@ cusparseHandle_t get_cusparse();
 // like cuSPARSE and (in the future) cuBLAS, as well as what
 // stream should kernels execute on.
 struct CUDALibraries {
-public:
-  CUDALibraries();
+  public:
+    CUDALibraries();
 
-private:
-  // Prevent copying and overwriting.
-  CUDALibraries(const CUDALibraries& rhs)            = delete;
-  CUDALibraries& operator=(const CUDALibraries& rhs) = delete;
+  private:
+    // Prevent copying and overwriting.
+    CUDALibraries(const CUDALibraries &rhs) = delete;
+    CUDALibraries &operator=(const CUDALibraries &rhs) = delete;
 
-public:
-  cusparseHandle_t get_cusparse();
-  cudaStream_t get_stream();
+  public:
+    cusparseHandle_t get_cusparse();
+    cudaStream_t get_stream();
 
-private:
-  cusparseHandle_t cusparse_;
-  cudaStream_t stream_;
+  private:
+    cusparseHandle_t cusparse_;
+    cudaStream_t stream_;
 };
 
 // LoadCUDALibsTask is a task that loads the CUDA libraries
 // on each GPU in the system.
 class LoadCUDALibsTask {
-public:
-  static const int TASK_ID = LEGION_SOLVERS_TASK_ID_ORIGIN + LOAD_CUDALIBS_TASK_ID;
-  static constexpr const char *task_name = "load_cuda_libs";
-  using return_type = void;
-  static return_type task_body(
-      const Legion::Task *task,
-      const std::vector<Legion::PhysicalRegion> &regions,
-      Legion::Context ctx,
-      Legion::Runtime *rt
-  );
-  static void preregister(bool verbose);
+  public:
+    static const int TASK_ID =
+        LEGION_SOLVERS_TASK_ID_ORIGIN + LOAD_CUDALIBS_TASK_ID;
+    static constexpr const char *task_name = "load_cuda_libs";
+    using return_type = void;
+    static return_type task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+    static void preregister(bool verbose);
 };
 
 // Function to actually perform initialization of CUDA modules
 // on each GPU. This should only be called once the Legion
 // runtime has started.
-void loadCUDALibs(Legion::Context ctx, Legion::Runtime* rt);
+void loadCUDALibs(Legion::Context ctx, Legion::Runtime *rt);
 
-}  // namespace LegionSolvers
+} // namespace LegionSolvers

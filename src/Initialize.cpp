@@ -6,7 +6,7 @@
 #include "UtilityTasks.hpp"        // for *ScalarTask
 
 #ifdef LEGION_USE_CUDA
-#include "CudaLibs.hpp"
+    #include "CudaLibs.hpp"
 #endif
 
 // clang-format off
@@ -160,9 +160,9 @@ void LegionSolvers::initialize(bool verbose) {
     #endif // LEGION_SOLVERS_USE_DOUBLE
 
     #ifdef LEGION_USE_CUDA
-      #ifndef REALM_USE_KOKKOS
-        LoadCUDALibsTask::preregister(verbose);
-      #endif
+        #ifndef REALM_USE_KOKKOS
+            LoadCUDALibsTask::preregister(verbose);
+        #endif
     #endif
 }
 // clang-format on
