@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
     LegionSolvers::preregister_task<top_level_task>(
         TOP_LEVEL_TASK_ID, "top_level", TaskFlags::INNER | TaskFlags::REPLICABLE
     );
-    LegionSolvers::initialize(true);
+    LegionSolvers::initialize(false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     Legion::Runtime::set_top_level_task_mapper_id(
         LegionSolvers::LEGION_SOLVERS_MAPPER_ID

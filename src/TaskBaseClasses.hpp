@@ -14,12 +14,18 @@ namespace LegionSolvers {
 using LEGION_SOLVERS_SUPPORTED_INDEX_TYPES = TypeList<
 #ifdef LEGION_SOLVERS_USE_S32_INDICES
     int,
+#else
+    void,
 #endif // LEGION_SOLVERS_USE_S32_INDICES
 #ifdef LEGION_SOLVERS_USE_U32_INDICES
     unsigned,
+#else
+    void,
 #endif // LEGION_SOLVERS_USE_U32_INDICES
 #ifdef LEGION_SOLVERS_USE_S64_INDICES
     long long,
+#else
+    void,
 #endif // LEGION_SOLVERS_USE_S64_INDICES
     void>;
 
@@ -187,17 +193,22 @@ template <
     Legion::TaskID BLOCK_ID,
     template <typename, int, typename>
     typename TaskClass,
-    typename T,
-    typename I>
-struct TaskTDI<BLOCK_ID, TaskClass, T, 0, I> {
+    typename T>
+struct TaskTDI<BLOCK_ID, TaskClass, T, 0, void> {
 
-    static constexpr Legion::TaskID task_id(int N) {
+    static constexpr Legion::TaskID task_id(int N, int I) {
         return LEGION_SOLVERS_TASK_ID_ORIGIN +
                LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
-               LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM *
-                   LEGION_SOLVERS_INDEX_TYPE_INDEX<I> +
+               LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM * I +
                LEGION_SOLVERS_NUM_ENTRY_TYPES * (N - 1) +
                LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
+    }
+
+    static Legion::TaskID task_id(Legion::IndexSpace index_space) {
+        return task_id(
+            index_space.get_dim(),
+            index_space.get_type_tag() - 256 * index_space.get_dim()
+        );
     }
 
 }; // struct TaskTDI

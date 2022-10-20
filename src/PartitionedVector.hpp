@@ -204,7 +204,7 @@ class PartitionedVector {
         assert(color_space == x.get_color_space());
         assert(index_partition == x.get_index_partition());
         Legion::IndexTaskLauncher launcher(
-            AxpyTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            AxpyTask<ENTRY_T, 0, void>::task_id(index_space),
             color_space,
             Legion::UntypedBuffer(),
             Legion::ArgumentMap()
@@ -243,7 +243,7 @@ class PartitionedVector {
         assert(color_space == x.get_color_space());
         assert(index_partition == x.get_index_partition());
         Legion::IndexTaskLauncher launcher(
-            AxpyTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            AxpyTask<ENTRY_T, 0, void>::task_id(index_space),
             color_space,
             Legion::UntypedBuffer(),
             Legion::ArgumentMap()
@@ -280,7 +280,7 @@ class PartitionedVector {
         assert(color_space == x.get_color_space());
         assert(index_partition == x.get_index_partition());
         Legion::IndexTaskLauncher launcher(
-            AxpyTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            AxpyTask<ENTRY_T, 0, void>::task_id(index_space),
             color_space,
             Legion::UntypedBuffer(),
             Legion::ArgumentMap()
@@ -313,7 +313,7 @@ class PartitionedVector {
         assert(color_space == x.get_color_space());
         assert(index_partition == x.get_index_partition());
         Legion::IndexTaskLauncher launcher(
-            XpayTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            XpayTask<ENTRY_T, 0, void>::task_id(index_space),
             color_space,
             Legion::UntypedBuffer(),
             Legion::ArgumentMap()
@@ -348,7 +348,7 @@ class PartitionedVector {
         assert(color_space == x.get_color_space());
         assert(index_partition == x.get_index_partition());
         Legion::IndexTaskLauncher launcher(
-            XpayTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            XpayTask<ENTRY_T, 0, void>::task_id(index_space),
             color_space,
             Legion::UntypedBuffer(),
             Legion::ArgumentMap()
@@ -384,7 +384,7 @@ class PartitionedVector {
         assert(color_space == x.get_color_space());
         assert(index_partition == x.get_index_partition());
         Legion::IndexTaskLauncher launcher(
-            DotTask<ENTRY_T, 0, void>::task_id(index_space.get_dim()),
+            DotTask<ENTRY_T, 0, void>::task_id(index_space),
             color_space,
             Legion::UntypedBuffer(),
             Legion::ArgumentMap()
