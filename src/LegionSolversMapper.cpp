@@ -1,8 +1,8 @@
 #include "LegionSolversMapper.hpp"
 
-#include <mappers/logging_wrapper.h>
+#include <mappers/logging_wrapper.h> // for Legion::Mapping::LoggingWrapper
 
-#include "LibraryOptions.hpp"
+#include "LibraryOptions.hpp" // for LEGION_SOLVERS_MAPPER_ID
 
 
 LegionSolvers::LegionSolversMapper::LegionSolversMapper(

@@ -1,9 +1,7 @@
 #ifndef LEGION_SOLVERS_LIBRARY_OPTIONS_HPP_INCLUDED
 #define LEGION_SOLVERS_LIBRARY_OPTIONS_HPP_INCLUDED
 
-#include <legion.h>
-
-#include "MetaprogrammingUtilities.hpp"
+#include <legion.h> // for Legion::*
 
 namespace LegionSolvers {
 
@@ -24,14 +22,14 @@ constexpr bool LEGION_SOLVERS_CHECK_BOUNDS = true;
 #endif // NDEBUG
 
 
-#ifndef LEGION_SOLVERS_MAPPER_ID
-constexpr Legion::MapperID LEGION_SOLVERS_MAPPER_ID = 1'000;
-#endif // LEGION_SOLVERS_MAPPER_ID
-
-
 #ifndef LEGION_SOLVERS_TASK_ID_ORIGIN
 constexpr Legion::TaskID LEGION_SOLVERS_TASK_ID_ORIGIN = 1'000'000;
 #endif // LEGION_SOLVERS_TASK_ID_ORIGIN
+
+
+#ifndef LEGION_SOLVERS_MAPPER_ID
+constexpr Legion::MapperID LEGION_SOLVERS_MAPPER_ID = 1'000;
+#endif // LEGION_SOLVERS_MAPPER_ID
 
 
 #ifndef LEGION_SOLVERS_PROJECTION_ID_ORIGIN

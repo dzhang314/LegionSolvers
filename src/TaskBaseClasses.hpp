@@ -1,13 +1,12 @@
 #ifndef LEGION_SOLVERS_TASK_BASE_CLASSES_HPP_INCLUDED
 #define LEGION_SOLVERS_TASK_BASE_CLASSES_HPP_INCLUDED
 
-#include <iostream>
-#include <string>
+#include <string> // for std::string
 
-#include <legion.h>
+#include <legion.h> // for Legion::*
 
-#include "LibraryOptions.hpp"
-#include "MetaprogrammingUtilities.hpp"
+#include "LibraryOptions.hpp"           // for LEGION_SOLVERS_USE_*
+#include "MetaprogrammingUtilities.hpp" // for TypeList, ListIndex, ...
 
 namespace LegionSolvers {
 

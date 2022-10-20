@@ -1,11 +1,11 @@
 #ifndef LEGION_SOLVERS_ABSTRACT_MATRIX_HPP_INCLUDED
 #define LEGION_SOLVERS_ABSTRACT_MATRIX_HPP_INCLUDED
 
-#include <vector>
+#include <vector> // for std::vector
 
-#include <legion.h>
+#include <legion.h> // for Legion::*
 
-#include "AbstractLinearOperator.hpp"
+#include "AbstractLinearOperator.hpp" // for AbstractLinearOperator
 
 namespace LegionSolvers {
 

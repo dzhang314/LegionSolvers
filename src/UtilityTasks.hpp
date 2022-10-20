@@ -1,7 +1,7 @@
 #ifndef LEGION_SOLVERS_UTILITY_TASKS_HPP_INCLUDED
 #define LEGION_SOLVERS_UTILITY_TASKS_HPP_INCLUDED
 
-#include <legion.h>
+#include <legion.h> // for Legion::*
 
 #include "LegionUtilities.hpp" // for TaskFlags
 #include "TaskBaseClasses.hpp" // for TaskT

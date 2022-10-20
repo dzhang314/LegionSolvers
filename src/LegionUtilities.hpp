@@ -6,9 +6,9 @@
 #include <type_traits> // for std::is_void_v
 #include <vector>      // for std::vector
 
-#include <legion.h>
+#include <legion.h> // for Legion::*
 
-#include "LibraryOptions.hpp"
+#include "LibraryOptions.hpp" // for LEGION_SOLVERS_CHECK_BOUNDS
 
 namespace LegionSolvers {
 

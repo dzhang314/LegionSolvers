@@ -1,9 +1,7 @@
 #ifndef LEGION_SOLVERS_TASK_REGISTRATION_HPP_INCLUDED
 #define LEGION_SOLVERS_TASK_REGISTRATION_HPP_INCLUDED
 
-#include <legion.h>
-
-#include "UtilityTasks.hpp"
+#include "UtilityTasks.hpp" // for *ScalarTask
 
 namespace LegionSolvers {
 

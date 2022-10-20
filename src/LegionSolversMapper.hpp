@@ -1,8 +1,8 @@
 #ifndef LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP_INCLUDED
 #define LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP_INCLUDED
 
-#include <legion.h>
-#include <mappers/default_mapper.h>
+#include <legion.h>                 // for Legion::*
+#include <mappers/default_mapper.h> // for Legion::Mapping::DefaultMapper
 
 namespace LegionSolvers {
 

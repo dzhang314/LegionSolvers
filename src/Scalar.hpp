@@ -1,7 +1,7 @@
 #ifndef LEGION_SOLVERS_SCALAR_HPP_INCLUDED
 #define LEGION_SOLVERS_SCALAR_HPP_INCLUDED
 
-#include <legion.h>
+#include <legion.h> // for Legion::*
 
 namespace LegionSolvers {
 
@@ -23,12 +23,11 @@ class Scalar {
     explicit Scalar(Legion::Context ctx, Legion::Runtime *rt, const T &value)
         : ctx(ctx), rt(rt), future(Legion::Future::from_value(rt, value)) {}
 
-    // NOTE: Copy constructor should not be explicit.
-    Scalar(const Scalar &) = default;
+    Scalar(const Scalar &) = default; // NOTE: should not be explicit
 
     Scalar &operator=(const Scalar &rhs) {
         future = rhs.future;
-        return *this; // No need to overwrite ctx or rt.
+        return *this; // no need to overwrite ctx or rt
     }
 
     Legion::Future get_future() const { return future; }

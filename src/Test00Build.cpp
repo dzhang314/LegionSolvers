@@ -1,6 +1,6 @@
-#include <iostream>
+#include <iostream> // for std::cout, std::endl
 
-#include <legion.h>
+#include <legion.h> // for LEGION_USE_CUDA, REALM_USE_KOKKOS
 
 int main() {
 

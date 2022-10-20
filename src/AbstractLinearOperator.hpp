@@ -1,7 +1,7 @@
 #ifndef LEGION_SOLVERS_ABSTRACT_LINEAR_OPERATOR_HPP_INCLUDED
 #define LEGION_SOLVERS_ABSTRACT_LINEAR_OPERATOR_HPP_INCLUDED
 
-#include <legion.h>
+#include <legion.h> // for Legion::IndexSpace, Legion::IndexPartition
 
 namespace LegionSolvers {
 

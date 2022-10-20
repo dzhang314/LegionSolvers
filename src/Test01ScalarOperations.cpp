@@ -1,11 +1,9 @@
-#include <iostream>
+#include <legion.h> // for Legion::*
 
-#include <legion.h>
-
-#include "LegionSolversMapper.hpp"
-#include "LegionUtilities.hpp"
-#include "Scalar.hpp"
-#include "TaskRegistration.hpp"
+#include "LegionSolversMapper.hpp" // for mapper_registration_callback
+#include "LegionUtilities.hpp"     // for preregister_task
+#include "Scalar.hpp"              // for Scalar
+#include "TaskRegistration.hpp"    // for register_tasks
 
 enum TaskIDs : Legion::TaskID { TOP_LEVEL_TASK_ID };
 

@@ -1,6 +1,6 @@
 #include "LegionUtilities.hpp"
 
-#include <cassert>
+#include <cassert> // for assert
 
 
 Legion::FieldSpace LegionSolvers::create_field_space(

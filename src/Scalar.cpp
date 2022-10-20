@@ -1,7 +1,7 @@
 #include "Scalar.hpp"
 
-#include "LibraryOptions.hpp"
-#include "UtilityTasks.hpp"
+#include "LibraryOptions.hpp" // for LEGION_SOLVERS_MAPPER_ID
+#include "UtilityTasks.hpp"   // for *ScalarTask
 
 using LegionSolvers::Scalar;
 

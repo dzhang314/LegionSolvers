@@ -1,7 +1,7 @@
 #ifndef LEGION_SOLVERS_METAPROGRAMMING_UTILITIES_HPP_INCLUDED
 #define LEGION_SOLVERS_METAPROGRAMMING_UTILITIES_HPP_INCLUDED
 
-#include <string>
+#include <string> // for std::string
 
 namespace LegionSolvers {
 
