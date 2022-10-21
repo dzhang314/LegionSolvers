@@ -100,4 +100,42 @@ void cublasDOT<double>(cublasHandle_t handle,
   ));
 }
 
+// Template dispatch for SCAL.
+template <typename ENTRY_T>
+void cublasSCAL(cublasHandle_t handle,
+                int n,
+                const ENTRY_T* alpha,
+                ENTRY_T* x,
+                int incx) { assert(false); }
+
+template <>
+void cublasSCAL<float>(cublasHandle_t handle,
+                       int n,
+                       const float* alpha,
+                       float* x,
+                       int incx) {
+  CHECK_CUBLAS(cublasSscal(
+      handle,
+      n,
+      alpha,
+      x,
+      incx
+  ));
+}
+
+template <>
+void cublasSCAL<double>(cublasHandle_t handle,
+                        int n,
+                        const double* alpha,
+                        double* x,
+                        int incx) {
+  CHECK_CUBLAS(cublasDscal(
+      handle,
+      n,
+      alpha,
+      x,
+      incx
+  ));
+}
+
 } // namespace LegionSolvers

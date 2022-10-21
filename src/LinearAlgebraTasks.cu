@@ -17,7 +17,45 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-  assert(false);
+  // Grab our stream and cuBLAS handle.
+  auto stream = get_cached_stream();
+  auto handle = get_cublas();
+  CHECK_CUBLAS(cublasSetStream(handle, stream));
+
+  assert(regions.size() == 1);
+  const auto &x = regions[0];
+
+  assert(task->regions.size() == 1);
+  const auto &x_req = task->regions[0];
+
+  assert(x_req.privilege_fields.size() == 1);
+  const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+
+  const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
+
+  AffineReaderWriter<ENTRY_T, DIM, COORD_T> x_reader_writer(x, x_fid);
+
+  const Legion::Domain x_domain =
+      rt->get_index_space_domain(ctx, x_req.region.get_index_space());
+
+  assert(x_domain.dense());
+
+  // If there are no points to process, exit.
+  if (x_domain.empty()) return;
+
+  // TODO (rohany): I'm not sure about what the right value for incx and
+  //  incy are. It depends on what layouts we're getting the input
+  //  vectors in. If we're getting exact layouts than this should be fine.
+  //  If we're getting some subslice of a larger region then this probably
+  //  won't work.
+  // Finally make the cuBLAS call.
+  cublasSCAL<ENTRY_T>(
+      handle,
+      x_domain.get_volume(),
+      &alpha,
+      x_reader_writer.ptr(x_domain.lo()),
+      1
+  );
 }
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
