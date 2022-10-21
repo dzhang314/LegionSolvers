@@ -45,6 +45,13 @@ cudaStream_t CUDALibraries::get_stream() {
   return this->stream_;
 }
 
+cublasHandle_t CUDALibraries::get_cublas() {
+  if (this->cublas_ == nullptr) {
+    CHECK_CUBLAS(cublasCreate(&this->cublas_));
+  }
+  return this->cublas_;
+}
+
 cusparseHandle_t CUDALibraries::get_cusparse() {
   if (this->cusparse_ == nullptr) {
     CHECK_CUSPARSE(cusparseCreate(&this->cusparse_));
@@ -70,6 +77,12 @@ StreamView get_cached_stream() {
   return StreamView(lib.get_stream());
 }
 
+cublasHandle_t get_cublas() {
+  const auto proc = Processor::get_executing_processor();
+  auto& lib       = get_cuda_libraries(proc);
+  return lib.get_cublas();
+}
+
 cusparseHandle_t get_cusparse() {
   const auto proc = Processor::get_executing_processor();
   auto& lib       = get_cuda_libraries(proc);
@@ -86,6 +99,7 @@ LoadCUDALibsTask::return_type LoadCUDALibsTask::task_body(
   const auto proc = Processor::get_executing_processor();
   auto& lib       = get_cuda_libraries(proc);
   lib.get_stream();
+  lib.get_cublas();
   lib.get_cusparse();
 }
 
