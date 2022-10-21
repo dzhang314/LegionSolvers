@@ -74,9 +74,9 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
       y_domain.get_volume(),
       &alpha,
       x_reader.ptr(x_domain.lo()),
-      sizeof(ENTRY_T),
+      1,
       y_reader_writer.ptr(y_domain.lo()),
-      sizeof(ENTRY_T)
+      1
   );
 }
 
@@ -200,10 +200,10 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
   cublasDOT<ENTRY_T>(
       handle,
       v_domain.get_volume(),
-      x_reader.ptr(x_domain.lo()),
-      sizeof(ENTRY_T),
-      y_reader_writer.ptr(y_domain.lo()),
-      sizeof(ENTRY_T),
+      v_reader.ptr(v_domain.lo()),
+      1,
+      w_reader.ptr(w_domain.lo()),
+      1,
       &result
   );
 
