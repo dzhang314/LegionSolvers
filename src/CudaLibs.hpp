@@ -22,10 +22,10 @@
     } while (false)
 
 #define CHECK_CUBLAS(expr)                                                     \
-  do {                                                                         \
-    cublasStatus_t __result__ = (expr);                                        \
-    check_cublas(__result__, __FILE__, __LINE__);                              \
-  } while (false)
+    do {                                                                       \
+        cublasStatus_t __result__ = (expr);                                    \
+        check_cublas(__result__, __FILE__, __LINE__);                          \
+    } while (false)
 
 #define CHECK_CUSPARSE(expr)                                                   \
     do {                                                                       \
