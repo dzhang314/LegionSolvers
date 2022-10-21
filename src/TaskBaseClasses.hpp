@@ -92,7 +92,11 @@ struct TaskT {
         preregister_task<
             typename TaskClass<T>::return_type,
             TaskClass<T>::task_body>(
-            task_id, task_name(), TaskClass<T>::flags, verbose
+            task_id,
+            task_name(),
+            TaskClass<T>::flags,
+            Legion::Processor::LOC_PROC,
+            verbose
         );
     }
 
@@ -139,7 +143,11 @@ struct TaskTDI {
         preregister_task<
             typename TaskClass<T, N, I>::return_type,
             TaskClass<T, N, I>::task_body>(
-            task_id, task_name(), TaskClass<T, N, I>::flags, verbose
+            task_id,
+            task_name(),
+            TaskClass<T, N, I>::flags,
+            Legion::Processor::LOC_PROC,
+            verbose
         );
     }
 
@@ -260,6 +268,7 @@ struct TaskTDDDIII {
             task_id,
             task_name(),
             TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
+            Legion::Processor::LOC_PROC,
             verbose
         );
     }

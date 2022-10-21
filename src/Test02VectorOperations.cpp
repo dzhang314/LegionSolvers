@@ -170,107 +170,128 @@ int main(int argc, char **argv) {
     LegionSolvers::preregister_task<test_task<float, 1, int, 1, long long>>(
         TEST_FLOAT__1_SI_1_LL_TASK_ID,
         "test_float__1_si_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<float, 1, unsigned, 1, long long>>(
         TEST_FLOAT__1_UI_1_LL_TASK_ID,
         "test_float__1_ui_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<float, 1, long long, 1, long long>>(
         TEST_FLOAT__1_LL_1_LL_TASK_ID,
         "test_float__1_ll_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<test_task<float, 2, int, 1, long long>>(
         TEST_FLOAT__2_SI_1_LL_TASK_ID,
         "test_float__2_si_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<float, 2, unsigned, 1, long long>>(
         TEST_FLOAT__2_UI_1_LL_TASK_ID,
         "test_float__2_ui_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<float, 2, long long, 1, long long>>(
         TEST_FLOAT__2_LL_1_LL_TASK_ID,
         "test_float__2_ll_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<test_task<float, 3, int, 1, long long>>(
         TEST_FLOAT__3_SI_1_LL_TASK_ID,
         "test_float__3_si_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<float, 3, unsigned, 1, long long>>(
         TEST_FLOAT__3_UI_1_LL_TASK_ID,
         "test_float__3_ui_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<float, 3, long long, 1, long long>>(
         TEST_FLOAT__3_LL_1_LL_TASK_ID,
         "test_float__3_ll_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<test_task<double, 1, int, 1, long long>>(
         TEST_DOUBLE_1_SI_1_LL_TASK_ID,
         "test_double_1_si_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<double, 1, unsigned, 1, long long>>(
         TEST_DOUBLE_1_UI_1_LL_TASK_ID,
         "test_double_1_ui_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<double, 1, long long, 1, long long>>(
         TEST_DOUBLE_1_LL_1_LL_TASK_ID,
         "test_double_1_ll_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<test_task<double, 2, int, 1, long long>>(
         TEST_DOUBLE_2_SI_1_LL_TASK_ID,
         "test_double_2_si_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<double, 2, unsigned, 1, long long>>(
         TEST_DOUBLE_2_UI_1_LL_TASK_ID,
         "test_double_2_ui_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<double, 2, long long, 1, long long>>(
         TEST_DOUBLE_2_LL_1_LL_TASK_ID,
         "test_double_2_ll_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<test_task<double, 3, int, 1, long long>>(
         TEST_DOUBLE_3_SI_1_LL_TASK_ID,
         "test_double_3_si_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<double, 3, unsigned, 1, long long>>(
         TEST_DOUBLE_3_UI_1_LL_TASK_ID,
         "test_double_3_ui_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<
         test_task<double, 3, long long, 1, long long>>(
         TEST_DOUBLE_3_LL_1_LL_TASK_ID,
         "test_double_3_ll_1_ll",
-        TaskFlags::INNER | TaskFlags::REPLICABLE
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::preregister_task<top_level_task>(
-        TOP_LEVEL_TASK_ID, "top_level", TaskFlags::INNER | TaskFlags::REPLICABLE
+        TOP_LEVEL_TASK_ID,
+        "top_level",
+        TaskFlags::INNER | TaskFlags::REPLICABLE,
+        Legion::Processor::LOC_PROC
     );
     LegionSolvers::initialize(false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
