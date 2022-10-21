@@ -12,6 +12,8 @@ endif()
 set(LegionSolvers_SOURCES "")
 
 list(APPEND LegionSolvers_SOURCES
+  src/COOMatrixTasks.cpp
+  src/CSRMatrixTasks.cpp
   src/Initialize.cpp
   src/LegionSolversMapper.cpp
   src/LegionUtilities.cpp
