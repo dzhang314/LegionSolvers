@@ -54,7 +54,7 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
       x_domain.get_volume(),
       &alpha,
       x_reader_writer.ptr(x_domain.lo()),
-      1,
+      1
   );
 }
 

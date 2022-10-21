@@ -105,14 +105,14 @@ template <typename ENTRY_T>
 void cublasSCAL(cublasHandle_t handle,
                 int n,
                 const ENTRY_T* alpha,
-                const ENTRY_T* x,
+                ENTRY_T* x,
                 int incx) { assert(false); }
 
 template <>
 void cublasSCAL<float>(cublasHandle_t handle,
                        int n,
                        const float* alpha,
-                       const float* x,
+                       float* x,
                        int incx) {
   CHECK_CUBLAS(cublasSscal(
       handle,
@@ -127,7 +127,7 @@ template <>
 void cublasSCAL<double>(cublasHandle_t handle,
                         int n,
                         const double* alpha,
-                        const double* x,
+                        double* x,
                         int incx) {
   CHECK_CUBLAS(cublasDscal(
       handle,
