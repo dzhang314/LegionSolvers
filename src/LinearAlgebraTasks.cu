@@ -8,10 +8,7 @@
 
 #include <cmath>   // for std::fma
 
-using LegionSolvers::AxpyTask;
-using LegionSolvers::DotTask;
-using LegionSolvers::ScalTask;
-using LegionSolvers::XpayTask;
+using namespace LegionSolvers;
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
 void ScalTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
@@ -89,7 +86,7 @@ template <typename ENTRY_T, int DIM, typename COORD_T>
 __global__
 void xpay_kernel(size_t volume,
                  ENTRY_T alpha,
-                 LegionSolvers::Pitches<DIM - 1, COORD_T> pitches,
+                 Pitches<DIM - 1, COORD_T> pitches,
                  const Legion::Point<DIM, COORD_T> lo,
                  AffineReaderWriter<ENTRY_T, DIM, COORD_T> y,
                  AffineReader<ENTRY_T, DIM, COORD_T> x) {
@@ -138,7 +135,7 @@ void XpayTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
   if (y_domain.empty()) return;
 
   auto stream = get_cached_stream();
-  LegionSolvers::Pitches<DIM - 1, COORD_T> pitches;
+  Pitches<DIM - 1, COORD_T> pitches;
   auto volume = pitches.flatten(y_domain.bounds<DIM, COORD_T>());
   auto blocks = get_num_blocks_1d(volume);
   xpay_kernel<ENTRY_T, DIM, COORD_T><<<blocks, THREADS_PER_BLOCK, 0, stream>>>(

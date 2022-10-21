@@ -77,10 +77,12 @@ __host__ inline void check_cusparse(cusparseStatus_t status, const char *file, i
     }
 }
 
+#ifdef __CUDACC__
 __device__ inline size_t global_tid_1d()
 {
   return static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 }
+#endif
 
 inline size_t get_num_blocks_1d(size_t threads) {
   return (threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
