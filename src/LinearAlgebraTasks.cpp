@@ -13,34 +13,6 @@ using LegionSolvers::ScalTask;
 using LegionSolvers::XpayTask;
 
 
-template <typename ENTRY_T>
-inline ENTRY_T get_alpha(const std::vector<Legion::Future> &futures) {
-    if (futures.size() == 0) {
-        return static_cast<ENTRY_T>(1);
-    } else if (futures.size() == 1) {
-        return futures[0].get_result<ENTRY_T>();
-    } else if (futures.size() == 2) {
-        const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
-        const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
-        return f0 / f1;
-    } else if (futures.size() == 3) {
-        const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
-        const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
-        const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
-        return f0 * f1 / f2;
-    } else if (futures.size() == 4) {
-        const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
-        const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
-        const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
-        const ENTRY_T f3 = futures[3].get_result<ENTRY_T>();
-        return f0 * f1 / (f2 * f3);
-    } else {
-        assert(false);
-        return static_cast<ENTRY_T>(1);
-    }
-}
-
-
 template <typename ENTRY_T, int DIM, typename COORD_T>
 void ScalTask<ENTRY_T, DIM, COORD_T>::task_body(
     const Legion::Task *task,
