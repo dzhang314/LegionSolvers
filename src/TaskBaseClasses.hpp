@@ -149,6 +149,20 @@ struct TaskTDI {
             Legion::Processor::LOC_PROC,
             verbose
         );
+
+        #ifdef LEGION_USE_CUDA
+          #ifndef REALM_USE_KOKKOS
+            preregister_task<
+              typename TaskClass<T, N, I>::return_type,
+              TaskClass<T, N, I>::gpu_task_body>(
+                task_id,
+                task_name(),
+                TaskClass<T, N, I>::flags,
+                Legion::Processor::TOC_PROC,
+                verbose
+            );
+          #endif // REALM_USE_KOKKOS
+        #endif // LEGION_USE_CUDA
     }
 
     // static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
