@@ -33,6 +33,8 @@
         LegionSolvers::check_cusparse(result, __FILE__, __LINE__);              \
     } while (false)
 
+#define THREADS_PER_BLOCK 128
+
 namespace LegionSolvers {
 
 __host__ inline void check_cuda(cudaError_t error, const char *file, int line) {
@@ -74,6 +76,16 @@ __host__ inline void check_cusparse(cusparseStatus_t status, const char *file, i
         assert(false);
     }
 }
+
+__device__ inline size_t global_tid_1d()
+{
+  return static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+}
+
+inline size_t get_num_blocks_1d(size_t threads) {
+  return (threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+}
+
 
 // StreamView is a managed view of a CUDA stream. This code is
 // inspired from Legate's CUDA StreamView.
