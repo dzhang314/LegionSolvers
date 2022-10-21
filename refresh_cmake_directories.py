@@ -22,8 +22,11 @@ def main():
                 for cuda_tag, use_cuda in CUDA_TYPES:
                     for kokkos_tag, use_kokkos in KOKKOS_TYPES:
                         build_name = os.path.join(
-                            join("build", kokkos_tag, cuda_tag),
-                            join(dir_name, network_tag, build_type.lower())
+                            "build",
+                            join(
+                                dir_name, network_tag, cuda_tag,
+                                kokkos_tag, build_type.lower()
+                            )
                         )
                         lib_name = join(
                             "legion", dir_name, network_tag,
@@ -38,8 +41,11 @@ def main():
                         }
                         if MACHINE == Machines.LASSEN:
                             defines["CMAKE_CXX_FLAGS"] = "-maltivec -mabi=altivec"
-                        cmake(build_name, defines, build=False,
-                              test=False, install=False, cmake_cmd=("cmake", ".."))
+                        cmake(
+                            build_name, defines,
+                            build=False, test=False, install=False,
+                            cmake_cmd=("cmake", os.path.join("..", ".."))
+                        )
 
 
 ################################################################################
