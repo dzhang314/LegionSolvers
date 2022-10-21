@@ -1,6 +1,10 @@
 #ifndef LEGION_SOLVERS_COO_MATRIX_TASKS_HPP_INCLUDED
 #define LEGION_SOLVERS_COO_MATRIX_TASKS_HPP_INCLUDED
 
+#include "LegionUtilities.hpp" // for TaskFlags
+#include "TaskBaseClasses.hpp" // for TaskTDDDIII
+#include "TaskIDs.hpp"         // for *_TASK_BLOCK_ID
+
 namespace LegionSolvers {
 
 
