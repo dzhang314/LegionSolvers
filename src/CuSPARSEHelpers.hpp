@@ -61,6 +61,9 @@ void convertGlobalRowptrToLocalIndPtr(
 }
 
 // Utilities for constructing cuSPARSE matrices and vectors.
+
+// makeCuSparseCSR constructs a cuSPARSE CSR matrix from accessors
+// that back the underlying regions.
 template <
     typename ENTRY_T,
     int KERNEL_DIM,
@@ -115,6 +118,8 @@ cusparseSpMatDescr_t makeCuSparseCSR(
     return descr;
 }
 
+// makeCuSparseCOO constructs a cuSPARSE COO matrix from accessors
+// that back the underlying regions.
 template <
     typename ENTRY_T,
     int KERNEL_DIM,
@@ -155,33 +160,47 @@ cusparseSpMatDescr_t makeCuSparseCOO(
     return descr;
 }
 
-// TODO (rohany): comment on the difference between these two things.
+// makeCuSparseDnVec creates a cuSPARSE dense vector object where
+// the full domain of the vector should be considered as accessible
+// and aligned with the memory backing the cuSPARSE vector. This is
+// the standard case, and care should be taken when differentiating
+// between using this and makeShiftedCuSparseDnVec defined below.
+template <typename ENTRY_T, typename Accessor>
+cusparseDnVecDescr_t makeCuSparseDnVec(
+    const Legion::Domain domain,
+    Accessor acc) {
+  cusparseDnVecDescr_t descr;
+  CHECK_CUSPARSE(cusparseCreateDnVec(
+      &descr,
+      domain.get_volume(),
+      acc.ptr(domain.lo()),
+      cusparseDataType<ENTRY_T>()
+  ));
+  return descr;
+}
 
+// makeShiftedCuSparseDnVec creates a cuSPARSE dense vector object
+// where the backing region is the result of an image operation that
+// selects only a subset of the vector. The classic example is the
+// image from the coordinates region of a CSR matrix to the vector
+// x in y = Ax. In this case, partitions of x are defined by images
+// from partitions of A. These partitions of x are restricted to a
+// small portion of x's domain. However, to use these partitions
+// effectively with cuSPARSE, we don't want to have to materialize
+// the full region x. So, this shifted operation returns a pointer
+// to the logical (but invalid) beginning of the full region x. It
+// is then assumed that this vector is only used with operations that
+// are guaranteed not to read the invalid memory locations.
 template <typename ENTRY_T, typename Accessor>
 cusparseDnVecDescr_t makeShiftedCuSparseDnVec(
     const Legion::Domain domain,
     size_t size,
     Accessor acc) {
     cusparseDnVecDescr_t descr;
-    // TODO (rohany): Comment this...
     CHECK_CUSPARSE(cusparseCreateDnVec(
         &descr,
         size,
         acc.ptr(domain.lo()) - size_t(domain.lo()[0]),
-        cusparseDataType<ENTRY_T>()
-    ));
-    return descr;
-}
-
-template <typename ENTRY_T, typename Accessor>
-cusparseDnVecDescr_t makeCuSparseDnVec(
-    const Legion::Domain domain,
-    Accessor acc) {
-    cusparseDnVecDescr_t descr;
-    CHECK_CUSPARSE(cusparseCreateDnVec(
-        &descr,
-        domain.get_volume(),
-        acc.ptr(domain.lo()),
         cusparseDataType<ENTRY_T>()
     ));
     return descr;
