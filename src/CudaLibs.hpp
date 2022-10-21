@@ -24,13 +24,13 @@
 #define CHECK_CUBLAS(expr)                                                     \
     do {                                                                       \
         cublasStatus_t __result__ = (expr);                                    \
-        check_cublas(__result__, __FILE__, __LINE__);                          \
+        LegionSolvers::check_cublas(__result__, __FILE__, __LINE__);           \
     } while (false)
 
 #define CHECK_CUSPARSE(expr)                                                   \
     do {                                                                       \
         cusparseStatus_t result = (expr);                                      \
-        checkCuSparse(result, __FILE__, __LINE__);                             \
+        LegionSolvers::check_cusparse(result, __FILE__, __LINE__);              \
     } while (false)
 
 namespace LegionSolvers {
@@ -61,8 +61,7 @@ __host__ inline void check_cublas(cublasStatus_t status, const char* file, int l
 }
 
 
-__host__ inline void
-checkCuSparse(cusparseStatus_t status, const char *file, int line) {
+__host__ inline void check_cusparse(cusparseStatus_t status, const char *file, int line) {
     if (status != CUSPARSE_STATUS_SUCCESS) {
         fprintf(
             stderr,

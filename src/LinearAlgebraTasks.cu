@@ -20,14 +20,23 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
 }
 
 // Template dispatch for AXPY.
-template <typename float>
+template <typename ENTRY_T>
 void cublasAXPY(cublasHandle_t handle,
                 int n,
-                const float* alpha,
-                const float* x,
+                const ENTRY_T* alpha,
+                const ENTRY_T* x,
                 int incx,
-                float* y,
-                int incy) {
+                ENTRY_T* y,
+                int incy) { assert(false); }
+
+template <>
+void cublasAXPY<float>(cublasHandle_t handle,
+                       int n,
+                       const float* alpha,
+                       const float* x,
+                       int incx,
+                       float* y,
+                       int incy) {
   CHECK_CUBLAS(cublasSaxpy(
       handle,
       n,
@@ -39,14 +48,14 @@ void cublasAXPY(cublasHandle_t handle,
   ));
 }
 
-template <typename double>
-void cublasAXPY(cublasHandle_t handle,
-                int n,
-                const double* alpha,
-                const double* x,
-                int incx,
-                double* y,
-                int incy) {
+template <>
+void cublasAXPY<double>(cublasHandle_t handle,
+                        int n,
+                        const double* alpha,
+                        const double* x,
+                        int incx,
+                        double* y,
+                        int incy) {
   CHECK_CUBLAS(cublasDaxpy(
       handle,
       n,
@@ -97,6 +106,9 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
 
   assert(y_domain == x_domain);
   assert(y_domain.dense());
+
+  // If there are no points to process, exit.
+  if (y_domain.empty()) return;
 
   // TODO (rohany): I'm not sure about what the right value for incx and
   //  incy are. It depends on what layouts we're getting the input
