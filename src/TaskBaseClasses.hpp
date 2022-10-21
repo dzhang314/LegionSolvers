@@ -310,6 +310,20 @@ struct TaskTDDDIII {
             Legion::Processor::LOC_PROC,
             verbose
         );
+
+        #ifdef LEGION_USE_CUDA
+          #ifndef REALM_USE_KOKKOS
+              preregister_task<
+                  typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
+                  TaskClass<T, N1, N2, N3, I1, I2, I3>::gpu_task_body>(
+                  task_id,
+                  task_name(),
+                  TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
+                  Legion::Processor::TOC_PROC,
+                  verbose
+              );
+          #endif // REALM_USE_KOKKOS
+        #endif // LEGION_USE_CUDA
     }
 
 }; // struct TaskTDDDIII

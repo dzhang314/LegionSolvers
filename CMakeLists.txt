@@ -29,6 +29,8 @@ endif()
 
 if(Legion_USE_CUDA AND NOT Legion_USE_KOKKOS)
   list(APPEND LegionSolvers_SOURCES
+    src/COOMatrixTasks.cu
+    src/CSRMatrixTasks.cu
     src/CudaLibs.cu
     src/LinearAlgebraTasks.cu
   )
