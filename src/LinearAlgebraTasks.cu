@@ -1,5 +1,6 @@
 #include "LinearAlgebraTasks.hpp"
 
+#include "CudaLibs.hpp"
 #include "LegionUtilities.hpp" // for AffineReader, AffineWriter, ...
 #include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
 
@@ -18,6 +19,45 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
   assert(false);
 }
 
+// Template dispatch for AXPY.
+template <typename float>
+void cublasAXPY(cublasHandle_t handle,
+                int n,
+                const float* alpha,
+                const float* x,
+                int incx,
+                float* y,
+                int incy) {
+  CHECK_CUBLAS(cublasSaxpy(
+      handle,
+      n,
+      alpha,
+      x,
+      incx,
+      y,
+      incy
+  ));
+}
+
+template <typename double>
+void cublasAXPY(cublasHandle_t handle,
+                int n,
+                const double* alpha,
+                const double* x,
+                int incx,
+                double* y,
+                int incy) {
+  CHECK_CUBLAS(cublasDaxpy(
+      handle,
+      n,
+      alpha,
+      x,
+      incx,
+      y,
+      incy
+  ));
+}
+
 template <typename ENTRY_T, int DIM, typename COORD_T>
 void AxpyTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     const Legion::Task *task,
@@ -25,7 +65,54 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-  assert(false);
+  // Grab our stream and cuBLAS handle.
+  auto stream = get_cached_stream();
+  auto handle = get_cublas();
+  CHECK_CUBLAS(cublasSetStream(handle, stream));
+
+  assert(regions.size() == 2);
+  const auto &y = regions[0];
+  const auto &x = regions[1];
+
+  assert(task->regions.size() == 2);
+  const auto &y_req = task->regions[0];
+  const auto &x_req = task->regions[1];
+
+  assert(y_req.privilege_fields.size() == 1);
+  const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
+
+  assert(x_req.privilege_fields.size() == 1);
+  const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+
+  const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
+
+  AffineReaderWriter<ENTRY_T, DIM, COORD_T> y_reader_writer{y, y_fid};
+  AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
+
+  const Legion::Domain y_domain =
+      rt->get_index_space_domain(ctx, y_req.region.get_index_space());
+
+  const Legion::Domain x_domain =
+      rt->get_index_space_domain(ctx, x_req.region.get_index_space());
+
+  assert(y_domain == x_domain);
+  assert(y_domain.dense());
+
+  // TODO (rohany): I'm not sure about what the right value for incx and
+  //  incy are. It depends on what layouts we're getting the input
+  //  vectors in. If we're getting exact layouts than this should be fine.
+  //  If we're getting some subslice of a larger region then this probably
+  //  won't work.
+  // Finally make the cuBLAS call.
+  cublasAXPY<ENTRY_T>(
+      handle,
+      y_domain.get_volume(),
+      &alpha,
+      x_reader.ptr(x_domain.lo()),
+      sizeof(ENTRY_T),
+      y_reader_writer.ptr(y_domain.lo()),
+      sizeof(ENTRY_T)
+  );
 }
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
