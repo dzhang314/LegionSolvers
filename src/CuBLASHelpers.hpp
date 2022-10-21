@@ -52,5 +52,52 @@ void cublasAXPY<double>(cublasHandle_t handle,
   ));
 }
 
+// Template dispatch for DOT.
+template <typename ENTRY_T>
+void cublasDOT(cublasHandle_t handle,
+               int n,
+               const ENTRY_T* x,
+               int incx,
+               const ENTRY_T* y,
+               int incy,
+               ENTRY_T* result) { assert(false); }
+
+template <>
+void cublasDOT<float>(cublasHandle_t handle,
+                      int n,
+                      const float* x,
+                      int incx,
+                      const float* y,
+                      int incy,
+                      float* result) {
+  CHECK_CUBLAS(cublasSdot(
+    handle,
+    n,
+    x,
+    incx,
+    y,
+    incy,
+    result
+  ));
+}
+
+template <>
+void cublasDOT<double>(cublasHandle_t handle,
+                       int n,
+                       const double* x,
+                       int incx,
+                       const double* y,
+                       int incy,
+                       double* result) {
+  CHECK_CUBLAS(cublasDdot(
+      handle,
+      n,
+      x,
+      incx,
+      y,
+      incy,
+      result
+  ));
+}
 
 } // namespace LegionSolvers

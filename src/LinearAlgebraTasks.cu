@@ -74,9 +74,9 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
       y_domain.get_volume(),
       &alpha,
       x_reader.ptr(x_domain.lo()),
-      sizeof(ENTRY_T),
+      1,
       y_reader_writer.ptr(y_domain.lo()),
-      sizeof(ENTRY_T)
+      1
   );
 }
 
@@ -155,8 +155,59 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-  assert(false);
-  return ENTRY_T{0};
+  // Grab our stream and cuBLAS handle.
+  auto stream = get_cached_stream();
+  auto handle = get_cublas();
+  CHECK_CUBLAS(cublasSetStream(handle, stream));
+
+  assert(regions.size() == 2);
+  const auto &v = regions[0];
+  const auto &w = regions[1];
+
+  assert(task->regions.size() == 2);
+  const auto &v_req = task->regions[0];
+  const auto &w_req = task->regions[1];
+
+  assert(v_req.privilege_fields.size() == 1);
+  const Legion::FieldID v_fid = *v_req.privilege_fields.begin();
+
+  assert(w_req.privilege_fields.size() == 1);
+  const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
+
+  AffineReader<ENTRY_T, DIM, COORD_T> v_reader{v, v_fid};
+  AffineReader<ENTRY_T, DIM, COORD_T> w_reader{w, w_fid};
+
+  const Legion::Domain v_domain =
+      rt->get_index_space_domain(ctx, v_req.region.get_index_space());
+
+  const Legion::Domain w_domain =
+      rt->get_index_space_domain(ctx, w_req.region.get_index_space());
+
+  assert(v_domain == w_domain);
+  assert(v_domain.dense());
+
+  ENTRY_T result = static_cast<ENTRY_T>(0);
+  if (v_domain.empty()) {
+    return result;
+  }
+
+  // TODO (rohany): I'm not sure about what the right value for incx and
+  //  incy are. It depends on what layouts we're getting the input
+  //  vectors in. If we're getting exact layouts than this should be fine.
+  //  If we're getting some subslice of a larger region then this probably
+  //  won't work.
+  // Finally make the cuBLAS call.
+  cublasDOT<ENTRY_T>(
+      handle,
+      v_domain.get_volume(),
+      v_reader.ptr(v_domain.lo()),
+      1,
+      w_reader.ptr(w_domain.lo()),
+      1,
+      &result
+  );
+
+  return result;
 }
 
 // clang-format off
