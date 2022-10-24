@@ -20,8 +20,11 @@ def main():
                         if use_kokkos and not use_cuda:
                             continue
                         build_name = os.path.join(
-                            join("build", kokkos_tag, cuda_tag),
-                            join(dir_name, network_tag, build_type.lower())
+                            "build",
+                            join(
+                                dir_name, network_tag, cuda_tag,
+                                kokkos_tag, build_type.lower()
+                            )
                         )
                         with pushd(build_name):
                             run("cmake", "--build", ".", "--parallel", "20")

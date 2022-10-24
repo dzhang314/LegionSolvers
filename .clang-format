@@ -29,7 +29,21 @@ SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
 
 # whitespace characters
+BitFieldColonSpacing: Both
 DeriveLineEnding: false
+SpaceAfterCStyleCast: true
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeRangeBasedForLoopColon: true
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+SpacesInSquareBrackets: false
+SpaceBeforeSquareBrackets: false
 UseCRLF: false
 UseTab: Never
 
@@ -53,6 +67,7 @@ SpaceBeforeParens: ControlStatements
 SpacesInParentheses: false
 
 # classes
+AccessModifierOffset: -4
 SpaceBeforeCpp11BracedList: false
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
@@ -62,22 +77,6 @@ AlwaysBreakTemplateDeclarations: Yes
 SpaceAfterTemplateKeyword: true
 SpacesInAngles: Never
 
-SpaceAfterCStyleCast: true
-SpaceAfterLogicalNot: false
-SpaceBeforeAssignmentOperators: true
-SpaceBeforeCaseColon: false
-SpaceBeforeRangeBasedForLoopColon: true
-SpacesInConditionalStatement: false
-SpacesInContainerLiterals: false
-SpacesInCStyleCastParentheses: false
-SpacesInLineCommentPrefix:
-  Minimum: 1
-  Maximum: -1
-SpacesInSquareBrackets: false
-SpaceBeforeSquareBrackets: false
-BitFieldColonSpacing: Both
-
-AccessModifierOffset: -2
 AlignArrayOfStructures: None
 AlignConsecutiveMacros: None
 AlignConsecutiveAssignments: None
