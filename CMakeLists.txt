@@ -14,6 +14,7 @@ set(LegionSolvers_SOURCES "")
 list(APPEND LegionSolvers_SOURCES
   src/COOMatrixTasks.cpp
   src/CSRMatrixTasks.cpp
+  src/ExampleSystems.cpp
   src/Initialize.cpp
   src/LegionSolversMapper.cpp
   src/LegionUtilities.cpp
@@ -73,3 +74,11 @@ set_target_properties(Test01ScalarOperations PROPERTIES CXX_STANDARD 17)
 add_executable(Test02VectorOperations src/Test02VectorOperations.cpp)
 target_link_libraries(Test02VectorOperations LegionSolvers)
 set_target_properties(Test02VectorOperations PROPERTIES CXX_STANDARD 17)
+
+add_executable(Test03COOPartitioning src/Test03COOPartitioning.cpp)
+target_link_libraries(Test03COOPartitioning LegionSolvers)
+set_target_properties(Test03COOPartitioning PROPERTIES CXX_STANDARD 17)
+
+add_executable(Test04CSRPartitioning src/Test04CSRPartitioning.cpp)
+target_link_libraries(Test04CSRPartitioning LegionSolvers)
+set_target_properties(Test04CSRPartitioning PROPERTIES CXX_STANDARD 17)

@@ -1,5 +1,6 @@
 #include "Initialize.hpp"
 
+#include "ExampleSystems.hpp"      // for Fill*NegativeLaplacianTask
 #include "LegionSolversMapper.hpp" // for mapper_registration_callback
 #include "LibraryOptions.hpp"      // for LEGION_SOLVERS_USE_*
 #include "LinearAlgebraTasks.hpp"  // for ScalTask, AxpyTask, XpayTask, DotTask
@@ -158,6 +159,13 @@ void LegionSolvers::initialize(bool verbose) {
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_DOUBLE
+
+    // TODO: proper guards
+    PrintIndexTask<1>::preregister(verbose);
+    PrintIndexTask<2>::preregister(verbose);
+    PrintIndexTask<3>::preregister(verbose);
+    FillCOONegativeLaplacianTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCOONegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
 
     #ifdef LEGION_USE_CUDA
         #ifndef REALM_USE_KOKKOS

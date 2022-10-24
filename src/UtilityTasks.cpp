@@ -8,6 +8,7 @@ using LegionSolvers::AddScalarTask;
 using LegionSolvers::DivideScalarTask;
 using LegionSolvers::MultiplyScalarTask;
 using LegionSolvers::NegateScalarTask;
+using LegionSolvers::PrintIndexTask;
 using LegionSolvers::PrintScalarTask;
 using LegionSolvers::SubtractScalarTask;
 
@@ -95,6 +96,35 @@ T DivideScalarTask<T>::task_body(
 }
 
 
+template <int DIM>
+void LegionSolvers::PrintIndexTask<DIM>::task_body(
+    const Legion::Task *task,
+    const std::vector<Legion::PhysicalRegion> &regions,
+    Legion::Context ctx,
+    Legion::Runtime *rt
+) {
+    const Legion::DomainPoint index_point = task->index_point;
+
+    assert(regions.size() == 1);
+    const auto &dummy = regions[0];
+
+    assert(task->regions.size() == 1);
+    const auto &dummy_req = task->regions[0];
+
+    if (task->arglen == 0) {
+        for (Legion::PointInDomainIterator<DIM> iter{dummy}; iter(); ++iter) {
+            std::cout << index_point << ' ' << *iter << '\n';
+        }
+    } else {
+        const std::string name{reinterpret_cast<const char *>(task->args)};
+        for (Legion::PointInDomainIterator<DIM> iter{dummy}; iter(); ++iter) {
+            std::cout << name << ' ' << index_point << ' ' << *iter << '\n';
+        }
+    }
+    std::cout << std::flush;
+}
+
+
 #ifdef LEGION_SOLVERS_USE_FLOAT
 template int PrintScalarTask<float>::task_body(
     const Legion::Task *task,
@@ -173,3 +203,12 @@ template double DivideScalarTask<double>::task_body(
     Legion::Runtime *rt
 );
 #endif // LEGION_SOLVERS_USE_DOUBLE
+
+
+// TODO: guards
+template void PrintIndexTask<1>::
+    task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void PrintIndexTask<2>::
+    task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
+template void PrintIndexTask<3>::
+    task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);

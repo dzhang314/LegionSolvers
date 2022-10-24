@@ -100,20 +100,45 @@ struct TaskT {
         );
     }
 
-    // static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
-    //     const Legion::Processor proc = rt->get_executing_processor(ctx);
-    //     std::cout << "[LegionSolvers] Running CPU task " << task_name()
-    //               << " on processor " << proc << '.' << std::endl;
-    // }
-
-    // static void preregister_kokkos(bool verbose) {
-    //     preregister_kokkos_task<
-    //         typename TaskClass<T>::return_type,
-    //         TaskClass<T>::template KokkosTaskTemplate
-    //     >(task_id, task_name(), TaskClass<T>::flags);
-    // }
-
 }; // struct TaskT
+
+
+template <Legion::TaskID BLOCK_ID, template <int> typename TaskClass, int N>
+struct TaskD {
+
+    static constexpr Legion::TaskID task_id =
+        LEGION_SOLVERS_TASK_ID_ORIGIN +
+        LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID + (N - 1);
+
+    static std::string task_name() {
+        return std::string{TaskClass<N>::task_base_name} + '_' +
+               std::to_string(N);
+    }
+
+    static void preregister(bool verbose = true) {
+        preregister_task<
+            typename TaskClass<N>::return_type,
+            TaskClass<N>::task_body>(
+            task_id,
+            task_name(),
+            TaskClass<N>::flags,
+            Legion::Processor::LOC_PROC,
+            verbose
+        );
+    }
+
+}; // struct TaskD
+
+
+template <Legion::TaskID BLOCK_ID, template <int> typename TaskClass>
+struct TaskD<BLOCK_ID, TaskClass, 0> {
+
+    static constexpr Legion::TaskID task_id(int N) {
+        return LEGION_SOLVERS_TASK_ID_ORIGIN +
+               LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID + (N - 1);
+    }
+
+}; // struct TaskD<BLOCK_ID, TaskClass, 0>
 
 
 template <
@@ -150,19 +175,19 @@ struct TaskTDI {
             verbose
         );
 
-        #ifdef LEGION_USE_CUDA
-          #ifndef REALM_USE_KOKKOS
-            preregister_task<
-              typename TaskClass<T, N, I>::return_type,
-              TaskClass<T, N, I>::gpu_task_body>(
-                task_id,
-                task_name(),
-                TaskClass<T, N, I>::flags,
-                Legion::Processor::TOC_PROC,
-                verbose
-            );
-          #endif // REALM_USE_KOKKOS
-        #endif // LEGION_USE_CUDA
+#ifdef LEGION_USE_CUDA
+    #ifndef REALM_USE_KOKKOS
+        preregister_task<
+            typename TaskClass<T, N, I>::return_type,
+            TaskClass<T, N, I>::gpu_task_body>(
+            task_id,
+            task_name(),
+            TaskClass<T, N, I>::flags,
+            Legion::Processor::TOC_PROC,
+            verbose
+        );
+    #endif // REALM_USE_KOKKOS
+#endif     // LEGION_USE_CUDA
     }
 
     // static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {

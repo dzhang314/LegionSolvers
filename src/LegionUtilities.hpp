@@ -73,16 +73,14 @@ template <void (*TASK_PTR)(const Legion::Task *,
                            Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
-                      Legion::Processor::Kind kind,
+                      Legion::Processor::Kind proc_kind,
                       bool verbose = true) {
     if (verbose) {
         std::cout << "[LegionSolvers] Registering task " << task_name
                   << " with ID " << task_id << "." << std::endl;
     }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
-    registrar.add_constraint(
-        Legion::ProcessorConstraint{kind}
-    );
+    registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
     Legion::Runtime::preregister_task_variant<TASK_PTR>(
         registrar, task_name.c_str()
     );
@@ -94,16 +92,14 @@ template <void (*TASK_PTR)(const Legion::Task *,
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
                       TaskFlags task_flags,
-                      Legion::Processor::Kind kind,
+                      Legion::Processor::Kind proc_kind,
                       bool verbose = true) {
     if (verbose) {
         std::cout << "[LegionSolvers] Registering task " << task_name
                   << " with ID " << task_id << "." << std::endl;
     }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
-    registrar.add_constraint(
-        Legion::ProcessorConstraint{kind}
-    );
+    registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
     registrar.set_leaf(task_flags & TaskFlags::LEAF);
     registrar.set_inner(task_flags & TaskFlags::INNER);
     registrar.set_idempotent(task_flags & TaskFlags::IDEMPOTENT);
@@ -119,16 +115,14 @@ template <typename RETURN_T,
                                Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
-                      Legion::Processor::Kind kind,
+                      Legion::Processor::Kind proc_kind,
                       bool verbose = true) {
     if (verbose) {
         std::cout << "[LegionSolvers] Registering task " << task_name
                   << " with ID " << task_id << "." << std::endl;
     }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
-    registrar.add_constraint(
-        Legion::ProcessorConstraint{kind}
-    );
+    registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
     if constexpr (std::is_void_v<RETURN_T>) {
         Legion::Runtime::preregister_task_variant<TASK_PTR>(
             registrar, task_name.c_str()
@@ -147,16 +141,14 @@ template <typename RETURN_T,
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
                       TaskFlags task_flags,
-                      Legion::Processor::Kind kind,
+                      Legion::Processor::Kind proc_kind,
                       bool verbose = true) {
     if (verbose) {
         std::cout << "[LegionSolvers] Registering task " << task_name
                   << " with ID " << task_id << "." << std::endl;
     }
     Legion::TaskVariantRegistrar registrar{task_id, task_name.c_str()};
-    registrar.add_constraint(
-        Legion::ProcessorConstraint{kind}
-    );
+    registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
     registrar.set_leaf(task_flags & TaskFlags::LEAF);
     registrar.set_inner(task_flags & TaskFlags::INNER);
     registrar.set_idempotent(task_flags & TaskFlags::IDEMPOTENT);
@@ -183,11 +175,12 @@ Legion::FieldSpace create_field_space(
 );
 
 
-// void print_index_partition(
-//     Legion::Context ctx, Legion::Runtime *rt,
-//     const std::string &name,
-//     Legion::IndexPartition index_partition
-// );
+void print_index_partition(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    const std::string &name,
+    Legion::IndexPartition index_partition
+);
 
 
 } // namespace LegionSolvers
