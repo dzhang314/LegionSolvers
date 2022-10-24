@@ -79,7 +79,7 @@ void LegionSolvers::CSRMatvecTask<
     using DRectIter = Legion::RectInDomainIterator<DOMAIN_DIM, DOMAIN_COORD_T>;
     using RRectIter = Legion::RectInDomainIterator<RANGE_DIM, RANGE_COORD_T>;
 
-    for (KRectIter k_it(coo_matrix); k_it(); ++k_it) {
+    for (KRectIter k_it(csr_matrix); k_it(); ++k_it) {
         const Legion::Rect<KERNEL_DIM, KERNEL_COORD_T> k_rect = *k_it;
         for (DRectIter d_it(input_vec); d_it(); ++d_it) {
             const Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T> d_rect = *d_it;
