@@ -41,6 +41,17 @@ struct CSRMatvecTask : public TaskTDDDIII<
         Legion::Runtime *rt
     );
 
+#ifdef LEGION_USE_CUDA
+  #ifndef REALM_USE_KOKKOS
+    static return_type gpu_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+    #endif
+#endif
+
 }; // struct CSRMatvecTask
 
 
@@ -76,6 +87,17 @@ struct CSRRmatvecTask : public TaskTDDDIII<
         Legion::Context ctx,
         Legion::Runtime *rt
     );
+
+#ifdef LEGION_USE_CUDA
+  #ifndef REALM_USE_KOKKOS
+    static return_type gpu_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+    #endif
+#endif
 
 }; // struct CSRRmatvecTask
 
