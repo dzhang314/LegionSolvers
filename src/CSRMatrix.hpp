@@ -112,7 +112,7 @@ public:
         Legion::LogicalPartition kernel_partition,
         Legion::IndexPartition ghost_partition
     ) const override {
-        const Legion::FieldID fids[3] = {fid_entry, fid_col};
+        const Legion::FieldID fids[2] = {fid_entry, fid_col};
 
         Legion::IndexLauncher launcher(
             LegionSolvers::CSRMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::
@@ -122,7 +122,7 @@ public:
                     dst_vector.get_index_space()
                 ),
             dst_vector.get_color_space(),
-            Legion::TaskArgument(&fids, sizeof(Legion::FieldID[3])),
+            Legion::TaskArgument(&fids, sizeof(Legion::FieldID[2])),
             Legion::ArgumentMap()
         );
         launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
