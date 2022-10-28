@@ -140,6 +140,19 @@ struct TaskD<BLOCK_ID, TaskClass, 0> {
 
 }; // struct TaskD<BLOCK_ID, TaskClass, 0>
 
+// Helper class to check if a class has a GPU task variant.
+template <class T>
+struct HasGPUVariantMixin {
+  using __no  = int8_t[1];
+  using __yes = int8_t[2];
+  struct HasGPUVariant {
+    template <typename U>
+    static __yes& test(decltype(&U::gpu_task_body));
+    template <typename U>
+    static __no& test(...);
+    static const bool value = (sizeof(test<T>(0)) == sizeof(__yes));
+  };
+};
 
 template <
     Legion::TaskID BLOCK_ID,
@@ -148,7 +161,7 @@ template <
     typename T,
     int N,
     typename I>
-struct TaskTDI {
+struct TaskTDI : HasGPUVariantMixin<TaskTDI<BLOCK_ID, TaskClass, T, N, I>> {
 
     static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
@@ -177,15 +190,17 @@ struct TaskTDI {
 
 #ifdef LEGION_USE_CUDA
     #ifndef REALM_USE_KOKKOS
-        preregister_task<
-            typename TaskClass<T, N, I>::return_type,
-            TaskClass<T, N, I>::gpu_task_body>(
-            task_id,
-            task_name(),
-            TaskClass<T, N, I>::flags,
-            Legion::Processor::TOC_PROC,
-            verbose
-        );
+	if constexpr (TaskTDI::HasGPUVariant::value) {
+          preregister_task<
+              typename TaskClass<T, N, I>::return_type,
+              TaskClass<T, N, I>::gpu_task_body>(
+              task_id,
+              task_name(),
+              TaskClass<T, N, I>::flags,
+              Legion::Processor::TOC_PROC,
+              verbose
+          );
+	}
     #endif // REALM_USE_KOKKOS
 #endif     // LEGION_USE_CUDA
     }
@@ -272,7 +287,7 @@ template <
     typename I1,
     typename I2,
     typename I3>
-struct TaskTDDDIII {
+struct TaskTDDDIII : HasGPUVariantMixin<TaskTDDDIII<BLOCK_ID, TaskClass, T, N1, N2, N3, I1, I2, I3>> {
 
     static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
@@ -313,15 +328,20 @@ struct TaskTDDDIII {
 
         #ifdef LEGION_USE_CUDA
           #ifndef REALM_USE_KOKKOS
-              preregister_task<
-                  typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
-                  TaskClass<T, N1, N2, N3, I1, I2, I3>::gpu_task_body>(
-                  task_id,
-                  task_name(),
-                  TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
-                  Legion::Processor::TOC_PROC,
-                  verbose
-              );
+	      if constexpr (TaskTDDDIII::HasGPUVariant::value) {
+                preregister_task<
+                    typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
+                    TaskClass<T, N1, N2, N3, I1, I2, I3>::gpu_task_body>(
+                    task_id,
+                    task_name(),
+                    TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
+                    Legion::Processor::TOC_PROC,
+                    verbose
+                );
+		std::cout << "REGISTERING GPU TASK: " << TaskTDDDIII::task_name() << std::endl;
+	      } else {
+		std::cout << "NOT REGISTERING GPU TASK: " << TaskTDDDIII::task_name() << std::endl;
+	      }
           #endif // REALM_USE_KOKKOS
         #endif // LEGION_USE_CUDA
     }

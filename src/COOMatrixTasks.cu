@@ -26,6 +26,7 @@ void COOMatvecTask<
                                   const std::vector<Legion::PhysicalRegion>& regions,
                                   Legion::Context ctx,
                                   Legion::Runtime* rt) {
+    std::cout << "COO MATVEC GPU" << std::endl;
     assert(regions.size() == 3);
     const auto &output_vec = regions[0];
     const auto &coo_matrix = regions[1];
@@ -105,7 +106,7 @@ void COOMatvecTask<
         cols,
         input_reader
     );
-    auto cusparse_output = makeShiftedCuSparseDnVec<ENTRY_T, decltype(output_reader)>(
+    auto cusparse_output = makeShiftedCuSparseDnVec<ENTRY_T, decltype(output_writer)>(
         output_bounds,
         rows,
         output_writer

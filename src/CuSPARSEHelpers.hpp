@@ -68,8 +68,8 @@ template <
     typename RANGE_COORD_T>
 cusparseSpMatDescr_t makeCuSparseCSR(
     StreamView& stream,
-    int64_t rows,
-    int64_t cols,
+    int64_t num_rows,
+    int64_t num_cols,
     const Legion::Domain rowptr_domain,
     const AffineReader<Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>, RANGE_DIM, RANGE_COORD_T> rowptr,
     const Legion::Domain kernel_domain,
@@ -85,10 +85,10 @@ cusparseSpMatDescr_t makeCuSparseCSR(
 
     // First, we need to convert the Legion::Rect based rowptr
     // region into a standard indptr array that cuSPARSE understands.
-    Legion::DeferredBuffer<KERNEL_COORD_T, KERNEL_DIM> indptr({0, rows}, Legion::Memory::GPU_FB_MEM);
-    auto blocks = get_num_blocks_1d(rows);
+    Legion::DeferredBuffer<KERNEL_COORD_T, KERNEL_DIM> indptr({0, num_rows}, Legion::Memory::GPU_FB_MEM);
+    auto blocks = get_num_blocks_1d(num_rows);
     convertGlobalRowptrToLocalIndPtr<KERNEL_COORD_T, RANGE_COORD_T><<<blocks, THREADS_PER_BLOCK, 0, stream>>>(
-        rows,
+        num_rows,
         rowptr_domain.lo(),
         rowptr,
         indptr
@@ -97,9 +97,9 @@ cusparseSpMatDescr_t makeCuSparseCSR(
     // Next, use the local indptr array to construct the CSR array.
     cusparseSpMatDescr_t descr;
     CHECK_CUSPARSE(cusparseCreateCsr(
-       &handle,
-       rows,
-       cols,
+       &descr,
+       num_rows,
+       num_cols,
        kernel_domain.get_volume(),
        indptr.ptr(0),
        cols.ptr(kernel_domain.lo()),
