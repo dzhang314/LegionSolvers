@@ -112,7 +112,63 @@ public:
         Legion::LogicalPartition kernel_partition,
         Legion::IndexPartition ghost_partition
     ) const override {
-        // TODO
+        const Legion::FieldID fids[3] = {fid_entry, fid_col};
+
+        Legion::IndexLauncher launcher(
+            LegionSolvers::CSRMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::
+                task_id(
+                    kernel_space,
+                    src_vector.get_index_space(),
+                    dst_vector.get_index_space()
+                ),
+            dst_vector.get_color_space(),
+            Legion::TaskArgument(&fids, sizeof(Legion::FieldID[3])),
+            Legion::ArgumentMap()
+        );
+        launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
+
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            dst_vector.get_logical_partition(),
+            0,
+            LEGION_READ_WRITE,
+            LEGION_EXCLUSIVE,
+            dst_vector.get_logical_region()
+        ));
+        launcher.add_field(0, dst_vector.get_fid());
+
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            kernel_partition,
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            kernel_region
+        ));
+        launcher.add_field(1, fid_entry);
+        launcher.add_field(1, fid_col);
+
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            rt->get_logical_partition(
+                rowptr_region, dst_vector.get_index_partition()
+            ),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            rowptr_region
+        ));
+        launcher.add_field(2, fid_rowptr);
+
+        launcher.add_region_requirement(Legion::RegionRequirement(
+            rt->get_logical_partition(
+                src_vector.get_logical_region(), ghost_partition
+            ),
+            0,
+            LEGION_READ_ONLY,
+            LEGION_EXCLUSIVE,
+            src_vector.get_logical_region()
+        ));
+        launcher.add_field(3, src_vector.get_fid());
+
+        rt->execute_index_space(ctx, launcher);
     }
 
 }; // class CSRMatrix

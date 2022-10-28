@@ -95,3 +95,32 @@ void LegionSolvers::COOMatvecTask<
         }
     }
 }
+
+template void LegionSolvers::COOMatvecTask<
+    float,
+    1,
+    1,
+    1,
+    Legion::coord_t,
+    Legion::coord_t,
+    Legion::coord_t>::
+    task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+template void LegionSolvers::COOMatvecTask<
+    double,
+    1,
+    1,
+    1,
+    Legion::coord_t,
+    Legion::coord_t,
+    Legion::coord_t>::
+    task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );

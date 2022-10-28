@@ -1,5 +1,7 @@
 #include "Initialize.hpp"
 
+#include "COOMatrixTasks.hpp"
+#include "CSRMatrixTasks.hpp"
 #include "ExampleSystems.hpp"      // for Fill*NegativeLaplacianTask
 #include "LegionSolversMapper.hpp" // for mapper_registration_callback
 #include "LibraryOptions.hpp"      // for LEGION_SOLVERS_USE_*
@@ -170,6 +172,10 @@ void LegionSolvers::initialize(bool verbose) {
     FillCSRNegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
     FillCSRNegativeLaplacianRowptrTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
     FillCSRNegativeLaplacianRowptrTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    COOMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    COOMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    CSRMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    CSRMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
 
     #ifdef LEGION_USE_CUDA
         #ifndef REALM_USE_KOKKOS

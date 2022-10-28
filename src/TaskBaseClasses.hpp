@@ -190,49 +190,6 @@ struct TaskTDI {
 #endif     // LEGION_USE_CUDA
     }
 
-    // static void announce_cpu(Legion::Context ctx, Legion::Runtime *rt) {
-    //     const Legion::Processor proc = rt->get_executing_processor(ctx);
-    //     std::cout << "[LegionSolvers] Running CPU task " << task_name()
-    //               << " on processor " << proc << '.' << std::endl;
-    // }
-
-    // static void announce_cpu(
-    //     Legion::DomainPoint index_point,
-    //     Legion::Context ctx,
-    //     Legion::Runtime *rt
-    // ) {
-    //     const Legion::Processor proc = rt->get_executing_processor(ctx);
-    //     std::cout << "[LegionSolvers] Running CPU task " << task_name()
-    //               << ", index point " << index_point << ", on processor "
-    //               << proc << '.' << std::endl;
-    // }
-
-    // static void preregister_kokkos(bool verbose) {
-    //     preregister_kokkos_task<
-    //         typename TaskClass<T, N, I>::return_type,
-    //         TaskClass<T, N, I>::template KokkosTaskTemplate>(
-    //         task_id,
-    //         task_name(),
-    //         TaskClass<T, N, I>::is_replicable,
-    //         TaskClass<T, N, I>::is_inner,
-    //         TaskClass<T, N, I>::is_leaf,
-    //         verbose
-    //     );
-    // }
-
-    // static void announce_kokkos(
-    //     Legion::DomainPoint index_point,
-    //     const std::type_info &execution_space,
-    //     Legion::Context ctx,
-    //     Legion::Runtime *rt
-    // ) {
-    //     const Legion::Processor proc = rt->get_executing_processor(ctx);
-    //     std::cout << "[LegionSolvers] Running Kokkos task " << task_name()
-    //               << ", index point " << index_point << ", on processor "
-    //               << proc << " (kind " << proc.kind() << ", "
-    //               << execution_space.name() << ")." << std::endl;
-    // }
-
 }; // struct TaskTDI
 
 
@@ -309,6 +266,53 @@ struct TaskTDDDIII {
             TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
             Legion::Processor::LOC_PROC,
             verbose
+        );
+    }
+
+}; // struct TaskTDDDIII
+
+
+template <
+    Legion::TaskID BLOCK_ID,
+    template <typename, int, int, int, typename, typename, typename>
+    typename TaskClass,
+    typename T>
+struct TaskTDDDIII<BLOCK_ID, TaskClass, T, 0, 0, 0, void, void, void> {
+
+    static constexpr Legion::TaskID
+    task_id(int N1, int N2, int N3, int I1, int I2, int I3) {
+        return LEGION_SOLVERS_TASK_ID_ORIGIN +
+               LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+               LEGION_SOLVERS_NUM_INDEX_TYPES_3 *
+                   LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM_2 *
+                   (N1 - 1) +
+               LEGION_SOLVERS_NUM_INDEX_TYPES_3 *
+                   LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM_1 *
+                   (N2 - 1) +
+               LEGION_SOLVERS_NUM_INDEX_TYPES_3 *
+                   LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM_0 *
+                   (N3 - 1) +
+               LEGION_SOLVERS_NUM_INDEX_TYPES_2 *
+                   LEGION_SOLVERS_NUM_ENTRY_TYPES * I1 +
+               LEGION_SOLVERS_NUM_INDEX_TYPES_1 *
+                   LEGION_SOLVERS_NUM_ENTRY_TYPES * I2 +
+               LEGION_SOLVERS_NUM_INDEX_TYPES_0 *
+                   LEGION_SOLVERS_NUM_ENTRY_TYPES * I3 +
+               LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
+    }
+
+    static Legion::TaskID task_id(
+        Legion::IndexSpace kernel_space,
+        Legion::IndexSpace domain_space,
+        Legion::IndexSpace range_space
+    ) {
+        return task_id(
+            kernel_space.get_dim(),
+            domain_space.get_dim(),
+            range_space.get_dim(),
+            kernel_space.get_type_tag() - 256 * kernel_space.get_dim(),
+            domain_space.get_type_tag() - 256 * domain_space.get_dim(),
+            range_space.get_type_tag() - 256 * range_space.get_dim()
         );
     }
 
