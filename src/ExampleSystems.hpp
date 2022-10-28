@@ -96,8 +96,7 @@ struct FillCSRNegativeLaplacianTask
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
 
     struct Args {
-        Legion::FieldID fid_i;
-        Legion::FieldID fid_j;
+        Legion::FieldID fid_col;
         Legion::FieldID fid_entry;
         KERNEL_COORD_T grid_shape[KERNEL_DIM];
     };
@@ -112,6 +111,49 @@ struct FillCSRNegativeLaplacianTask
     );
 
 }; // struct FillCSRNegativeLaplacianTask
+
+
+template <
+    typename ENTRY_T,
+    int KERNEL_DIM,
+    int DOMAIN_DIM,
+    int RANGE_DIM,
+    typename KERNEL_COORD_T,
+    typename DOMAIN_COORD_T,
+    typename RANGE_COORD_T>
+struct FillCSRNegativeLaplacianRowptrTask
+    : public TaskTDDDIII<
+          FILL_CSR_NEGATIVE_LAPLACIAN_ROWPTR_TASK_BLOCK_ID,
+          FillCSRNegativeLaplacianRowptrTask,
+          ENTRY_T,
+          KERNEL_DIM,
+          DOMAIN_DIM,
+          RANGE_DIM,
+          KERNEL_COORD_T,
+          DOMAIN_COORD_T,
+          RANGE_COORD_T> {
+
+    static constexpr const char *task_base_name =
+        "fill_csr_negative_laplacian_rowptr";
+
+    static constexpr const TaskFlags flags =
+        TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
+
+    struct Args {
+        Legion::FieldID fid_rowptr;
+        KERNEL_COORD_T grid_shape[KERNEL_DIM];
+    };
+
+    using return_type = void;
+
+    static return_type task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+
+}; // struct FillCSRNegativeLaplacianRowptrTask
 
 
 } // namespace LegionSolvers

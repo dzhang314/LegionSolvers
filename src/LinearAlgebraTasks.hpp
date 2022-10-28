@@ -27,16 +27,16 @@ struct ScalTask
     );
 
 #ifdef LEGION_USE_CUDA
-  #ifndef REALM_USE_KOKKOS
+    #ifndef REALM_USE_KOKKOS
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
     );
-  #endif // REALM_USE_KOKKOS
-#endif // LEGION_USE_CUDA
-}; // struct ScalTask
+    #endif // REALM_USE_KOKKOS
+#endif     // LEGION_USE_CUDA
+};         // struct ScalTask
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -58,7 +58,7 @@ struct AxpyTask
     );
 
 #ifdef LEGION_USE_CUDA
-  #ifndef REALM_USE_KOKKOS
+    #ifndef REALM_USE_KOKKOS
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
@@ -66,8 +66,8 @@ struct AxpyTask
         Legion::Runtime *rt
     );
     #endif // REALM_USE_KOKKOS
-#endif // LEGION_USE_CUDA
-}; // struct AxpyTask
+#endif     // LEGION_USE_CUDA
+};         // struct AxpyTask
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -89,7 +89,7 @@ struct XpayTask
     );
 
 #ifdef LEGION_USE_CUDA
-  #ifndef REALM_USE_KOKKOS
+    #ifndef REALM_USE_KOKKOS
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
@@ -97,8 +97,8 @@ struct XpayTask
         Legion::Runtime *rt
     );
     #endif // REALM_USE_KOKKOS
-#endif // LEGION_USE_CUDA
-}; // struct XpayTask
+#endif     // LEGION_USE_CUDA
+};         // struct XpayTask
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -120,7 +120,7 @@ struct DotTask
     );
 
 #ifdef LEGION_USE_CUDA
-  #ifndef REALM_USE_KOKKOS
+    #ifndef REALM_USE_KOKKOS
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
@@ -128,34 +128,34 @@ struct DotTask
         Legion::Runtime *rt
     );
     #endif // REALM_USE_KOKKOS
-#endif // LEGION_USE_CUDA
-}; // struct DotTask
+#endif     // LEGION_USE_CUDA
+};         // struct DotTask
 
 template <typename ENTRY_T>
 inline ENTRY_T get_alpha(const std::vector<Legion::Future> &futures) {
-  if (futures.size() == 0) {
-    return static_cast<ENTRY_T>(1);
-  } else if (futures.size() == 1) {
-    return futures[0].get_result<ENTRY_T>();
-  } else if (futures.size() == 2) {
-    const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
-    const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
-    return f0 / f1;
-  } else if (futures.size() == 3) {
-    const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
-    const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
-    const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
-    return f0 * f1 / f2;
-  } else if (futures.size() == 4) {
-    const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
-    const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
-    const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
-    const ENTRY_T f3 = futures[3].get_result<ENTRY_T>();
-    return f0 * f1 / (f2 * f3);
-  } else {
-    assert(false);
-    return static_cast<ENTRY_T>(1);
-  }
+    if (futures.size() == 0) {
+        return static_cast<ENTRY_T>(1);
+    } else if (futures.size() == 1) {
+        return futures[0].get_result<ENTRY_T>();
+    } else if (futures.size() == 2) {
+        const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
+        const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
+        return f0 / f1;
+    } else if (futures.size() == 3) {
+        const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
+        const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
+        const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
+        return f0 * f1 / f2;
+    } else if (futures.size() == 4) {
+        const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
+        const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
+        const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
+        const ENTRY_T f3 = futures[3].get_result<ENTRY_T>();
+        return f0 * f1 / (f2 * f3);
+    } else {
+        assert(false);
+        return static_cast<ENTRY_T>(1);
+    }
 }
 
 } // namespace LegionSolvers

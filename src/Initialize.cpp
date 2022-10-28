@@ -166,6 +166,10 @@ void LegionSolvers::initialize(bool verbose) {
     PrintIndexTask<3>::preregister(verbose);
     FillCOONegativeLaplacianTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
     FillCOONegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianRowptrTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianRowptrTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
 
     #ifdef LEGION_USE_CUDA
         #ifndef REALM_USE_KOKKOS

@@ -107,8 +107,8 @@ public:
     }
 
     virtual void matvec(
-        DenseDistributedVector<ENTRY_T> &dst_vector,
-        const DenseDistributedVector<ENTRY_T> &src_vector,
+        PartitionedVector<ENTRY_T> &dst_vector,
+        const PartitionedVector<ENTRY_T> &src_vector,
         Legion::LogicalPartition kernel_partition,
         Legion::IndexPartition ghost_partition
     ) const {

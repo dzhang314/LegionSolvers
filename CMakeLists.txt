@@ -82,3 +82,11 @@ set_target_properties(Test03COOPartitioning PROPERTIES CXX_STANDARD 17)
 add_executable(Test04CSRPartitioning src/Test04CSRPartitioning.cpp)
 target_link_libraries(Test04CSRPartitioning LegionSolvers)
 set_target_properties(Test04CSRPartitioning PROPERTIES CXX_STANDARD 17)
+
+add_executable(Test05COOSolveCG src/Test05COOSolveCG.cpp)
+target_link_libraries(Test05COOSolveCG LegionSolvers)
+set_target_properties(Test05COOSolveCG PROPERTIES CXX_STANDARD 17)
+
+add_executable(Test06CSRSolveCG src/Test06CSRSolveCG.cpp)
+target_link_libraries(Test06CSRSolveCG LegionSolvers)
+set_target_properties(Test06CSRSolveCG PROPERTIES CXX_STANDARD 17)
