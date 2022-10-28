@@ -7,36 +7,30 @@ namespace LegionSolvers {
 
 // Template dispatch for value type.
 template <typename ENTRY_T>
-cudaDataType cusparseDataType() {
-  assert(false);
+cudaDataType cusparseDataType();
+
+template <>
+inline cudaDataType cusparseDataType<float>() {
   return CUDA_R_32F;
 }
 
 template <>
-cudaDataType cusparseDataType<float>() {
-  return CUDA_R_32F;
-}
-
-template <>
-cudaDataType cusparseDataType<double>() {
+inline cudaDataType cusparseDataType<double>() {
   return CUDA_R_64F;
 }
 
 // Template dispatch for the index type.
 template <typename COORD_T>
-cusparseIndexType_t cusparseIndexType() {
-  assert(false);
-  return CUSPARSE_INDEX_32I;
-}
+cusparseIndexType_t cusparseIndexType();
 
 // TODO (rohany): Can we handle unsigned integers?
 template <>
-cusparseIndexType_t cusparseIndexType<int32_t>() {
+inline cusparseIndexType_t cusparseIndexType<int32_t>() {
   return CUSPARSE_INDEX_32I;
 }
 
 template <>
-cusparseIndexType_t cusparseIndexType<int64_t>() {
+inline cusparseIndexType_t cusparseIndexType<int64_t>() {
   return CUSPARSE_INDEX_64I;
 }
 
