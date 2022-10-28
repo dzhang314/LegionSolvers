@@ -118,7 +118,7 @@ public:
         const PartitionedVector<ENTRY_T> &src_vector,
         Legion::LogicalPartition kernel_partition,
         Legion::IndexPartition ghost_partition
-    ) const {
+    ) const override {
 
         // const Legion::FieldID fids[3] = {fid_i, fid_j, fid_entry};
 

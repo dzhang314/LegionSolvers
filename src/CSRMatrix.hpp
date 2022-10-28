@@ -111,7 +111,7 @@ public:
         const PartitionedVector<ENTRY_T> &src_vector,
         Legion::LogicalPartition kernel_partition,
         Legion::IndexPartition ghost_partition
-    ) const {
+    ) const override {
         // TODO
     }
 

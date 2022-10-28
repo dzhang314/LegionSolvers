@@ -72,16 +72,25 @@ void LegionSolvers::COOMatvecTask<
         output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>};
 
     using KRectIter = Legion::RectInDomainIterator<KERNEL_DIM, KERNEL_COORD_T>;
+    using KPointIter = Legion::PointInRectIterator<KERNEL_DIM, KERNEL_COORD_T>;
     using DRectIter = Legion::RectInDomainIterator<DOMAIN_DIM, DOMAIN_COORD_T>;
     using RRectIter = Legion::RectInDomainIterator<RANGE_DIM, RANGE_COORD_T>;
 
     for (KRectIter k_it(coo_matrix); k_it(); ++k_it) {
         const Legion::Rect<KERNEL_DIM, KERNEL_COORD_T> k_rect = *k_it;
-        for (DRectIter d_it(input_vec); d_it(); ++d_it) {
-            const Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T> d_rect = *d_it;
-            for (RRectIter r_it(output_vec); r_it(); ++r_it) {
-                const Legion::Rect<RANGE_DIM, RANGE_COORD_T> r_rect = *r_it;
-                // TODO
+        for (KPointIter kp_it(k_rect); kp_it(); ++kp_it) {
+            const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> kp = *kp_it;
+            const Legion::Point<RANGE_DIM, RANGE_COORD_T> i = i_reader[kp];
+            const Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T> j = j_reader[kp];
+            const ENTRY_T entry = entry_reader[kp];
+            for (DRectIter d_it(input_vec); d_it(); ++d_it) {
+                const Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T> d_rect = *d_it;
+                for (RRectIter r_it(output_vec); r_it(); ++r_it) {
+                    const Legion::Rect<RANGE_DIM, RANGE_COORD_T> r_rect = *r_it;
+                    if (r_rect.contains(i) && d_rect.contains(j)) {
+                        output_writer[i] <<= entry * input_reader[j];
+                    }
+                }
             }
         }
     }

@@ -6,6 +6,7 @@
 #include <legion.h> // for Legion::*
 
 #include "AbstractLinearOperator.hpp" // for AbstractLinearOperator
+#include "PartitionedVector.hpp"      // for PartitionedVector
 
 namespace LegionSolvers {
 
@@ -13,7 +14,7 @@ namespace LegionSolvers {
 template <typename ENTRY_T>
 class AbstractMatrix : public AbstractLinearOperator<ENTRY_T> {
 
-  public:
+public:
 
     virtual Legion::IndexSpace get_kernel_space() const = 0;
 
@@ -36,6 +37,13 @@ class AbstractMatrix : public AbstractLinearOperator<ENTRY_T> {
 
     virtual Legion::IndexPartition range_partition_from_kernel_partition(
         Legion::IndexSpace range_space, Legion::IndexPartition kernel_partition
+    ) const = 0;
+
+    virtual void matvec(
+        PartitionedVector<ENTRY_T> &dst_vector,
+        const PartitionedVector<ENTRY_T> &src_vector,
+        Legion::LogicalPartition kernel_partition,
+        Legion::IndexPartition ghost_partition
     ) const = 0;
 
     virtual Legion::IndexPartition domain_partition_from_range_partition(
