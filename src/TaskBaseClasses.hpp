@@ -145,10 +145,10 @@ struct TaskD<BLOCK_ID, TaskClass, 0> {
 }; // struct TaskD<BLOCK_ID, TaskClass, 0>
 
 // Helper class to check if a class has a GPU task variant.
-template <class T>
 struct HasGPUVariantMixin {
     using __no = int8_t[1];
     using __yes = int8_t[2];
+    template<typename T>
     struct HasGPUVariant {
         template <typename U>
         static __yes &test(decltype(&U::cuda_task_body));
@@ -165,7 +165,7 @@ template <
     typename T,
     int N,
     typename I>
-struct TaskTDI : HasGPUVariantMixin<TaskTDI<BLOCK_ID, TaskClass, T, N, I>> {
+struct TaskTDI : HasGPUVariantMixin {
 
     static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
@@ -193,7 +193,7 @@ struct TaskTDI : HasGPUVariantMixin<TaskTDI<BLOCK_ID, TaskClass, T, N, I>> {
         );
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-        if constexpr (TaskTDI::HasGPUVariant::value) {
+        if constexpr (TaskTDI::HasGPUVariant<TaskClass<T, N, I>>::value) {
             preregister_task<
                 typename TaskClass<T, N, I>::return_type,
                 TaskClass<T, N, I>::cuda_task_body>(
@@ -246,9 +246,7 @@ template <
     typename I1,
     typename I2,
     typename I3>
-struct TaskTDDDIII
-    : HasGPUVariantMixin<
-          TaskTDDDIII<BLOCK_ID, TaskClass, T, N1, N2, N3, I1, I2, I3>> {
+struct TaskTDDDIII : HasGPUVariantMixin {
 
     static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
@@ -288,7 +286,7 @@ struct TaskTDDDIII
         );
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-        if constexpr (TaskTDDDIII::HasGPUVariant::value) {
+        if constexpr (TaskTDDDIII::HasGPUVariant<TaskClass<T, N1, N2, N3, I1, I2, I3>>::value) {
             preregister_task<
                 typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
                 TaskClass<T, N1, N2, N3, I1, I2, I3>::cuda_task_body>(
@@ -298,11 +296,6 @@ struct TaskTDDDIII
                 Legion::Processor::TOC_PROC,
                 verbose
             );
-            std::cout << "REGISTERING GPU TASK: " << TaskTDDDIII::task_name()
-                      << std::endl;
-        } else {
-            std::cout << "NOT REGISTERING GPU TASK: "
-                      << TaskTDDDIII::task_name() << std::endl;
         }
 #endif
     }

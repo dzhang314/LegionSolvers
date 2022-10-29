@@ -34,6 +34,11 @@ inline cusparseIndexType_t cusparseIndexType<int64_t>() {
     return CUSPARSE_INDEX_64I;
 }
 
+template <>
+inline cusparseIndexType_t cusparseIndexType<long long>() {
+    return CUSPARSE_INDEX_64I;
+}
+
 template <typename KERNEL_COORD_T, typename RANGE_COORD_T>
 __global__ void convertGlobalRowptrToLocalIndPtr(
     size_t rows,
