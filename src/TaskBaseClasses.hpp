@@ -188,8 +188,7 @@ struct TaskTDI : HasGPUVariantMixin<TaskTDI<BLOCK_ID, TaskClass, T, N, I>> {
             verbose
         );
 
-#ifdef LEGION_USE_CUDA
-    #ifndef REALM_USE_KOKKOS
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
         if constexpr (TaskTDI::HasGPUVariant::value) {
             preregister_task<
                 typename TaskClass<T, N, I>::return_type,
@@ -201,8 +200,7 @@ struct TaskTDI : HasGPUVariantMixin<TaskTDI<BLOCK_ID, TaskClass, T, N, I>> {
                 verbose
             );
         }
-    #endif // REALM_USE_KOKKOS
-#endif     // LEGION_USE_CUDA
+#endif
     }
 
 }; // struct TaskTDI
@@ -285,8 +283,7 @@ struct TaskTDDDIII
             verbose
         );
 
-#ifdef LEGION_USE_CUDA
-    #ifndef REALM_USE_KOKKOS
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
         if constexpr (TaskTDDDIII::HasGPUVariant::value) {
             preregister_task<
                 typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
@@ -303,8 +300,7 @@ struct TaskTDDDIII
             std::cout << "NOT REGISTERING GPU TASK: "
                       << TaskTDDDIII::task_name() << std::endl;
         }
-    #endif // REALM_USE_KOKKOS
-#endif     // LEGION_USE_CUDA
+#endif
     }
 
 }; // struct TaskTDDDIII

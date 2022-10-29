@@ -16,7 +16,6 @@ class COOMatrix : public AbstractMatrix<ENTRY_T> {
 
     const Legion::Context ctx;
     Legion::Runtime *const rt;
-    const Legion::IndexSpace kernel_space;
     const Legion::LogicalRegion kernel_region;
     const Legion::FieldID fid_i;
     const Legion::FieldID fid_j;
@@ -32,12 +31,11 @@ public:
         Legion::FieldID fid_j,
         Legion::FieldID fid_entry
     )
-        : ctx(ctx), rt(rt), kernel_space(kernel_region.get_index_space()),
-          kernel_region(kernel_region), fid_i(fid_i), fid_j(fid_j),
-          fid_entry(fid_entry) {}
+        : ctx(ctx), rt(rt), kernel_region(kernel_region), fid_i(fid_i),
+          fid_j(fid_j), fid_entry(fid_entry) {}
 
     virtual Legion::IndexSpace get_kernel_space() const override {
-        return kernel_space;
+        return kernel_region.get_field_space();
     }
 
     virtual Legion::LogicalRegion get_kernel_region() const override {
@@ -124,7 +122,7 @@ public:
         Legion::IndexLauncher launcher(
             LegionSolvers::COOMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::
                 task_id(
-                    kernel_space,
+                    kernel_region.get_index_space(),
                     src_vector.get_index_space(),
                     dst_vector.get_index_space()
                 ),

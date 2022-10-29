@@ -26,17 +26,16 @@ struct ScalTask
         Legion::Runtime *rt
     );
 
-#ifdef LEGION_USE_CUDA
-    #ifndef REALM_USE_KOKKOS
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
     );
-    #endif // REALM_USE_KOKKOS
-#endif     // LEGION_USE_CUDA
-};         // struct ScalTask
+#endif
+
+}; // struct ScalTask
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -57,17 +56,16 @@ struct AxpyTask
         Legion::Runtime *rt
     );
 
-#ifdef LEGION_USE_CUDA
-    #ifndef REALM_USE_KOKKOS
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
     );
-    #endif // REALM_USE_KOKKOS
-#endif     // LEGION_USE_CUDA
-};         // struct AxpyTask
+#endif
+
+}; // struct AxpyTask
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -88,17 +86,16 @@ struct XpayTask
         Legion::Runtime *rt
     );
 
-#ifdef LEGION_USE_CUDA
-    #ifndef REALM_USE_KOKKOS
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
     );
-    #endif // REALM_USE_KOKKOS
-#endif     // LEGION_USE_CUDA
-};         // struct XpayTask
+#endif
+
+}; // struct XpayTask
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -119,17 +116,16 @@ struct DotTask
         Legion::Runtime *rt
     );
 
-#ifdef LEGION_USE_CUDA
-    #ifndef REALM_USE_KOKKOS
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     static return_type gpu_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
         Legion::Runtime *rt
     );
-    #endif // REALM_USE_KOKKOS
-#endif     // LEGION_USE_CUDA
-};         // struct DotTask
+#endif
+
+}; // struct DotTask
 
 template <typename ENTRY_T>
 inline ENTRY_T get_alpha(const std::vector<Legion::Future> &futures) {

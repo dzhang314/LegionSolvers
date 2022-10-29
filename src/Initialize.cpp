@@ -8,7 +8,7 @@
 #include "LinearAlgebraTasks.hpp"  // for ScalTask, AxpyTask, XpayTask, DotTask
 #include "UtilityTasks.hpp"        // for *ScalarTask
 
-#ifdef LEGION_USE_CUDA
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     #include "CudaLibs.hpp"
 #endif
 
@@ -177,10 +177,8 @@ void LegionSolvers::initialize(bool verbose) {
     CSRMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
     CSRMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
 
-    #ifdef LEGION_USE_CUDA
-        #ifndef REALM_USE_KOKKOS
-            LoadCUDALibsTask::preregister(verbose);
-        #endif
+    #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
+        LoadCUDALibsTask::preregister(verbose);
     #endif
 }
 // clang-format on
