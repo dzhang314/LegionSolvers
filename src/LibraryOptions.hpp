@@ -7,8 +7,8 @@ namespace LegionSolvers {
 
 
 // TODO: provide ways to turn these off
-#define LEGION_SOLVERS_USE_FLOAT true
-#define LEGION_SOLVERS_USE_DOUBLE true
+#define LEGION_SOLVERS_USE_F32 true
+#define LEGION_SOLVERS_USE_F64 true
 #define LEGION_SOLVERS_USE_S32_INDICES true
 #define LEGION_SOLVERS_USE_U32_INDICES true
 #define LEGION_SOLVERS_USE_S64_INDICES true

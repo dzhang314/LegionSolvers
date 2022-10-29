@@ -193,7 +193,7 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::task_body(
 
 
 // clang-format off
-#ifdef LEGION_SOLVERS_USE_FLOAT
+#ifdef LEGION_SOLVERS_USE_F32
     #ifdef LEGION_SOLVERS_USE_S32_INDICES
         #if LEGION_SOLVERS_MAX_DIM >= 1
             template void ScalTask<float, 1, int>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
@@ -254,8 +254,8 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::task_body(
             template float DotTask<float, 3, long long>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
         #endif // LEGION_SOLVERS_MAX_DIM >= 3
     #endif // LEGION_SOLVERS_USE_S64_INDICES
-#endif // LEGION_SOLVERS_USE_FLOAT
-#ifdef LEGION_SOLVERS_USE_DOUBLE
+#endif // LEGION_SOLVERS_USE_F32
+#ifdef LEGION_SOLVERS_USE_F64
     #ifdef LEGION_SOLVERS_USE_S32_INDICES
         #if LEGION_SOLVERS_MAX_DIM >= 1
             template void ScalTask<double, 1, int>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
@@ -316,5 +316,5 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::task_body(
             template double DotTask<double, 3, long long>::task_body(const Legion::Task *, const std::vector<Legion::PhysicalRegion> &, Legion::Context, Legion::Runtime *);
         #endif // LEGION_SOLVERS_MAX_DIM >= 3
     #endif // LEGION_SOLVERS_USE_S64_INDICES
-#endif // LEGION_SOLVERS_USE_DOUBLE
+#endif // LEGION_SOLVERS_USE_F64
 // clang-format on

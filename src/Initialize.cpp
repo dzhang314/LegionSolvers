@@ -19,25 +19,25 @@ void LegionSolvers::initialize(bool verbose) {
         LegionSolvers::mapper_registration_callback
     );
 
-    #ifdef LEGION_SOLVERS_USE_FLOAT
+    #ifdef LEGION_SOLVERS_USE_F32
         PrintScalarTask<float>::preregister(verbose);
         NegateScalarTask<float>::preregister(verbose);
         AddScalarTask<float>::preregister(verbose);
         SubtractScalarTask<float>::preregister(verbose);
         MultiplyScalarTask<float>::preregister(verbose);
         DivideScalarTask<float>::preregister(verbose);
-    #endif // LEGION_SOLVERS_USE_FLOAT
+    #endif // LEGION_SOLVERS_USE_F32
 
-    #ifdef LEGION_SOLVERS_USE_DOUBLE
+    #ifdef LEGION_SOLVERS_USE_F64
         PrintScalarTask<double>::preregister(verbose);
         NegateScalarTask<double>::preregister(verbose);
         AddScalarTask<double>::preregister(verbose);
         SubtractScalarTask<double>::preregister(verbose);
         MultiplyScalarTask<double>::preregister(verbose);
         DivideScalarTask<double>::preregister(verbose);
-    #endif // LEGION_SOLVERS_USE_DOUBLE
+    #endif // LEGION_SOLVERS_USE_F64
 
-    #ifdef LEGION_SOLVERS_USE_FLOAT
+    #ifdef LEGION_SOLVERS_USE_F32
         #ifdef LEGION_SOLVERS_USE_S32_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 ScalTask<float, 1, int>::preregister(verbose);
@@ -98,8 +98,8 @@ void LegionSolvers::initialize(bool verbose) {
                 DotTask<float, 3, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
-    #endif // LEGION_SOLVERS_USE_FLOAT
-    #ifdef LEGION_SOLVERS_USE_DOUBLE
+    #endif // LEGION_SOLVERS_USE_F32
+    #ifdef LEGION_SOLVERS_USE_F64
         #ifdef LEGION_SOLVERS_USE_S32_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 ScalTask<double, 1, int>::preregister(verbose);
@@ -160,7 +160,7 @@ void LegionSolvers::initialize(bool verbose) {
                 DotTask<double, 3, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
-    #endif // LEGION_SOLVERS_USE_DOUBLE
+    #endif // LEGION_SOLVERS_USE_F64
 
     // TODO: proper guards
     PrintIndexTask<1>::preregister(verbose);

@@ -28,12 +28,12 @@ AbstractMatrix<ENTRY_T>::range_partition_from_domain_partition(
 
 
 // clang-format off
-#ifdef LEGION_SOLVERS_USE_FLOAT
+#ifdef LEGION_SOLVERS_USE_F32
     template Legion::IndexPartition AbstractMatrix<float>::domain_partition_from_range_partition(Legion::IndexSpace, Legion::IndexPartition) const;
     template Legion::IndexPartition AbstractMatrix<float>::range_partition_from_domain_partition(Legion::IndexSpace, Legion::IndexPartition) const;
-#endif // LEGION_SOLVERS_USE_FLOAT
-#ifdef LEGION_SOLVERS_USE_DOUBLE
+#endif // LEGION_SOLVERS_USE_F32
+#ifdef LEGION_SOLVERS_USE_F64
     template Legion::IndexPartition AbstractMatrix<double>::domain_partition_from_range_partition(Legion::IndexSpace, Legion::IndexPartition) const;
     template Legion::IndexPartition AbstractMatrix<double>::range_partition_from_domain_partition(Legion::IndexSpace, Legion::IndexPartition) const;
-#endif // LEGION_SOLVERS_USE_DOUBLE
+#endif // LEGION_SOLVERS_USE_F64
 // clang-format on
