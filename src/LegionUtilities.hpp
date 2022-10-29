@@ -2,6 +2,7 @@
 #define LEGION_SOLVERS_LEGION_UTILITIES_HPP_INCLUDED
 
 #include <cstddef>     // for std::size_t
+#include <cstdint>     // for std::uint8_t
 #include <string>      // for std::string
 #include <type_traits> // for std::is_void_v
 #include <vector>      // for std::vector
@@ -18,6 +19,8 @@
 #define LEGION_SOLVERS_DECLARE_TASK(RETURN_TYPE) \
     using return_type = RETURN_TYPE; \
     static return_type task_body(LEGION_SOLVERS_TASK_ARGS);
+#define LEGION_SOLVERS_DECLARE_CUDA_TASK \
+    static return_type cuda_task_body(LEGION_SOLVERS_TASK_ARGS);
 // clang-format on
 
 namespace LegionSolvers {
