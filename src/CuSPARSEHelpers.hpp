@@ -104,7 +104,7 @@ cusparseSpMatDescr_t makeCuSparseCSR(
     auto blocks = get_num_blocks_1d(num_rows);
     convertGlobalRowptrToLocalIndPtr<KERNEL_COORD_T, RANGE_COORD_T>
         <<<blocks, THREADS_PER_BLOCK, 0, stream>>>(
-            num_rows, rowptr_domain.lo(), rowptr, indptr
+            num_rows, rowptr_domain.lo()[0], rowptr, indptr
         );
 
     // Next, use the local indptr array to construct the CSR array.
@@ -114,9 +114,9 @@ cusparseSpMatDescr_t makeCuSparseCSR(
         num_rows,
         num_cols,
         kernel_domain.get_volume(),
-        indptr.ptr(0),
-        cols.ptr(kernel_domain.lo()),
-        entries.ptr(kernel_domain.lo()),
+        static_cast<void*>(indptr.ptr(0)),
+        const_cast<void*>(static_cast<const void*>(cols.ptr(kernel_domain.lo()))),
+        const_cast<void*>(static_cast<const void*>(entries.ptr(kernel_domain.lo()))),
         cusparseIndexType<KERNEL_COORD_T>(),
         cusparseIndexType<DOMAIN_COORD_T>(),
         CUSPARSE_INDEX_BASE_ZERO,
@@ -169,9 +169,9 @@ cusparseSpMatDescr_t makeCuSparseCOO(
         rows,
         cols,
         domain.get_volume(),
-        row.ptr(domain.lo()),
-        col.ptr(domain.lo()),
-        entries.ptr(domain.lo()),
+        const_cast<void*>(static_cast<const void*>(row.ptr(domain.lo()))),
+        const_cast<void*>(static_cast<const void*>(col.ptr(domain.lo()))),
+        const_cast<void*>(static_cast<const void*>(entries.ptr(domain.lo()))),
         cusparseIndexType<KERNEL_COORD_T>(),
         CUSPARSE_INDEX_BASE_ZERO,
         cusparseDataType<ENTRY_T>()
@@ -191,7 +191,7 @@ makeCuSparseDnVec(const Legion::Domain domain, Accessor acc) {
     CHECK_CUSPARSE(cusparseCreateDnVec(
         &descr,
         domain.get_volume(),
-        acc.ptr(domain.lo()),
+        const_cast<void*>(static_cast<const void*>(acc.ptr(domain.lo()))),
         cusparseDataType<ENTRY_T>()
     ));
     return descr;
@@ -217,7 +217,7 @@ cusparseDnVecDescr_t makeShiftedCuSparseDnVec(
     CHECK_CUSPARSE(cusparseCreateDnVec(
         &descr,
         size,
-        acc.ptr(domain.lo()) - size_t(domain.lo()[0]),
+        const_cast<void*>(static_cast<const void*>((acc.ptr(domain.lo()) - size_t(domain.lo()[0])))),
         cusparseDataType<ENTRY_T>()
     ));
     return descr;

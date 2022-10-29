@@ -85,12 +85,12 @@ void COOMatvecTask<
     // the upper domain of the output vector, since the kernel and range
     // are related by an image.
     static_assert(RANGE_DIM == 1);
-    auto rows = output_bounds.hi()[0] + 1;
+    auto rows = output_bounds.bounds.hi[0] + 1;
     // The number of columns in this slice of the COO matrix is at most
     // the upper domain of the input vector, since the kernel and domain
     // are related by an image.
     static_assert(DOMAIN_DIM == 1);
-    auto cols = input_bounds.hi()[0] + 1;
+    auto cols = input_bounds.bounds.hi[0] + 1;
 
     // Construct our cuSPARSE objects from individual regions.
     auto cusparse_coo = makeCuSparseCOO<
@@ -185,3 +185,32 @@ void COORmatvecTask<
     ) {
     assert(false);
 }
+
+template void LegionSolvers::COOMatvecTask<
+    float,
+    1,
+    1,
+    1,
+    Legion::coord_t,
+    Legion::coord_t,
+    Legion::coord_t>::
+    cuda_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+template void LegionSolvers::COOMatvecTask<
+    double,
+    1,
+    1,
+    1,
+    Legion::coord_t,
+    Legion::coord_t,
+    Legion::coord_t>::
+    cuda_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );

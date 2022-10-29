@@ -85,14 +85,14 @@ void CSRMatvecTask<
 
     auto output_bounds = output_vec.get_bounds<RANGE_DIM, RANGE_COORD_T>();
     assert(output_bounds.dense());
-    auto rows = output_bounds.get_volume();
+    auto rows = output_bounds.bounds.volume();
 
     auto input_bounds = input_vec.get_bounds<DOMAIN_DIM, DOMAIN_COORD_T>();
     // The number of columns in this slice of the COO matrix is at most
     // the upper domain of the input vector, since the kernel and domain
     // are related by an image.
     static_assert(DOMAIN_DIM == 1);
-    auto cols = input_bounds.hi()[0] + 1;
+    auto cols = input_bounds.bounds.hi[0] + 1;
 
     auto cusparse_csr = makeCuSparseCSR<
         ENTRY_T,
@@ -188,3 +188,32 @@ void CSRRmatvecTask<
     ) {
     assert(false);
 }
+
+template void LegionSolvers::CSRMatvecTask<
+    float,
+    1,
+    1,
+    1,
+    Legion::coord_t,
+    Legion::coord_t,
+    Legion::coord_t>::
+    cuda_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+template void LegionSolvers::CSRMatvecTask<
+    double,
+    1,
+    1,
+    1,
+    Legion::coord_t,
+    Legion::coord_t,
+    Legion::coord_t>::
+    cuda_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
