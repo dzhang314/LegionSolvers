@@ -17,6 +17,7 @@ LEGION_GIT_URL = "https://gitlab.com/StanfordLegion/legion.git"
 LEGION_BRANCHES = [
     ("master", "master"),
     ("cr", "control_replication"),
+    ("coll", "collective")
 ]
 
 
