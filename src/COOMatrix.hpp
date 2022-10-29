@@ -35,7 +35,7 @@ public:
           fid_j(fid_j), fid_entry(fid_entry) {}
 
     virtual Legion::IndexSpace get_kernel_space() const override {
-        return kernel_region.get_field_space();
+        return kernel_region.get_index_space();
     }
 
     virtual Legion::LogicalRegion get_kernel_region() const override {
