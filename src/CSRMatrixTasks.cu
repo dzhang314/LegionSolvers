@@ -1,7 +1,7 @@
 #include "CSRMatrixTasks.hpp"
 
-#include "CudaLibs.hpp"
 #include "CuSPARSEHelpers.hpp"
+#include "CudaLibs.hpp"
 #include "LegionUtilities.hpp" // for AffineReader, AffineWriter, ...
 #include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
 
@@ -22,10 +22,13 @@ void CSRMatvecTask<
     RANGE_DIM,
     KERNEL_COORD_T,
     DOMAIN_COORD_T,
-    RANGE_COORD_T>::gpu_task_body(const Legion::Task* task,
-                                  const std::vector<Legion::PhysicalRegion>& regions,
-                                  Legion::Context ctx,
-                                  Legion::Runtime* rt) {
+    RANGE_COORD_T>::
+    gpu_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    ) {
 
     assert(regions.size() == 4);
     const auto &output_vec = regions[0];
@@ -56,7 +59,7 @@ void CSRMatvecTask<
     const Legion::FieldID input_fid = *input_req.privilege_fields.begin();
 
     const AffineReader<
-    Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
+        Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
         col_reader{csr_matrix, fid_col};
@@ -65,7 +68,7 @@ void CSRMatvecTask<
         csr_matrix, fid_entry};
 
     const AffineReader<
-    Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>,
+        Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>,
         RANGE_DIM,
         RANGE_COORD_T>
         rowptr_reader{aux_region, fid_rowptr};
@@ -91,7 +94,14 @@ void CSRMatvecTask<
     static_assert(DOMAIN_DIM == 1);
     auto cols = input_bounds.hi()[0] + 1;
 
-    auto cusparse_csr = makeCuSparseCSR<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, KERNEL_COORD_T, DOMAIN_COORD_T, RANGE_COORD_T>(
+    auto cusparse_csr = makeCuSparseCSR<
+        ENTRY_T,
+        KERNEL_DIM,
+        DOMAIN_DIM,
+        RANGE_DIM,
+        KERNEL_COORD_T,
+        DOMAIN_COORD_T,
+        RANGE_COORD_T>(
         stream,
         rows,
         cols,
@@ -103,16 +113,14 @@ void CSRMatvecTask<
     );
     // There is an image relationship between col->input, so input should
     // be offset to the base of the image rather used directly.
-    auto cusparse_input = makeShiftedCuSparseDnVec<ENTRY_T, decltype(input_reader)>(
-        input_bounds,
-        cols,
-        input_reader
-    );
+    auto cusparse_input =
+        makeShiftedCuSparseDnVec<ENTRY_T, decltype(input_reader)>(
+            input_bounds, cols, input_reader
+        );
     // There is no such relationship between output and row, so the
     // vector can be used directly.
     auto cusparse_output = makeCuSparseDnVec<ENTRY_T, decltype(output_writer)>(
-        output_bounds,
-        output_writer
+        output_bounds, output_writer
     );
 
     ENTRY_T alpha = static_cast<ENTRY_T>(1.0);
@@ -130,10 +138,12 @@ void CSRMatvecTask<
         CUSPARSE_MV_ALG_DEFAULT,
         &bufSize
     ));
-    void* workspace = nullptr;
+    void *workspace = nullptr;
     if (bufSize > 0) {
-      Legion::DeferredBuffer<char, 1> buf({0, bufSize - 1}, Legion::Memory::GPU_FB_MEM);
-      workspace = buf.ptr(0);
+        Legion::DeferredBuffer<char, 1> buf(
+            {0, bufSize - 1}, Legion::Memory::GPU_FB_MEM
+        );
+        workspace = buf.ptr(0);
     }
     CHECK_CUSPARSE(cusparseSpMV(
         handle,
@@ -169,9 +179,12 @@ void CSRRmatvecTask<
     RANGE_DIM,
     KERNEL_COORD_T,
     DOMAIN_COORD_T,
-    RANGE_COORD_T>::gpu_task_body(const Legion::Task* task,
-                                  const std::vector<Legion::PhysicalRegion>& regions,
-                                  Legion::Context ctx,
-                                  Legion::Runtime* rt) {
-  assert(false);
+    RANGE_COORD_T>::
+    gpu_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    ) {
+    assert(false);
 }

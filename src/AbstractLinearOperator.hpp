@@ -9,7 +9,7 @@ namespace LegionSolvers {
 template <typename ENTRY_T>
 class AbstractLinearOperator {
 
-  public:
+public:
 
     virtual Legion::IndexPartition domain_partition_from_range_partition(
         Legion::IndexSpace domain_space, Legion::IndexPartition range_partition

@@ -27,94 +27,89 @@ namespace LegionSolvers {
 template <int DIM, typename COORD_T, bool C_ORDER = true>
 class Pitches {
 public:
-  __CUDA_HD__
-  inline size_t flatten(const Legion::Rect<DIM + 1, COORD_T>& rect)
-  {
-    size_t pitch  = 1;
-    size_t volume = 1;
-    for (int d = DIM; d >= 0; --d) {
-      // Quick exit for empty rectangle dimensions
-      if (rect.lo[d] > rect.hi[d]) return 0;
-      const size_t diff = rect.hi[d] - rect.lo[d] + 1;
-      volume *= diff;
-      if (d > 0) {
-        pitch *= diff;
-        pitches[d - 1] = pitch;
-      }
+    __CUDA_HD__
+    inline size_t flatten(const Legion::Rect<DIM + 1, COORD_T> &rect) {
+        size_t pitch = 1;
+        size_t volume = 1;
+        for (int d = DIM; d >= 0; --d) {
+            // Quick exit for empty rectangle dimensions
+            if (rect.lo[d] > rect.hi[d]) return 0;
+            const size_t diff = rect.hi[d] - rect.lo[d] + 1;
+            volume *= diff;
+            if (d > 0) {
+                pitch *= diff;
+                pitches[d - 1] = pitch;
+            }
+        }
+        return volume;
     }
-    return volume;
-  }
-  __CUDA_HD__
-  inline Legion::Point<DIM + 1, COORD_T> unflatten(size_t index, const Legion::Point<DIM + 1, COORD_T>& lo) const
-  {
-    Legion::Point<DIM + 1, COORD_T> point = lo;
-    for (int d = 0; d < DIM; d++) {
-      point[d] += index / pitches[d];
-      index = index % pitches[d];
+    __CUDA_HD__
+    inline Legion::Point<DIM + 1, COORD_T>
+    unflatten(size_t index, const Legion::Point<DIM + 1, COORD_T> &lo) const {
+        Legion::Point<DIM + 1, COORD_T> point = lo;
+        for (int d = 0; d < DIM; d++) {
+            point[d] += index / pitches[d];
+            index = index % pitches[d];
+        }
+        point[DIM] += index;
+        return point;
     }
-    point[DIM] += index;
-    return point;
-  }
 
 private:
-  size_t pitches[DIM];
+    size_t pitches[DIM];
 };
 
 template <int DIM, typename COORD_T>
 class Pitches<DIM, COORD_T, false /*C_ORDER*/> {
 public:
-  __CUDA_HD__
-  inline size_t flatten(const Legion::Rect<DIM + 1, COORD_T>& rect)
-  {
-    size_t pitch  = 1;
-    size_t volume = 1;
-    for (int d = 0; d <= DIM; ++d) {
-      // Quick exit for empty rectangle dimensions
-      if (rect.lo[d] > rect.hi[d]) return 0;
-      const size_t diff = rect.hi[d] - rect.lo[d] + 1;
-      volume *= diff;
-      if (d < DIM) {
-        pitch *= diff;
-        pitches[d] = pitch;
-      }
+    __CUDA_HD__
+    inline size_t flatten(const Legion::Rect<DIM + 1, COORD_T> &rect) {
+        size_t pitch = 1;
+        size_t volume = 1;
+        for (int d = 0; d <= DIM; ++d) {
+            // Quick exit for empty rectangle dimensions
+            if (rect.lo[d] > rect.hi[d]) return 0;
+            const size_t diff = rect.hi[d] - rect.lo[d] + 1;
+            volume *= diff;
+            if (d < DIM) {
+                pitch *= diff;
+                pitches[d] = pitch;
+            }
+        }
+        return volume;
     }
-    return volume;
-  }
-  __CUDA_HD__
-  inline Legion::Point<DIM + 1, COORD_T> unflatten(size_t index, const Legion::Point<DIM + 1, COORD_T>& lo) const
-  {
-    Legion::Point<DIM + 1, COORD_T> point = lo;
-    for (int d = DIM - 1; d >= 0; --d) {
-      point[d + 1] += index / pitches[d];
-      index = index % pitches[d];
+    __CUDA_HD__
+    inline Legion::Point<DIM + 1, COORD_T>
+    unflatten(size_t index, const Legion::Point<DIM + 1, COORD_T> &lo) const {
+        Legion::Point<DIM + 1, COORD_T> point = lo;
+        for (int d = DIM - 1; d >= 0; --d) {
+            point[d + 1] += index / pitches[d];
+            index = index % pitches[d];
+        }
+        point[0] += index;
+        return point;
     }
-    point[0] += index;
-    return point;
-  }
 
 private:
-  size_t pitches[DIM];
+    size_t pitches[DIM];
 };
 
 // Specialization for the zero-sized case
 template <typename COORD_T, bool C_ORDER>
 class Pitches<0, COORD_T, C_ORDER> {
 public:
-  __CUDA_HD__
-  inline size_t flatten(const Legion::Rect<1, COORD_T>& rect)
-  {
-    if (rect.lo[0] > rect.hi[0])
-      return 0;
-    else
-      return (rect.hi[0] - rect.lo[0] + 1);
-  }
-  __CUDA_HD__
-  inline Legion::Point<1, COORD_T> unflatten(size_t index, const Legion::Point<1, COORD_T>& lo) const
-  {
-    Legion::Point<1, COORD_T> point = lo;
-    point[0] += index;
-    return point;
-  }
+    __CUDA_HD__
+    inline size_t flatten(const Legion::Rect<1, COORD_T> &rect) {
+        if (rect.lo[0] > rect.hi[0]) return 0;
+        else return (rect.hi[0] - rect.lo[0] + 1);
+    }
+    __CUDA_HD__
+    inline Legion::Point<1, COORD_T>
+    unflatten(size_t index, const Legion::Point<1, COORD_T> &lo) const {
+        Legion::Point<1, COORD_T> point = lo;
+        point[0] += index;
+        return point;
+    }
 };
 
-}  // namespace LegionSolvers
+} // namespace LegionSolvers

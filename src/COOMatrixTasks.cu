@@ -1,7 +1,7 @@
 #include "COOMatrixTasks.hpp"
 
-#include "CudaLibs.hpp"
 #include "CuSPARSEHelpers.hpp"
+#include "CudaLibs.hpp"
 #include "LegionUtilities.hpp" // for AffineReader, AffineWriter, ...
 #include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
 
@@ -22,10 +22,13 @@ void COOMatvecTask<
     RANGE_DIM,
     KERNEL_COORD_T,
     DOMAIN_COORD_T,
-    RANGE_COORD_T>::gpu_task_body(const Legion::Task* task,
-                                  const std::vector<Legion::PhysicalRegion>& regions,
-                                  Legion::Context ctx,
-                                  Legion::Runtime* rt) {
+    RANGE_COORD_T>::
+    gpu_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    ) {
     std::cout << "COO MATVEC GPU" << std::endl;
     assert(regions.size() == 3);
     const auto &output_vec = regions[0];
@@ -52,13 +55,13 @@ void COOMatvecTask<
     const Legion::FieldID fid_entry = argptr[2];
 
     const AffineReader<
-    Legion::Point<RANGE_DIM, RANGE_COORD_T>,
+        Legion::Point<RANGE_DIM, RANGE_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
         i_reader{coo_matrix, fid_i};
 
     const AffineReader<
-    Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
+        Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
         j_reader{coo_matrix, fid_j};
@@ -90,7 +93,14 @@ void COOMatvecTask<
     auto cols = input_bounds.hi()[0] + 1;
 
     // Construct our cuSPARSE objects from individual regions.
-    auto cusparse_coo = makeCuSparseCOO<ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, KERNEL_COORD_T, DOMAIN_COORD_T, RANGE_COORD_T>(
+    auto cusparse_coo = makeCuSparseCOO<
+        ENTRY_T,
+        KERNEL_DIM,
+        DOMAIN_DIM,
+        RANGE_DIM,
+        KERNEL_COORD_T,
+        DOMAIN_COORD_T,
+        RANGE_COORD_T>(
         rows,
         cols,
         coo_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>(),
@@ -101,16 +111,14 @@ void COOMatvecTask<
     // There are image relationships between row->output and col->input,
     // so these vectors should be offset to the base of the image rather
     // used directly.
-    auto cusparse_input = makeShiftedCuSparseDnVec<ENTRY_T, decltype(input_reader)>(
-        input_bounds,
-        cols,
-        input_reader
-    );
-    auto cusparse_output = makeShiftedCuSparseDnVec<ENTRY_T, decltype(output_writer)>(
-        output_bounds,
-        rows,
-        output_writer
-    );
+    auto cusparse_input =
+        makeShiftedCuSparseDnVec<ENTRY_T, decltype(input_reader)>(
+            input_bounds, cols, input_reader
+        );
+    auto cusparse_output =
+        makeShiftedCuSparseDnVec<ENTRY_T, decltype(output_writer)>(
+            output_bounds, rows, output_writer
+        );
 
     ENTRY_T alpha = static_cast<ENTRY_T>(1.0);
     ENTRY_T beta = static_cast<ENTRY_T>(0.0);
@@ -127,10 +135,12 @@ void COOMatvecTask<
         CUSPARSE_MV_ALG_DEFAULT,
         &bufSize
     ));
-    void* workspace = nullptr;
+    void *workspace = nullptr;
     if (bufSize > 0) {
-      Legion::DeferredBuffer<char, 1> buf({0, bufSize - 1}, Legion::Memory::GPU_FB_MEM);
-      workspace = buf.ptr(0);
+        Legion::DeferredBuffer<char, 1> buf(
+            {0, bufSize - 1}, Legion::Memory::GPU_FB_MEM
+        );
+        workspace = buf.ptr(0);
     }
     CHECK_CUSPARSE(cusparseSpMV(
         handle,
@@ -166,9 +176,12 @@ void COORmatvecTask<
     RANGE_DIM,
     KERNEL_COORD_T,
     DOMAIN_COORD_T,
-    RANGE_COORD_T>::gpu_task_body(const Legion::Task* task,
-                                  const std::vector<Legion::PhysicalRegion>& regions,
-                                  Legion::Context ctx,
-                                  Legion::Runtime* rt) {
-      assert(false);
+    RANGE_COORD_T>::
+    gpu_task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    ) {
+    assert(false);
 }

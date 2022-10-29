@@ -9,7 +9,7 @@ namespace LegionSolvers {
 
 class LegionSolversMapper : public Legion::Mapping::DefaultMapper {
 
-  public:
+public:
 
     LegionSolversMapper(
         Legion::Mapping::MapperRuntime *rt,

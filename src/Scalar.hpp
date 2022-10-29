@@ -13,7 +13,7 @@ class Scalar {
     Legion::Runtime *const rt;
     Legion::Future future;
 
-  public:
+public:
 
     explicit Scalar(
         Legion::Context ctx, Legion::Runtime *rt, const Legion::Future &future

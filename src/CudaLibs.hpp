@@ -30,7 +30,7 @@
 #define CHECK_CUSPARSE(expr)                                                   \
     do {                                                                       \
         cusparseStatus_t result = (expr);                                      \
-        LegionSolvers::check_cusparse(result, __FILE__, __LINE__);              \
+        LegionSolvers::check_cusparse(result, __FILE__, __LINE__);             \
     } while (false)
 
 #define THREADS_PER_BLOCK 128
@@ -51,19 +51,23 @@ __host__ inline void check_cuda(cudaError_t error, const char *file, int line) {
     }
 }
 
-__host__ inline void check_cublas(cublasStatus_t status, const char* file, int line) {
-  if (status != CUBLAS_STATUS_SUCCESS) {
-    fprintf(stderr,
+__host__ inline void
+check_cublas(cublasStatus_t status, const char *file, int line) {
+    if (status != CUBLAS_STATUS_SUCCESS) {
+        fprintf(
+            stderr,
             "cuBLAS failure with error code %d in file %s at line %d\n",
             status,
             file,
-            line);
-    assert(false);
-  }
+            line
+        );
+        assert(false);
+    }
 }
 
 
-__host__ inline void check_cusparse(cusparseStatus_t status, const char *file, int line) {
+__host__ inline void
+check_cusparse(cusparseStatus_t status, const char *file, int line) {
     if (status != CUSPARSE_STATUS_SUCCESS) {
         fprintf(
             stderr,
@@ -78,36 +82,35 @@ __host__ inline void check_cusparse(cusparseStatus_t status, const char *file, i
 }
 
 #ifdef __CUDACC__
-__device__ inline size_t global_tid_1d()
-{
-  return static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+__device__ inline size_t global_tid_1d() {
+    return static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 }
 #endif
 
 inline size_t get_num_blocks_1d(size_t threads) {
-  return (threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    return (threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 }
 
 
 // StreamView is a managed view of a CUDA stream. This code is
 // inspired from Legate's CUDA StreamView.
 struct StreamView {
-  public:
+public:
     StreamView(cudaStream_t stream) : valid_(true), stream_(stream) {}
     ~StreamView();
 
-  public:
+public:
     StreamView(const StreamView &) = delete;
     StreamView &operator=(const StreamView &) = delete;
 
-  public:
+public:
     StreamView(StreamView &&);
     StreamView &operator=(StreamView &&);
 
-  public:
+public:
     operator cudaStream_t() const { return stream_; }
 
-  private:
+private:
     bool valid_;
     cudaStream_t stream_;
 };
@@ -123,20 +126,20 @@ cublasHandle_t get_cublas();
 // like cuSPARSE and (in the future) cuBLAS, as well as what
 // stream should kernels execute on.
 struct CUDALibraries {
-  public:
+public:
     CUDALibraries();
 
-  private:
+private:
     // Prevent copying and overwriting.
     CUDALibraries(const CUDALibraries &rhs) = delete;
     CUDALibraries &operator=(const CUDALibraries &rhs) = delete;
 
-  public:
+public:
     cublasHandle_t get_cublas();
     cusparseHandle_t get_cusparse();
     cudaStream_t get_stream();
 
-  private:
+private:
     cublasHandle_t cublas_;
     cusparseHandle_t cusparse_;
     cudaStream_t stream_;
@@ -145,7 +148,7 @@ struct CUDALibraries {
 // LoadCUDALibsTask is a task that loads the CUDA libraries
 // on each GPU in the system.
 class LoadCUDALibsTask {
-  public:
+public:
     static const int TASK_ID =
         LEGION_SOLVERS_TASK_ID_ORIGIN + LOAD_CUDALIBS_TASK_ID;
     static constexpr const char *task_name = "load_cuda_libs";

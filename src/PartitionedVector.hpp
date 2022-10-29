@@ -23,7 +23,7 @@ class PartitionedVector {
     const Legion::IndexPartition index_partition;
     const Legion::LogicalPartition logical_partition;
 
-  public:
+public:
 
     PartitionedVector() = delete;
     PartitionedVector(PartitionedVector &&) = delete;

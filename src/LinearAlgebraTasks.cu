@@ -6,7 +6,7 @@
 #include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
 #include "Pitches.hpp"
 
-#include <cmath>   // for std::fma
+#include <cmath> // for std::fma
 
 using namespace LegionSolvers;
 
@@ -17,45 +17,45 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-  // Grab our stream and cuBLAS handle.
-  auto stream = get_cached_stream();
-  auto handle = get_cublas();
-  CHECK_CUBLAS(cublasSetStream(handle, stream));
+    // Grab our stream and cuBLAS handle.
+    auto stream = get_cached_stream();
+    auto handle = get_cublas();
+    CHECK_CUBLAS(cublasSetStream(handle, stream));
 
-  assert(regions.size() == 1);
-  const auto &x = regions[0];
+    assert(regions.size() == 1);
+    const auto &x = regions[0];
 
-  assert(task->regions.size() == 1);
-  const auto &x_req = task->regions[0];
+    assert(task->regions.size() == 1);
+    const auto &x_req = task->regions[0];
 
-  assert(x_req.privilege_fields.size() == 1);
-  const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+    assert(x_req.privilege_fields.size() == 1);
+    const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
 
-  const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
+    const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
 
-  AffineReaderWriter<ENTRY_T, DIM, COORD_T> x_reader_writer(x, x_fid);
+    AffineReaderWriter<ENTRY_T, DIM, COORD_T> x_reader_writer(x, x_fid);
 
-  const Legion::Domain x_domain =
-      rt->get_index_space_domain(ctx, x_req.region.get_index_space());
+    const Legion::Domain x_domain =
+        rt->get_index_space_domain(ctx, x_req.region.get_index_space());
 
-  assert(x_domain.dense());
+    assert(x_domain.dense());
 
-  // If there are no points to process, exit.
-  if (x_domain.empty()) return;
+    // If there are no points to process, exit.
+    if (x_domain.empty()) return;
 
-  // TODO (rohany): I'm not sure about what the right value for incx and
-  //  incy are. It depends on what layouts we're getting the input
-  //  vectors in. If we're getting exact layouts than this should be fine.
-  //  If we're getting some subslice of a larger region then this probably
-  //  won't work.
-  // Finally make the cuBLAS call.
-  cublasSCAL<ENTRY_T>(
-      handle,
-      x_domain.get_volume(),
-      &alpha,
-      x_reader_writer.ptr(x_domain.lo()),
-      1
-  );
+    // TODO (rohany): I'm not sure about what the right value for incx and
+    //  incy are. It depends on what layouts we're getting the input
+    //  vectors in. If we're getting exact layouts than this should be fine.
+    //  If we're getting some subslice of a larger region then this probably
+    //  won't work.
+    // Finally make the cuBLAS call.
+    cublasSCAL<ENTRY_T>(
+        handle,
+        x_domain.get_volume(),
+        &alpha,
+        x_reader_writer.ptr(x_domain.lo()),
+        1
+    );
 }
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -65,73 +65,74 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-  // Grab our stream and cuBLAS handle.
-  auto stream = get_cached_stream();
-  auto handle = get_cublas();
-  CHECK_CUBLAS(cublasSetStream(handle, stream));
+    // Grab our stream and cuBLAS handle.
+    auto stream = get_cached_stream();
+    auto handle = get_cublas();
+    CHECK_CUBLAS(cublasSetStream(handle, stream));
 
-  assert(regions.size() == 2);
-  const auto &y = regions[0];
-  const auto &x = regions[1];
+    assert(regions.size() == 2);
+    const auto &y = regions[0];
+    const auto &x = regions[1];
 
-  assert(task->regions.size() == 2);
-  const auto &y_req = task->regions[0];
-  const auto &x_req = task->regions[1];
+    assert(task->regions.size() == 2);
+    const auto &y_req = task->regions[0];
+    const auto &x_req = task->regions[1];
 
-  assert(y_req.privilege_fields.size() == 1);
-  const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
+    assert(y_req.privilege_fields.size() == 1);
+    const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
 
-  assert(x_req.privilege_fields.size() == 1);
-  const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+    assert(x_req.privilege_fields.size() == 1);
+    const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
 
-  const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
+    const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
 
-  AffineReaderWriter<ENTRY_T, DIM, COORD_T> y_reader_writer{y, y_fid};
-  AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
+    AffineReaderWriter<ENTRY_T, DIM, COORD_T> y_reader_writer{y, y_fid};
+    AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
 
-  const Legion::Domain y_domain =
-      rt->get_index_space_domain(ctx, y_req.region.get_index_space());
+    const Legion::Domain y_domain =
+        rt->get_index_space_domain(ctx, y_req.region.get_index_space());
 
-  const Legion::Domain x_domain =
-      rt->get_index_space_domain(ctx, x_req.region.get_index_space());
+    const Legion::Domain x_domain =
+        rt->get_index_space_domain(ctx, x_req.region.get_index_space());
 
-  assert(y_domain == x_domain);
-  assert(y_domain.dense());
+    assert(y_domain == x_domain);
+    assert(y_domain.dense());
 
-  // If there are no points to process, exit.
-  if (y_domain.empty()) return;
+    // If there are no points to process, exit.
+    if (y_domain.empty()) return;
 
-  // TODO (rohany): I'm not sure about what the right value for incx and
-  //  incy are. It depends on what layouts we're getting the input
-  //  vectors in. If we're getting exact layouts than this should be fine.
-  //  If we're getting some subslice of a larger region then this probably
-  //  won't work.
-  // Finally make the cuBLAS call.
-  cublasAXPY<ENTRY_T>(
-      handle,
-      y_domain.get_volume(),
-      &alpha,
-      x_reader.ptr(x_domain.lo()),
-      1,
-      y_reader_writer.ptr(y_domain.lo()),
-      1
-  );
+    // TODO (rohany): I'm not sure about what the right value for incx and
+    //  incy are. It depends on what layouts we're getting the input
+    //  vectors in. If we're getting exact layouts than this should be fine.
+    //  If we're getting some subslice of a larger region then this probably
+    //  won't work.
+    // Finally make the cuBLAS call.
+    cublasAXPY<ENTRY_T>(
+        handle,
+        y_domain.get_volume(),
+        &alpha,
+        x_reader.ptr(x_domain.lo()),
+        1,
+        y_reader_writer.ptr(y_domain.lo()),
+        1
+    );
 }
 
 // cuBLAS doesn't have a XPAY kernel for some reason, so just
 // write it out by hand.
 template <typename ENTRY_T, int DIM, typename COORD_T>
-__global__
-void xpay_kernel(size_t volume,
-                 ENTRY_T alpha,
-                 Pitches<DIM - 1, COORD_T> pitches,
-                 const Legion::Point<DIM, COORD_T> lo,
-                 AffineReaderWriter<ENTRY_T, DIM, COORD_T> y,
-                 AffineReader<ENTRY_T, DIM, COORD_T> x) {
-  const auto idx = global_tid_1d();
-  if (idx >= volume) return;
-  auto point = pitches.unflatten(idx, lo);
-  y[point] = std::fma(alpha, y[point], x[point]);
+__global__ void xpay_kernel(
+    size_t volume,
+    ENTRY_T alpha,
+    Pitches<DIM - 1, COORD_T> pitches,
+    const Legion::Point<DIM, COORD_T> lo,
+    AffineReaderWriter<ENTRY_T, DIM, COORD_T> y,
+    AffineReader<ENTRY_T, DIM, COORD_T> x
+) {
+    const auto idx = global_tid_1d();
+    if (idx >= volume) return;
+    auto point = pitches.unflatten(idx, lo);
+    y[point] = std::fma(alpha, y[point], x[point]);
 }
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -141,49 +142,45 @@ void XpayTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-  assert(regions.size() == 2);
-  const auto &y = regions[0];
-  const auto &x = regions[1];
+    assert(regions.size() == 2);
+    const auto &y = regions[0];
+    const auto &x = regions[1];
 
-  assert(task->regions.size() == 2);
-  const auto &y_req = task->regions[0];
-  const auto &x_req = task->regions[1];
+    assert(task->regions.size() == 2);
+    const auto &y_req = task->regions[0];
+    const auto &x_req = task->regions[1];
 
-  assert(y_req.privilege_fields.size() == 1);
-  const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
+    assert(y_req.privilege_fields.size() == 1);
+    const Legion::FieldID y_fid = *y_req.privilege_fields.begin();
 
-  assert(x_req.privilege_fields.size() == 1);
-  const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
+    assert(x_req.privilege_fields.size() == 1);
+    const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
 
-  const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
+    const ENTRY_T alpha = get_alpha<ENTRY_T>(task->futures);
 
-  AffineReaderWriter<ENTRY_T, DIM, COORD_T> y_reader_writer{y, y_fid};
-  AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
+    AffineReaderWriter<ENTRY_T, DIM, COORD_T> y_reader_writer{y, y_fid};
+    AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
 
-  const Legion::Domain y_domain =
-      rt->get_index_space_domain(ctx, y_req.region.get_index_space());
+    const Legion::Domain y_domain =
+        rt->get_index_space_domain(ctx, y_req.region.get_index_space());
 
-  const Legion::Domain x_domain =
-      rt->get_index_space_domain(ctx, x_req.region.get_index_space());
+    const Legion::Domain x_domain =
+        rt->get_index_space_domain(ctx, x_req.region.get_index_space());
 
-  assert(y_domain == x_domain);
-  assert(y_domain.dense());
+    assert(y_domain == x_domain);
+    assert(y_domain.dense());
 
-  // If there are no points to process, exit.
-  if (y_domain.empty()) return;
+    // If there are no points to process, exit.
+    if (y_domain.empty()) return;
 
-  auto stream = get_cached_stream();
-  Pitches<DIM - 1, COORD_T> pitches;
-  auto volume = pitches.flatten(y_domain.bounds<DIM, COORD_T>());
-  auto blocks = get_num_blocks_1d(volume);
-  xpay_kernel<ENTRY_T, DIM, COORD_T><<<blocks, THREADS_PER_BLOCK, 0, stream>>>(
-    volume,
-    alpha,
-    pitches,
-    y_domain.lo(),
-    y_reader_writer,
-    x_reader
-  );
+    auto stream = get_cached_stream();
+    Pitches<DIM - 1, COORD_T> pitches;
+    auto volume = pitches.flatten(y_domain.bounds<DIM, COORD_T>());
+    auto blocks = get_num_blocks_1d(volume);
+    xpay_kernel<ENTRY_T, DIM, COORD_T>
+        <<<blocks, THREADS_PER_BLOCK, 0, stream>>>(
+            volume, alpha, pitches, y_domain.lo(), y_reader_writer, x_reader
+        );
 }
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -193,59 +190,57 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::gpu_task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-  // Grab our stream and cuBLAS handle.
-  auto stream = get_cached_stream();
-  auto handle = get_cublas();
-  CHECK_CUBLAS(cublasSetStream(handle, stream));
+    // Grab our stream and cuBLAS handle.
+    auto stream = get_cached_stream();
+    auto handle = get_cublas();
+    CHECK_CUBLAS(cublasSetStream(handle, stream));
 
-  assert(regions.size() == 2);
-  const auto &v = regions[0];
-  const auto &w = regions[1];
+    assert(regions.size() == 2);
+    const auto &v = regions[0];
+    const auto &w = regions[1];
 
-  assert(task->regions.size() == 2);
-  const auto &v_req = task->regions[0];
-  const auto &w_req = task->regions[1];
+    assert(task->regions.size() == 2);
+    const auto &v_req = task->regions[0];
+    const auto &w_req = task->regions[1];
 
-  assert(v_req.privilege_fields.size() == 1);
-  const Legion::FieldID v_fid = *v_req.privilege_fields.begin();
+    assert(v_req.privilege_fields.size() == 1);
+    const Legion::FieldID v_fid = *v_req.privilege_fields.begin();
 
-  assert(w_req.privilege_fields.size() == 1);
-  const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
+    assert(w_req.privilege_fields.size() == 1);
+    const Legion::FieldID w_fid = *w_req.privilege_fields.begin();
 
-  AffineReader<ENTRY_T, DIM, COORD_T> v_reader{v, v_fid};
-  AffineReader<ENTRY_T, DIM, COORD_T> w_reader{w, w_fid};
+    AffineReader<ENTRY_T, DIM, COORD_T> v_reader{v, v_fid};
+    AffineReader<ENTRY_T, DIM, COORD_T> w_reader{w, w_fid};
 
-  const Legion::Domain v_domain =
-      rt->get_index_space_domain(ctx, v_req.region.get_index_space());
+    const Legion::Domain v_domain =
+        rt->get_index_space_domain(ctx, v_req.region.get_index_space());
 
-  const Legion::Domain w_domain =
-      rt->get_index_space_domain(ctx, w_req.region.get_index_space());
+    const Legion::Domain w_domain =
+        rt->get_index_space_domain(ctx, w_req.region.get_index_space());
 
-  assert(v_domain == w_domain);
-  assert(v_domain.dense());
+    assert(v_domain == w_domain);
+    assert(v_domain.dense());
 
-  ENTRY_T result = static_cast<ENTRY_T>(0);
-  if (v_domain.empty()) {
+    ENTRY_T result = static_cast<ENTRY_T>(0);
+    if (v_domain.empty()) { return result; }
+
+    // TODO (rohany): I'm not sure about what the right value for incx and
+    //  incy are. It depends on what layouts we're getting the input
+    //  vectors in. If we're getting exact layouts than this should be fine.
+    //  If we're getting some subslice of a larger region then this probably
+    //  won't work.
+    // Finally make the cuBLAS call.
+    cublasDOT<ENTRY_T>(
+        handle,
+        v_domain.get_volume(),
+        v_reader.ptr(v_domain.lo()),
+        1,
+        w_reader.ptr(w_domain.lo()),
+        1,
+        &result
+    );
+
     return result;
-  }
-
-  // TODO (rohany): I'm not sure about what the right value for incx and
-  //  incy are. It depends on what layouts we're getting the input
-  //  vectors in. If we're getting exact layouts than this should be fine.
-  //  If we're getting some subslice of a larger region then this probably
-  //  won't work.
-  // Finally make the cuBLAS call.
-  cublasDOT<ENTRY_T>(
-      handle,
-      v_domain.get_volume(),
-      v_reader.ptr(v_domain.lo()),
-      1,
-      w_reader.ptr(w_domain.lo()),
-      1,
-      &result
-  );
-
-  return result;
 }
 
 // clang-format off
