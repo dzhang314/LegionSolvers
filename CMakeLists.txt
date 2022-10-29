@@ -24,11 +24,11 @@ list(APPEND LegionSolvers_SOURCES
     src/UtilityTasks.cpp
 )
 
-if(Legion_USE_OPENMP AND NOT Legion_USE_KOKKOS)
+if(Legion_USE_OPENMP AND NOT Legion_USE_Kokkos)
     # Placeholder if we ever add OpenMP tasks.
 endif()
 
-if(Legion_USE_CUDA AND NOT Legion_USE_KOKKOS)
+if(Legion_USE_CUDA AND NOT Legion_USE_Kokkos)
     list(APPEND LegionSolvers_SOURCES
         src/COOMatrixTasks.cu
         src/CSRMatrixTasks.cu
@@ -42,12 +42,12 @@ add_library(LegionSolvers ${LegionSolvers_SOURCES})
 # Link in Legion.
 target_link_libraries(LegionSolvers Legion::Legion)
 # If Kokkos was enabled in Legion, link in Kokkos.
-if(Legion_USE_KOKKOS)
+if(Legion_USE_Kokkos)
     target_link_libraries(Kokkos::kokkoscore)
 endif()
 # If Legion has CUDA support, link in the appopriate CUDA libraries.
 if(Legion_USE_CUDA)
-    if(NOT Legion_USE_KOKKOS)
+    if(NOT Legion_USE_Kokkos)
         target_link_libraries(LegionSolvers
             CUDA::cudart CUDA::cublas CUDA::cusparse
         )
