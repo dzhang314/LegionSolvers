@@ -23,7 +23,7 @@ void CSRMatvecTask<
     KERNEL_COORD_T,
     DOMAIN_COORD_T,
     RANGE_COORD_T>::
-    gpu_task_body(
+    cuda_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
@@ -180,7 +180,7 @@ void CSRRmatvecTask<
     KERNEL_COORD_T,
     DOMAIN_COORD_T,
     RANGE_COORD_T>::
-    gpu_task_body(
+    cuda_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,

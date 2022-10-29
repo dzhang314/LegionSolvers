@@ -151,7 +151,7 @@ struct HasGPUVariantMixin {
     using __yes = int8_t[2];
     struct HasGPUVariant {
         template <typename U>
-        static __yes &test(decltype(&U::gpu_task_body));
+        static __yes &test(decltype(&U::cuda_task_body));
         template <typename U>
         static __no &test(...);
         static const bool value = (sizeof(test<T>(0)) == sizeof(__yes));
@@ -196,7 +196,7 @@ struct TaskTDI : HasGPUVariantMixin<TaskTDI<BLOCK_ID, TaskClass, T, N, I>> {
         if constexpr (TaskTDI::HasGPUVariant::value) {
             preregister_task<
                 typename TaskClass<T, N, I>::return_type,
-                TaskClass<T, N, I>::gpu_task_body>(
+                TaskClass<T, N, I>::cuda_task_body>(
                 task_id,
                 task_name(),
                 TaskClass<T, N, I>::flags,
@@ -291,7 +291,7 @@ struct TaskTDDDIII
         if constexpr (TaskTDDDIII::HasGPUVariant::value) {
             preregister_task<
                 typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
-                TaskClass<T, N1, N2, N3, I1, I2, I3>::gpu_task_body>(
+                TaskClass<T, N1, N2, N3, I1, I2, I3>::cuda_task_body>(
                 task_id,
                 task_name(),
                 TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,

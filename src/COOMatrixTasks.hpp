@@ -42,7 +42,7 @@ struct COOMatvecTask : public TaskTDDDIII<
     );
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-    static return_type gpu_task_body(
+    static return_type cuda_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
@@ -88,7 +88,7 @@ struct COORmatvecTask : public TaskTDDDIII<
 
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-    static return_type gpu_task_body(
+    static return_type cuda_task_body(
         const Legion::Task *task,
         const std::vector<Legion::PhysicalRegion> &regions,
         Legion::Context ctx,
