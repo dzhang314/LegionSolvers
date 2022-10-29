@@ -40,7 +40,6 @@ struct XpayTask
     static constexpr const char *task_base_name = "xpay";
     static constexpr const TaskFlags flags =
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
-    using return_type = void;
     LEGION_SOLVERS_DECLARE_TASK(void);
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     LEGION_SOLVERS_DECLARE_CUDA_TASK;
