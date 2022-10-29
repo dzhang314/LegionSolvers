@@ -12,21 +12,25 @@ namespace LegionSolvers {
 
 
 using LEGION_SOLVERS_SUPPORTED_INDEX_TYPES = TypeList<
+
 #ifdef LEGION_SOLVERS_USE_S32_INDICES
     int,
 #else
     void,
 #endif // LEGION_SOLVERS_USE_S32_INDICES
+
 #ifdef LEGION_SOLVERS_USE_U32_INDICES
     unsigned,
 #else
     void,
 #endif // LEGION_SOLVERS_USE_U32_INDICES
+
 #ifdef LEGION_SOLVERS_USE_S64_INDICES
     long long,
 #else
     void,
 #endif // LEGION_SOLVERS_USE_S64_INDICES
+
     void>;
 
 
