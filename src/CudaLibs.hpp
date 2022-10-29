@@ -29,8 +29,8 @@
 
 #define CHECK_CUSPARSE(expr)                                                   \
     do {                                                                       \
-        cusparseStatus_t result = (expr);                                      \
-        LegionSolvers::check_cusparse(result, __FILE__, __LINE__);             \
+        cusparseStatus_t __result__ = (expr);                                  \
+        LegionSolvers::check_cusparse(__result__, __FILE__, __LINE__);         \
     } while (false)
 
 #define THREADS_PER_BLOCK 128
