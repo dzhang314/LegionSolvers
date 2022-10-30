@@ -79,13 +79,11 @@ void CSRMatvecTask<
     const AffineSumAccessor<ENTRY_T, RANGE_DIM, RANGE_COORD_T> output_writer{
         output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>};
 
-    auto stream = get_cached_stream();
-    auto handle = get_cusparse();
-    CHECK_CUSPARSE(cusparseSetStream(handle, stream));
-
     auto output_bounds = output_vec.get_bounds<RANGE_DIM, RANGE_COORD_T>();
     assert(output_bounds.dense());
     auto rows = output_bounds.bounds.volume();
+    // Break out if there are no rows to process.
+    if (rows == 0) { return; }
 
     auto input_bounds = input_vec.get_bounds<DOMAIN_DIM, DOMAIN_COORD_T>();
     // The number of columns in this slice of the COO matrix is at most
@@ -93,6 +91,10 @@ void CSRMatvecTask<
     // are related by an image.
     static_assert(DOMAIN_DIM == 1);
     auto cols = input_bounds.bounds.hi[0] + 1;
+
+    auto stream = get_cached_stream();
+    auto handle = get_cusparse();
+    CHECK_CUSPARSE(cusparseSetStream(handle, stream));
 
     auto cusparse_csr = makeCuSparseCSR<
         ENTRY_T,
@@ -105,7 +107,7 @@ void CSRMatvecTask<
         stream,
         rows,
         cols,
-        aux_region.get_bounds<KERNEL_DIM, KERNEL_COORD_T>(),
+        aux_region.get_bounds<RANGE_DIM, RANGE_COORD_T>(),
         rowptr_reader,
         csr_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>(),
         col_reader,
