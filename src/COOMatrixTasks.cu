@@ -79,6 +79,10 @@ void COOMatvecTask<
     auto handle = get_cusparse();
     CHECK_CUSPARSE(cusparseSetStream(handle, stream));
 
+    const Legion::Domain coo_bounds =
+        coo_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>();
+    // If there are no coordinates to process, break out.
+    if (coo_bounds.empty()) { return; }
     auto input_bounds = input_vec.get_bounds<RANGE_DIM, RANGE_COORD_T>();
     auto output_bounds = output_vec.get_bounds<DOMAIN_DIM, DOMAIN_COORD_T>();
     // The number of rows in this slice of the COO matrix is at most
@@ -101,12 +105,7 @@ void COOMatvecTask<
         KERNEL_COORD_T,
         DOMAIN_COORD_T,
         RANGE_COORD_T>(
-        rows,
-        cols,
-        coo_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>(),
-        i_reader,
-        j_reader,
-        entry_reader
+        rows, cols, coo_bounds, i_reader, j_reader, entry_reader
     );
     // There are image relationships between row->output and col->input,
     // so these vectors should be offset to the base of the image rather
