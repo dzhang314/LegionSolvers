@@ -74,18 +74,19 @@ inline ENTRY_T get_alpha(const std::vector<Legion::Future> &futures) {
         const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
         const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
         const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
-        return f0 * f1 / f2;
+        return (f0 * f1) / f2;
     } else if (futures.size() == 4) {
         const ENTRY_T f0 = futures[0].get_result<ENTRY_T>();
         const ENTRY_T f1 = futures[1].get_result<ENTRY_T>();
         const ENTRY_T f2 = futures[2].get_result<ENTRY_T>();
         const ENTRY_T f3 = futures[3].get_result<ENTRY_T>();
-        return f0 * f1 / (f2 * f3);
+        return (f0 * f1) / (f2 * f3);
     } else {
         assert(false);
         return static_cast<ENTRY_T>(1);
     }
 }
+
 
 } // namespace LegionSolvers
 

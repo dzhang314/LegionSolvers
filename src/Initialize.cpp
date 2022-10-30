@@ -12,13 +12,16 @@
     #include "CudaLibs.hpp"
 #endif
 
-// clang-format off
+
 void LegionSolvers::initialize(bool verbose) {
 
+    // LegionSolversMapper.hpp
     Legion::Runtime::add_registration_callback(
         LegionSolvers::mapper_registration_callback
     );
 
+// UtilityTasks.hpp
+// clang-format off
     #ifdef LEGION_SOLVERS_USE_F32
         PrintScalarTask<float>::preregister(verbose);
         NegateScalarTask<float>::preregister(verbose);
@@ -27,7 +30,6 @@ void LegionSolvers::initialize(bool verbose) {
         MultiplyScalarTask<float>::preregister(verbose);
         DivideScalarTask<float>::preregister(verbose);
     #endif // LEGION_SOLVERS_USE_F32
-
     #ifdef LEGION_SOLVERS_USE_F64
         PrintScalarTask<double>::preregister(verbose);
         NegateScalarTask<double>::preregister(verbose);
@@ -36,7 +38,43 @@ void LegionSolvers::initialize(bool verbose) {
         MultiplyScalarTask<double>::preregister(verbose);
         DivideScalarTask<double>::preregister(verbose);
     #endif // LEGION_SOLVERS_USE_F64
+    #ifdef LEGION_SOLVERS_USE_S32_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            PrintIndexTask<1, int>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            PrintIndexTask<2, int>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            PrintIndexTask<3, int>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_S32_INDICES
+    #ifdef LEGION_SOLVERS_USE_U32_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            PrintIndexTask<1, unsigned>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            PrintIndexTask<2, unsigned>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            PrintIndexTask<3, unsigned>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_U32_INDICES
+    #ifdef LEGION_SOLVERS_USE_S64_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            PrintIndexTask<1, long long>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            PrintIndexTask<2, long long>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            PrintIndexTask<3, long long>::preregister(verbose);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_S64_INDICES
+// clang-format on
 
+// LinearAlgebraTasks.hpp
+// clang-format off
     #ifdef LEGION_SOLVERS_USE_F32
         #ifdef LEGION_SOLVERS_USE_S32_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
@@ -161,24 +199,92 @@ void LegionSolvers::initialize(bool verbose) {
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_F64
+    // clang-format on
+
 
     // TODO: proper guards
-    PrintIndexTask<1>::preregister(verbose);
-    PrintIndexTask<2>::preregister(verbose);
-    PrintIndexTask<3>::preregister(verbose);
-    FillCOONegativeLaplacianTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    FillCOONegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianRowptrTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianRowptrTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    COOMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    COOMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    CSRMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    CSRMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCOONegativeLaplacianTask<
+        float,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    FillCOONegativeLaplacianTask<
+        double,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianTask<
+        float,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianTask<
+        double,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianRowptrTask<
+        float,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianRowptrTask<
+        double,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    COOMatvecTask<
+        float,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    COOMatvecTask<
+        double,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    CSRMatvecTask<
+        float,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
+    CSRMatvecTask<
+        double,
+        1,
+        1,
+        1,
+        Legion::coord_t,
+        Legion::coord_t,
+        Legion::coord_t>::preregister(verbose);
 
-    #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-        LoadCUDALibsTask::preregister(verbose);
-    #endif
+#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
+    LoadCUDALibsTask::preregister(verbose);
+#endif
 }
-// clang-format on

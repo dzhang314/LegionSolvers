@@ -27,7 +27,6 @@ void LegionSolvers::print_index_partition(
 ) {
     const Legion::IndexSpace color_space =
         rt->get_index_partition_color_space_name(index_partition);
-    const int color_dim = color_space.get_dim();
     const Legion::FieldSpace dummy_field_space =
         LegionSolvers::create_field_space(ctx, rt, {1}, {0});
     const Legion::LogicalRegion dummy_region = rt->create_logical_region(
@@ -35,7 +34,7 @@ void LegionSolvers::print_index_partition(
     );
     rt->fill_field(ctx, dummy_region, dummy_region, 0, '\0');
     Legion::IndexLauncher launcher(
-        LegionSolvers::PrintIndexTask<0>::task_id(color_dim),
+        LegionSolvers::PrintIndexTask<0, void>::task_id(color_space),
         color_space,
         Legion::TaskArgument(name.c_str(), name.size() + 1),
         Legion::ArgumentMap()

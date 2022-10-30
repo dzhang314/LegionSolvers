@@ -66,8 +66,8 @@ T DivideScalarTask<T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
 }
 
 
-template <int DIM>
-void PrintIndexTask<DIM>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+template <int DIM, typename COORD_T>
+void PrintIndexTask<DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
 
     const Legion::DomainPoint index_point = task->index_point;
 
@@ -75,15 +75,16 @@ void PrintIndexTask<DIM>::task_body(LEGION_SOLVERS_TASK_ARGS) {
     const auto &dummy = regions[0];
 
     assert(task->regions.size() == 1);
-    const auto &dummy_req = task->regions[0];
 
     if (task->arglen == 0) {
-        for (Legion::PointInDomainIterator<DIM> iter(dummy); iter(); ++iter) {
+        for (Legion::PointInDomainIterator<DIM, COORD_T> iter(dummy); iter();
+             ++iter) {
             std::cout << index_point << ' ' << *iter << '\n';
         }
     } else {
         const std::string name(reinterpret_cast<const char *>(task->args));
-        for (Legion::PointInDomainIterator<DIM> iter(dummy); iter(); ++iter) {
+        for (Legion::PointInDomainIterator<DIM, COORD_T> iter(dummy); iter();
+             ++iter) {
             std::cout << name << ' ' << index_point << ' ' << *iter << '\n';
         }
     }
@@ -108,13 +109,37 @@ void PrintIndexTask<DIM>::task_body(LEGION_SOLVERS_TASK_ARGS) {
     template double MultiplyScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
     template double DivideScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
 #endif // LEGION_SOLVERS_USE_F64
-#if LEGION_SOLVERS_MAX_DIM >= 1
-    template void PrintIndexTask<1>::task_body(LEGION_SOLVERS_TASK_ARGS);
-#endif // LEGION_SOLVERS_MAX_DIM >= 1
-#if LEGION_SOLVERS_MAX_DIM >= 2
-    template void PrintIndexTask<2>::task_body(LEGION_SOLVERS_TASK_ARGS);
-#endif // LEGION_SOLVERS_MAX_DIM >= 2
-#if LEGION_SOLVERS_MAX_DIM >= 3
-    template void PrintIndexTask<3>::task_body(LEGION_SOLVERS_TASK_ARGS);
-#endif // LEGION_SOLVERS_MAX_DIM >= 3
+#ifdef LEGION_SOLVERS_USE_S32_INDICES
+    #if LEGION_SOLVERS_MAX_DIM >= 1
+        template void PrintIndexTask<1, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 1
+    #if LEGION_SOLVERS_MAX_DIM >= 2
+        template void PrintIndexTask<2, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 2
+    #if LEGION_SOLVERS_MAX_DIM >= 3
+        template void PrintIndexTask<3, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 3
+#endif // LEGION_SOLVERS_USE_S32_INDICES
+#ifdef LEGION_SOLVERS_USE_U32_INDICES
+    #if LEGION_SOLVERS_MAX_DIM >= 1
+        template void PrintIndexTask<1, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 1
+    #if LEGION_SOLVERS_MAX_DIM >= 2
+        template void PrintIndexTask<2, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 2
+    #if LEGION_SOLVERS_MAX_DIM >= 3
+        template void PrintIndexTask<3, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 3
+#endif // LEGION_SOLVERS_USE_U32_INDICES
+#ifdef LEGION_SOLVERS_USE_S64_INDICES
+    #if LEGION_SOLVERS_MAX_DIM >= 1
+        template void PrintIndexTask<1, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 1
+    #if LEGION_SOLVERS_MAX_DIM >= 2
+        template void PrintIndexTask<2, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 2
+    #if LEGION_SOLVERS_MAX_DIM >= 3
+        template void PrintIndexTask<3, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    #endif // LEGION_SOLVERS_MAX_DIM >= 3
+#endif // LEGION_SOLVERS_USE_S64_INDICES
 // clang-format on

@@ -11,49 +11,62 @@
 namespace LegionSolvers {
 
 
+// clang-format off
 using LEGION_SOLVERS_SUPPORTED_INDEX_TYPES = TypeList<
 
-#ifdef LEGION_SOLVERS_USE_S32_INDICES
-    int,
-#else
-    void,
-#endif // LEGION_SOLVERS_USE_S32_INDICES
+    #ifdef LEGION_SOLVERS_USE_S32_INDICES
+        int,
+    #else
+        void,
+    #endif // LEGION_SOLVERS_USE_S32_INDICES
 
-#ifdef LEGION_SOLVERS_USE_U32_INDICES
-    unsigned,
-#else
-    void,
-#endif // LEGION_SOLVERS_USE_U32_INDICES
+    #ifdef LEGION_SOLVERS_USE_U32_INDICES
+        unsigned,
+    #else
+        void,
+    #endif // LEGION_SOLVERS_USE_U32_INDICES
 
-#ifdef LEGION_SOLVERS_USE_S64_INDICES
-    long long,
-#else
-    void,
-#endif // LEGION_SOLVERS_USE_S64_INDICES
+    #ifdef LEGION_SOLVERS_USE_S64_INDICES
+        long long,
+    #else
+        void,
+    #endif // LEGION_SOLVERS_USE_S64_INDICES
 
-    void>;
+    void
+>;
+// clang-format on
 
 
+// clang-format off
 using LEGION_SOLVERS_SUPPORTED_ENTRY_TYPES = TypeList<
-#ifdef LEGION_SOLVERS_USE_F32
-    float,
-#endif // LEGION_SOLVERS_USE_F32
-#ifdef LEGION_SOLVERS_USE_F64
-    double,
-#endif // LEGION_SOLVERS_USE_F64
-    void>;
+
+    #ifdef LEGION_SOLVERS_USE_F32
+        float,
+    #endif // LEGION_SOLVERS_USE_F32
+
+    #ifdef LEGION_SOLVERS_USE_F64
+        double,
+    #endif // LEGION_SOLVERS_USE_F64
+
+    void
+>;
+// clang-format on
 
 
 template <typename T>
 constexpr int LEGION_SOLVERS_INDEX_TYPE_INDEX =
     ListIndex<LEGION_SOLVERS_SUPPORTED_INDEX_TYPES, T>::value;
+
 template <typename T>
 constexpr int LEGION_SOLVERS_ENTRY_TYPE_INDEX =
     ListIndex<LEGION_SOLVERS_SUPPORTED_ENTRY_TYPES, T>::value;
+
 constexpr int LEGION_SOLVERS_NUM_INDEX_TYPES =
     ListLength<LEGION_SOLVERS_SUPPORTED_INDEX_TYPES>::value;
+
 constexpr int LEGION_SOLVERS_NUM_ENTRY_TYPES =
     ListLength<LEGION_SOLVERS_SUPPORTED_ENTRY_TYPES>::value;
+
 constexpr int LEGION_SOLVERS_NUM_INDEX_TYPES_0 = 1;
 constexpr int LEGION_SOLVERS_NUM_INDEX_TYPES_1 =
     LEGION_SOLVERS_NUM_INDEX_TYPES * LEGION_SOLVERS_NUM_INDEX_TYPES_0;
@@ -61,6 +74,7 @@ constexpr int LEGION_SOLVERS_NUM_INDEX_TYPES_2 =
     LEGION_SOLVERS_NUM_INDEX_TYPES * LEGION_SOLVERS_NUM_INDEX_TYPES_1;
 constexpr int LEGION_SOLVERS_NUM_INDEX_TYPES_3 =
     LEGION_SOLVERS_NUM_INDEX_TYPES * LEGION_SOLVERS_NUM_INDEX_TYPES_2;
+
 constexpr int LEGION_SOLVERS_MAX_DIM_0 = 1;
 constexpr int LEGION_SOLVERS_MAX_DIM_1 =
     LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_MAX_DIM_0;
@@ -68,6 +82,7 @@ constexpr int LEGION_SOLVERS_MAX_DIM_2 =
     LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_MAX_DIM_1;
 constexpr int LEGION_SOLVERS_MAX_DIM_3 =
     LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_MAX_DIM_2;
+
 constexpr int LEGION_SOLVERS_TASK_BLOCK_SIZE = LEGION_SOLVERS_NUM_ENTRY_TYPES *
                                                LEGION_SOLVERS_MAX_DIM_3 *
                                                LEGION_SOLVERS_NUM_INDEX_TYPES_3;
@@ -86,10 +101,8 @@ struct TaskT {
         LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
 
     static std::string task_name() {
-        return (
-            std::string(TaskClass<T>::task_base_name) + '_' +
-            ToString<T>::value()
-        );
+        return std::string(TaskClass<T>::task_base_name) + '_' +
+               ToString<T>::value();
     }
 
     static void preregister(bool verbose = true) {
@@ -107,56 +120,57 @@ struct TaskT {
 }; // struct TaskT
 
 
-template <Legion::TaskID BLOCK_ID, template <int> typename TaskClass, int N>
-struct TaskD {
+template <
+    Legion::TaskID BLOCK_ID,
+    template <int, typename>
+    typename TaskClass,
+    int N,
+    typename I>
+struct TaskDI {
 
     static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
-        LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID + (N - 1);
+        LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+        LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_INDEX_TYPE_INDEX<I> + (N - 1);
 
     static std::string task_name() {
-        return std::string{TaskClass<N>::task_base_name} + '_' +
-               std::to_string(N);
+        return std::string{TaskClass<N, I>::task_base_name} + '_' +
+               std::to_string(N) + '_' + ToString<I>::value();
     }
 
     static void preregister(bool verbose = true) {
         preregister_task<
-            typename TaskClass<N>::return_type,
-            TaskClass<N>::task_body>(
+            typename TaskClass<N, I>::return_type,
+            TaskClass<N, I>::task_body>(
             task_id,
             task_name(),
-            TaskClass<N>::flags,
+            TaskClass<N, I>::flags,
             Legion::Processor::LOC_PROC,
             verbose
         );
     }
 
-}; // struct TaskD
+}; // struct TaskDI
 
 
-template <Legion::TaskID BLOCK_ID, template <int> typename TaskClass>
-struct TaskD<BLOCK_ID, TaskClass, 0> {
+template <Legion::TaskID BLOCK_ID, template <int, typename> typename TaskClass>
+struct TaskDI<BLOCK_ID, TaskClass, 0, void> {
 
-    static constexpr Legion::TaskID task_id(int N) {
+    static constexpr Legion::TaskID task_id(int N, int I) {
         return LEGION_SOLVERS_TASK_ID_ORIGIN +
-               LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID + (N - 1);
+               LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
+               LEGION_SOLVERS_MAX_DIM * I + (N - 1);
     }
 
-}; // struct TaskD<BLOCK_ID, TaskClass, 0>
+    static Legion::TaskID task_id(Legion::IndexSpace index_space) {
+        return task_id(
+            index_space.get_dim(),
+            index_space.get_type_tag() - 256 * index_space.get_dim()
+        );
+    }
 
-// Helper class to check if a class has a GPU task variant.
-struct HasGPUVariantMixin {
-    using __no = int8_t[1];
-    using __yes = int8_t[2];
-    template <typename T>
-    struct HasGPUVariant {
-        template <typename U>
-        static __yes &test(decltype(&U::cuda_task_body));
-        template <typename U>
-        static __no &test(...);
-        static const bool value = (sizeof(test<T>(0)) == sizeof(__yes));
-    };
-};
+}; // struct TaskDI<BLOCK_ID, TaskClass, 0>
+
 
 template <
     Legion::TaskID BLOCK_ID,
@@ -165,7 +179,7 @@ template <
     typename T,
     int N,
     typename I>
-struct TaskTDI : HasGPUVariantMixin {
+struct TaskTDI : HasCUDAVariantMixin {
 
     static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
@@ -193,7 +207,7 @@ struct TaskTDI : HasGPUVariantMixin {
         );
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-        if constexpr (TaskTDI::HasGPUVariant<TaskClass<T, N, I>>::value) {
+        if constexpr (TaskTDI::HasCUDAVariant<TaskClass<T, N, I>>::value) {
             preregister_task<
                 typename TaskClass<T, N, I>::return_type,
                 TaskClass<T, N, I>::cuda_task_body>(
@@ -246,7 +260,7 @@ template <
     typename I1,
     typename I2,
     typename I3>
-struct TaskTDDDIII : HasGPUVariantMixin {
+struct TaskTDDDIII : HasCUDAVariantMixin {
 
     static constexpr Legion::TaskID task_id =
         LEGION_SOLVERS_TASK_ID_ORIGIN +
@@ -286,7 +300,7 @@ struct TaskTDDDIII : HasGPUVariantMixin {
         );
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-        if constexpr (TaskTDDDIII::HasGPUVariant<
+        if constexpr (TaskTDDDIII::HasCUDAVariant<
                           TaskClass<T, N1, N2, N3, I1, I2, I3>>::value) {
             preregister_task<
                 typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,

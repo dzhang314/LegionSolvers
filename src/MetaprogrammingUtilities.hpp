@@ -120,6 +120,31 @@ struct ListIndex<TypeList<L, LS...>, L> {
 };
 
 
+struct HasCUDAVariantMixin {
+
+    struct _meta_false {
+        char _dummy[1];
+    };
+
+    struct _meta_true {
+        char _dummy[2];
+    };
+
+    template <typename T>
+    struct HasCUDAVariant {
+
+        template <typename U>
+        static _meta_true _meta_test(decltype(&U::cuda_task_body));
+
+        template <typename U>
+        static _meta_false _meta_test(...);
+
+        static constexpr bool value =
+            (sizeof(_meta_test<T>(0)) == sizeof(_meta_true));
+    };
+};
+
+
 } // namespace LegionSolvers
 
 #endif // LEGION_SOLVERS_METAPROGRAMMING_UTILITIES_HPP_INCLUDED

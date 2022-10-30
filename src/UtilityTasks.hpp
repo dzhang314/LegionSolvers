@@ -4,7 +4,7 @@
 #include <legion.h> // for Legion::*
 
 #include "LegionUtilities.hpp" // for LEGION_SOLVERS_DECLARE_TASK, TaskFlags
-#include "TaskBaseClasses.hpp" // for TaskT, TaskD
+#include "TaskBaseClasses.hpp" // for TaskT, TaskDI
 #include "TaskIDs.hpp"         // for *_TASK_BLOCK_ID
 
 namespace LegionSolvers {
@@ -19,9 +19,9 @@ struct PrintScalarTask
 };
 
 
-template <int DIM>
+template <int DIM, typename COORD_T>
 struct PrintIndexTask
-    : public TaskD<PRINT_INDEX_TASK_BLOCK_ID, PrintIndexTask, DIM> {
+    : public TaskDI<PRINT_INDEX_TASK_BLOCK_ID, PrintIndexTask, DIM, COORD_T> {
     static constexpr const char *task_base_name = "print_index";
     static constexpr TaskFlags flags = TaskFlags::LEAF;
     LEGION_SOLVERS_DECLARE_TASK(void);

@@ -18,9 +18,9 @@
     Legion::Context ctx, Legion::Runtime *rt
 #define LEGION_SOLVERS_DECLARE_TASK(RETURN_TYPE) \
     using return_type = RETURN_TYPE; \
-    static return_type task_body(LEGION_SOLVERS_TASK_ARGS);
+    static return_type task_body(LEGION_SOLVERS_TASK_ARGS)
 #define LEGION_SOLVERS_DECLARE_CUDA_TASK \
-    static return_type cuda_task_body(LEGION_SOLVERS_TASK_ARGS);
+    static return_type cuda_task_body(LEGION_SOLVERS_TASK_ARGS)
 // clang-format on
 
 namespace LegionSolvers {
