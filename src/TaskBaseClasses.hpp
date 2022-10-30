@@ -148,7 +148,7 @@ struct TaskD<BLOCK_ID, TaskClass, 0> {
 struct HasGPUVariantMixin {
     using __no = int8_t[1];
     using __yes = int8_t[2];
-    template<typename T>
+    template <typename T>
     struct HasGPUVariant {
         template <typename U>
         static __yes &test(decltype(&U::cuda_task_body));
@@ -286,7 +286,8 @@ struct TaskTDDDIII : HasGPUVariantMixin {
         );
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
-        if constexpr (TaskTDDDIII::HasGPUVariant<TaskClass<T, N1, N2, N3, I1, I2, I3>>::value) {
+        if constexpr (TaskTDDDIII::HasGPUVariant<
+                          TaskClass<T, N1, N2, N3, I1, I2, I3>>::value) {
             preregister_task<
                 typename TaskClass<T, N1, N2, N3, I1, I2, I3>::return_type,
                 TaskClass<T, N1, N2, N3, I1, I2, I3>::cuda_task_body>(
