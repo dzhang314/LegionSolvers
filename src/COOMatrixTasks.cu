@@ -120,7 +120,13 @@ void COOMatvecTask<
         );
 
     ENTRY_T alpha = static_cast<ENTRY_T>(1.0);
-    ENTRY_T beta = static_cast<ENTRY_T>(0.0);
+    // Interestingly, we set beta = 1.0 here rather than 0.0. Because
+    // we launch tasks over the output with a reduction requirement,
+    // we can't just throw away the data that is already present in
+    // the output instance with beta = 0.0, as that is not a valid
+    // operation with reduction privileges. Instead, we have to just
+    // accumulate onto the data that exists already, so we use beta = 1.0.
+    ENTRY_T beta = static_cast<ENTRY_T>(1.0);
     size_t bufSize = 0;
     CHECK_CUSPARSE(cusparseSpMV_bufferSize(
         handle,
