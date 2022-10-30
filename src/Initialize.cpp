@@ -13,6 +13,7 @@
 #endif
 
 
+// clang-format off
 void LegionSolvers::initialize(bool verbose) {
 
     // LegionSolversMapper.hpp
@@ -20,8 +21,7 @@ void LegionSolvers::initialize(bool verbose) {
         LegionSolvers::mapper_registration_callback
     );
 
-// UtilityTasks.hpp
-// clang-format off
+    // UtilityTasks.hpp
     #ifdef LEGION_SOLVERS_USE_F32
         PrintScalarTask<float>::preregister(verbose);
         NegateScalarTask<float>::preregister(verbose);
@@ -71,10 +71,8 @@ void LegionSolvers::initialize(bool verbose) {
             PrintIndexTask<3, long long>::preregister(verbose);
         #endif // LEGION_SOLVERS_MAX_DIM >= 3
     #endif // LEGION_SOLVERS_USE_S64_INDICES
-// clang-format on
 
-// LinearAlgebraTasks.hpp
-// clang-format off
+    // LinearAlgebraTasks.hpp
     #ifdef LEGION_SOLVERS_USE_F32
         #ifdef LEGION_SOLVERS_USE_S32_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
@@ -199,8 +197,6 @@ void LegionSolvers::initialize(bool verbose) {
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_F64
-    // clang-format on
-
 
     // TODO: proper guards
     FillCOONegativeLaplacianTask<
@@ -288,3 +284,4 @@ void LegionSolvers::initialize(bool verbose) {
     LoadCUDALibsTask::preregister(verbose);
 #endif
 }
+// clang-format on
