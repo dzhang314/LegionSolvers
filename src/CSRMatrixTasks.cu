@@ -49,8 +49,8 @@ void CSRMatvecTask<
     assert(task->arglen == 2 * sizeof(Legion::FieldID));
     const Legion::FieldID *argptr =
         reinterpret_cast<const Legion::FieldID *>(task->args);
-    const Legion::FieldID fid_col = argptr[0];
-    const Legion::FieldID fid_entry = argptr[1];
+    const Legion::FieldID fid_entry = argptr[0];
+    const Legion::FieldID fid_col = argptr[1];
 
     assert(aux_req.privilege_fields.size() == 1);
     const Legion::FieldID fid_rowptr = *aux_req.privilege_fields.begin();
