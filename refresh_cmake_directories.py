@@ -35,12 +35,13 @@ def main():
                         remove_directory(build_name)
                         defines = {
                             "CMAKE_CXX_STANDARD": 17,
+                            "CMAKE_CXX_FLAGS": "-Wfatal-errors -Wno-deprecated-declarations",
                             "CMAKE_BUILD_TYPE": build_type,
                             "Kokkos_DIR": KOKKOS_DIR[use_cuda],
                             "Legion_DIR": os.path.join(LIB_PREFIX, lib_name, "share", "Legion", "cmake"),
                         }
                         if MACHINE == Machines.LASSEN:
-                            defines["CMAKE_CXX_FLAGS"] = "-maltivec -mabi=altivec"
+                            defines["CMAKE_CXX_FLAGS"] += " -maltivec -mabi=altivec"
                         cmake(
                             build_name, defines,
                             build=False, test=False, install=False,
