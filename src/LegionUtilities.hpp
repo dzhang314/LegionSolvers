@@ -12,45 +12,63 @@
 #include "LibraryOptions.hpp" // for LEGION_SOLVERS_CHECK_BOUNDS
 
 // clang-format off
+
 #define LEGION_SOLVERS_TASK_ARGS \
     const Legion::Task *task, \
     const std::vector<Legion::PhysicalRegion> &regions, \
     Legion::Context ctx, Legion::Runtime *rt
+
 #define LEGION_SOLVERS_DECLARE_TASK(RETURN_TYPE) \
     using return_type = RETURN_TYPE; \
     static return_type task_body(LEGION_SOLVERS_TASK_ARGS)
+
 #define LEGION_SOLVERS_DECLARE_CUDA_TASK \
     static return_type cuda_task_body(LEGION_SOLVERS_TASK_ARGS)
+
+#define LEGION_SOLVERS_KDR_TEMPLATE template < \
+    typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, \
+    typename KERNEL_COORD_T, typename DOMAIN_COORD_T, typename RANGE_COORD_T \
+>
+
+#define LEGION_SOLVERS_KDR_TEMPLATE_ARGS \
+    ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, \
+    KERNEL_COORD_T, DOMAIN_COORD_T, RANGE_COORD_T
+
 // clang-format on
 
 namespace LegionSolvers {
 
 
 // clang-format off
+
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineReader = Legion::FieldAccessor<
     LEGION_READ_ONLY, FIELD_TYPE, DIM, COORD_T,
     Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
+
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineWriter = Legion::FieldAccessor<
     LEGION_WRITE_ONLY, FIELD_TYPE, DIM, COORD_T,
     Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
+
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineReaderWriter = Legion::FieldAccessor<
     LEGION_READ_WRITE, FIELD_TYPE, DIM, COORD_T,
     Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
+
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineSumAccessor = Legion::ReductionAccessor<
     Legion::SumReduction<FIELD_TYPE>, false, // non-exclusive
     DIM, COORD_T, Realm::AffineAccessor<FIELD_TYPE, DIM, COORD_T>,
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
+
 // clang-format on
 
 
