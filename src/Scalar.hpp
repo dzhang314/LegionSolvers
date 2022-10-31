@@ -19,8 +19,6 @@ public:
 
     Scalar() = delete;
 
-    PartitionedVector &operator=(PartitionedVector &&) = delete;
-
     explicit Scalar(
         Legion::Context ctx, Legion::Runtime *rt, const Legion::Future &future
     )
