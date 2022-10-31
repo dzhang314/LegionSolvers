@@ -16,6 +16,10 @@ struct CSRMatvecTask : public TaskTDDDIII<
     static constexpr const char *task_base_name = "csr_matvec";
     static constexpr const TaskFlags flags =
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
+    struct Args {
+        Legion::FieldID fid_entry;
+        Legion::FieldID fid_col;
+    };
     LEGION_SOLVERS_DECLARE_TASK(void);
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     LEGION_SOLVERS_DECLARE_CUDA_TASK;
@@ -31,6 +35,10 @@ struct CSRRmatvecTask : public TaskTDDDIII<
     static constexpr const char *task_base_name = "csr_rmatvec";
     static constexpr const TaskFlags flags =
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
+    struct Args {
+        Legion::FieldID fid_entry;
+        Legion::FieldID fid_col;
+    };
     LEGION_SOLVERS_DECLARE_TASK(void);
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     LEGION_SOLVERS_DECLARE_CUDA_TASK;

@@ -102,20 +102,23 @@ void CSRMatrix<ENTRY_T>::matvec(
     Legion::LogicalPartition kernel_partition,
     Legion::IndexPartition ghost_partition
 ) const {
-    const Legion::FieldID fids[2] = {fid_entry, fid_col};
+
+    typename CSRMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::Args args;
+    args.fid_entry = fid_entry;
+    args.fid_col = fid_col;
 
     Legion::IndexLauncher launcher(
-        LegionSolvers::CSRMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::
+        CSRMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::
             task_id(
                 kernel_region.get_index_space(),
                 src_vector.get_index_space(),
                 dst_vector.get_index_space()
             ),
         dst_vector.get_color_space(),
-        Legion::TaskArgument(&fids, sizeof(Legion::FieldID[2])),
+        Legion::TaskArgument(&args, sizeof(decltype(args))),
         Legion::ArgumentMap()
     );
-    launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
+    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
 
     launcher.add_region_requirement(Legion::RegionRequirement(
         dst_vector.get_logical_partition(),
