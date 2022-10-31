@@ -161,8 +161,8 @@ void top_level_task(
             ctx,
             rt,
             matrix_region,
-            FID_COL,
             FID_ENTRY,
+            FID_COL,
             rowptr_region,
             FID_ROWPTR
         );

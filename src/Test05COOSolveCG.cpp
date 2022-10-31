@@ -128,7 +128,7 @@ void top_level_task(
         }
 
         LegionSolvers::COOMatrix<ENTRY_T> coo_matrix{
-            ctx, rt, matrix_region, FID_I, FID_J, FID_ENTRY};
+            ctx, rt, matrix_region, FID_ENTRY, FID_I, FID_J};
 
         {
             LegionSolvers::PartitionedVector<ENTRY_T> rhs{

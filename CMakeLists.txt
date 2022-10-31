@@ -13,7 +13,9 @@ set(LegionSolvers_SOURCES "")
 
 list(APPEND LegionSolvers_SOURCES
     src/AbstractMatrix.cpp
+    src/COOMatrix.cpp
     src/COOMatrixTasks.cpp
+    src/CSRMatrix.cpp
     src/CSRMatrixTasks.cpp
     src/ExampleSystems.cpp
     src/Initialize.cpp
