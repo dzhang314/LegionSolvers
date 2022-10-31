@@ -108,12 +108,11 @@ void CSRMatrix<ENTRY_T>::matvec(
     args.fid_col = fid_col;
 
     Legion::IndexLauncher launcher(
-        CSRMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::
-            task_id(
-                kernel_region.get_index_space(),
-                src_vector.get_index_space(),
-                dst_vector.get_index_space()
-            ),
+        CSRMatvecTask<ENTRY_T, 0, 0, 0, void, void, void>::task_id(
+            kernel_region.get_index_space(),
+            src_vector.get_index_space(),
+            dst_vector.get_index_space()
+        ),
         dst_vector.get_color_space(),
         Legion::TaskArgument(&args, sizeof(decltype(args))),
         Legion::ArgumentMap()
