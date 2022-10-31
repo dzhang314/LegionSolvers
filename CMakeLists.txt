@@ -22,6 +22,7 @@ list(APPEND LegionSolvers_SOURCES
     src/LegionSolversMapper.cpp
     src/LegionUtilities.cpp
     src/LinearAlgebraTasks.cpp
+    src/PartitionedVector.cpp
     src/Scalar.cpp
     src/UtilityTasks.cpp
 )
