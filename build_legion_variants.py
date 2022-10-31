@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 
 from build_legion_dependencies import (
     Machines, MACHINE, SCRATCH_DIR, LIB_PREFIX,
@@ -79,45 +80,75 @@ def join(*args):
     return "_".join(arg for arg in args if arg)
 
 
+def clone_legion(dir_name, branch_name):
+    output_dir = join("legion", dir_name)
+    remove_directory("legion")
+    remove_directory(output_dir)
+    clone(LEGION_GIT_URL, branch=branch_name)
+    os.rename("legion", output_dir)
+    return output_dir
+
+
+def cmake_legion(dir_name, network_tag, network_key, network_val,
+                 cuda_tag, use_cuda, kokkos_tag, use_kokkos, build_type):
+    lib_path = os.path.join(LIB_PREFIX, join(
+        "legion", dir_name, network_tag,
+        cuda_tag, kokkos_tag, build_type.lower()
+    ))
+    remove_directory(lib_path)
+    defines = {
+        "CMAKE_CXX_STANDARD": 17,
+        "CMAKE_BUILD_TYPE": build_type,
+        "CMAKE_INSTALL_PREFIX": lib_path,
+        "Legion_EMBED_GASNet": True,
+        "GASNet_CONDUIT": "ibv",
+        "Legion_USE_OpenMP": True,
+        "Legion_USE_CUDA": use_cuda,
+        network_key: network_val,
+    }
+    if use_kokkos:
+        defines["Legion_USE_Kokkos"] = True
+        defines["Kokkos_DIR"] = KOKKOS_DIR[use_cuda]
+        defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
+    if MACHINE == Machines.PIZDAINT:
+        defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
+    cmake(join(
+        "build", dir_name, network_tag,
+        cuda_tag, kokkos_tag, build_type.lower()
+    ), defines)
+
+
 def main():
     os.chdir(SCRATCH_DIR)
-    for dir_name, branch_name in LEGION_BRANCHES:
-        remove_directory("legion")
-        remove_directory(join("legion", dir_name))
-        clone(LEGION_GIT_URL, branch=branch_name)
-        os.rename("legion", join("legion", dir_name))
-        with pushd(join("legion", dir_name)):
-            for build_type in BUILD_TYPES:
-                for network_tag, (network_key, network_val) in NETWORK_TYPES:
-                    for cuda_tag, use_cuda in CUDA_TYPES:
-                        for kokkos_tag, use_kokkos in KOKKOS_TYPES:
-                            lib_name = join(
-                                "legion", dir_name, network_tag,
-                                cuda_tag, kokkos_tag, build_type.lower()
-                            )
-                            remove_directory(
-                                os.path.join(LIB_PREFIX, lib_name)
-                            )
-                            defines = {
-                                "CMAKE_CXX_STANDARD": 17,
-                                "CMAKE_BUILD_TYPE": build_type,
-                                "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, lib_name),
-                                "Legion_EMBED_GASNet": True,
-                                "GASNet_CONDUIT": "ibv",
-                                "Legion_USE_OpenMP": True,
-                                "Legion_USE_CUDA": use_cuda,
-                                network_key: network_val,
-                            }
-                            if use_kokkos:
-                                defines["Legion_USE_Kokkos"] = True
-                                defines["Kokkos_DIR"] = KOKKOS_DIR[use_cuda]
-                                defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
-                            if MACHINE == Machines.PIZDAINT:
-                                defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
-                            cmake(join(
-                                "build", dir_name, network_tag,
-                                cuda_tag, kokkos_tag, build_type.lower()
-                            ), defines)
+    if any(dir_name in sys.argv for dir_name, branch_name in LEGION_BRANCHES):
+        for dir_name, branch_name in LEGION_BRANCHES:
+            if dir_name in sys.argv:
+                legion_dir = clone_legion(dir_name, branch_name)
+                with pushd(legion_dir):
+                    for build_type in BUILD_TYPES:
+                        for network_tag, (network_key, network_val) in NETWORK_TYPES:
+                            for cuda_tag, use_cuda in CUDA_TYPES:
+                                for kokkos_tag, use_kokkos in KOKKOS_TYPES:
+                                    cmake_legion(
+                                        dir_name, network_tag,
+                                        network_key, network_val,
+                                        cuda_tag, use_cuda,
+                                        kokkos_tag, use_kokkos, build_type
+                                    )
+    else:
+        for dir_name, branch_name in LEGION_BRANCHES:
+            legion_dir = clone_legion(dir_name, branch_name)
+            with pushd(legion_dir):
+                for build_type in BUILD_TYPES:
+                    for network_tag, (network_key, network_val) in NETWORK_TYPES:
+                        for cuda_tag, use_cuda in CUDA_TYPES:
+                            for kokkos_tag, use_kokkos in KOKKOS_TYPES:
+                                cmake_legion(
+                                    dir_name, network_tag,
+                                    network_key, network_val,
+                                    cuda_tag, use_cuda,
+                                    kokkos_tag, use_kokkos, build_type
+                                )
 
 
 ################################################################################
