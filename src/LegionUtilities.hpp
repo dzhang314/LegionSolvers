@@ -27,8 +27,7 @@
 
 #define LEGION_SOLVERS_KDR_TEMPLATE template < \
     typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, \
-    typename KERNEL_COORD_T, typename DOMAIN_COORD_T, typename RANGE_COORD_T \
->
+    typename KERNEL_COORD_T, typename DOMAIN_COORD_T, typename RANGE_COORD_T>
 
 #define LEGION_SOLVERS_KDR_TEMPLATE_ARGS \
     ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, \

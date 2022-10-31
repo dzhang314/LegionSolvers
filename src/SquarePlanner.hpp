@@ -20,14 +20,18 @@ class SquarePlanner {
 
     const Legion::Context ctx;
     Legion::Runtime *const rt;
+
     std::vector<Legion::IndexSpace> canonical_index_spaces;
     std::vector<Legion::IndexPartition> canonical_index_partitions;
+
     Legion::FieldSpace workspace_fields;
     std::vector<Legion::LogicalRegion> workspace_regions;
     std::vector<Legion::LogicalPartition> workspace_partitions;
+
     std::vector<PartitionedVector<ENTRY_T>> sol_vectors;
     std::vector<PartitionedVector<ENTRY_T>> rhs_vectors;
     std::vector<std::vector<PartitionedVector<ENTRY_T>>> workspace_vectors;
+
     std::vector<std::tuple<
         const AbstractMatrix<ENTRY_T> *,
         std::size_t,              // domain index
@@ -37,6 +41,7 @@ class SquarePlanner {
         Legion::IndexPartition    // ghost index partition
         >>
         row_partitioned_matrices;
+
     std::vector<std::tuple<
         const AbstractMatrix<ENTRY_T> *,
         std::size_t,       // domain index

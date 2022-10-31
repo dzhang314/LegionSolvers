@@ -7,29 +7,11 @@
 
 using namespace LegionSolvers;
 
-template <
-    typename ENTRY_T,
-    int KERNEL_DIM,
-    int DOMAIN_DIM,
-    int RANGE_DIM,
-    typename KERNEL_COORD_T,
-    typename DOMAIN_COORD_T,
-    typename RANGE_COORD_T>
-void COOMatvecTask<
-    ENTRY_T,
-    KERNEL_DIM,
-    DOMAIN_DIM,
-    RANGE_DIM,
-    KERNEL_COORD_T,
-    DOMAIN_COORD_T,
-    RANGE_COORD_T>::
-    cuda_task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    ) {
-    std::cout << "COO MATVEC GPU" << std::endl;
+LEGION_SOLVERS_KDR_TEMPLATE
+void COOMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
+    LEGION_SOLVERS_TASK_ARGS
+) {
+
     assert(regions.size() == 3);
     const auto &output_vec = regions[0];
     const auto &coo_matrix = regions[1];
@@ -43,37 +25,36 @@ void COOMatvecTask<
     assert(output_req.privilege_fields.size() == 1);
     const Legion::FieldID output_fid = *output_req.privilege_fields.begin();
 
+    assert(matrix_req.privilege_fields.size() == 3);
+
     assert(input_req.privilege_fields.size() == 1);
     const Legion::FieldID input_fid = *input_req.privilege_fields.begin();
 
-    assert(matrix_req.privilege_fields.size() == 3);
-    assert(task->arglen == 3 * sizeof(Legion::FieldID));
-    const Legion::FieldID *argptr =
-        reinterpret_cast<const Legion::FieldID *>(task->args);
-    const Legion::FieldID fid_i = argptr[0];
-    const Legion::FieldID fid_j = argptr[1];
-    const Legion::FieldID fid_entry = argptr[2];
+    assert(task->arglen == sizeof(Args));
+    const Args args = *reinterpret_cast<const Args *>(task->args);
+
+    const AffineSumAccessor<ENTRY_T, RANGE_DIM, RANGE_COORD_T>
+        output_writer(output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>);
+
+    const AffineReader<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T> entry_reader(
+        coo_matrix, args.fid_entry
+    );
 
     const AffineReader<
         Legion::Point<RANGE_DIM, RANGE_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
-        i_reader{coo_matrix, fid_i};
+        row_reader(coo_matrix, args.fid_row);
 
     const AffineReader<
         Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
-        j_reader{coo_matrix, fid_j};
+        col_reader(coo_matrix, args.fid_col);
 
-    const AffineReader<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T> entry_reader{
-        coo_matrix, fid_entry};
-
-    const AffineReader<ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T> input_reader{
-        input_vec, input_fid};
-
-    const AffineSumAccessor<ENTRY_T, RANGE_DIM, RANGE_COORD_T> output_writer{
-        output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>};
+    const AffineReader<ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T> input_reader(
+        input_vec, input_fid
+    );
 
     auto stream = get_cached_stream();
     auto handle = get_cusparse();
@@ -105,7 +86,7 @@ void COOMatvecTask<
         KERNEL_COORD_T,
         DOMAIN_COORD_T,
         RANGE_COORD_T>(
-        rows, cols, coo_bounds, i_reader, j_reader, entry_reader
+        rows, cols, coo_bounds, row_reader, col_reader, entry_reader
     );
     // There are image relationships between row->output and col->input,
     // so these vectors should be offset to the base of the image rather
@@ -166,56 +147,18 @@ void COOMatvecTask<
     CHECK_CUSPARSE(cusparseDestroySpMat(cusparse_coo));
 }
 
-template <
-    typename ENTRY_T,
-    int KERNEL_DIM,
-    int DOMAIN_DIM,
-    int RANGE_DIM,
-    typename KERNEL_COORD_T,
-    typename DOMAIN_COORD_T,
-    typename RANGE_COORD_T>
-void COORmatvecTask<
-    ENTRY_T,
-    KERNEL_DIM,
-    DOMAIN_DIM,
-    RANGE_DIM,
-    KERNEL_COORD_T,
-    DOMAIN_COORD_T,
-    RANGE_COORD_T>::
-    cuda_task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    ) {
+
+LEGION_SOLVERS_KDR_TEMPLATE
+void COORmatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
+    LEGION_SOLVERS_TASK_ARGS
+) {
     assert(false);
 }
 
-template void LegionSolvers::COOMatvecTask<
-    float,
-    1,
-    1,
-    1,
-    Legion::coord_t,
-    Legion::coord_t,
-    Legion::coord_t>::
-    cuda_task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    );
-template void LegionSolvers::COOMatvecTask<
-    double,
-    1,
-    1,
-    1,
-    Legion::coord_t,
-    Legion::coord_t,
-    Legion::coord_t>::
-    cuda_task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    );
+
+// clang-format off
+template void COOMatvecTask<float, 1, 1, 1, long long, long long, long long>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COORmatvecTask<float, 1, 1, 1, long long, long long, long long>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOMatvecTask<double, 1, 1, 1, long long, long long, long long>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COORmatvecTask<double, 1, 1, 1, long long, long long, long long>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS);
+// clang-format on

@@ -3,28 +3,11 @@
 using LegionSolvers::COOMatvecTask;
 using LegionSolvers::COORmatvecTask;
 
-template <
-    typename ENTRY_T,
-    int KERNEL_DIM,
-    int DOMAIN_DIM,
-    int RANGE_DIM,
-    typename KERNEL_COORD_T,
-    typename DOMAIN_COORD_T,
-    typename RANGE_COORD_T>
-void LegionSolvers::COOMatvecTask<
-    ENTRY_T,
-    KERNEL_DIM,
-    DOMAIN_DIM,
-    RANGE_DIM,
-    KERNEL_COORD_T,
-    DOMAIN_COORD_T,
-    RANGE_COORD_T>::
-    task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    ) {
+
+LEGION_SOLVERS_KDR_TEMPLATE
+void COOMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
+    LEGION_SOLVERS_TASK_ARGS
+) {
 
     assert(regions.size() == 3);
     const auto &output_vec = regions[0];
@@ -39,88 +22,66 @@ void LegionSolvers::COOMatvecTask<
     assert(output_req.privilege_fields.size() == 1);
     const Legion::FieldID output_fid = *output_req.privilege_fields.begin();
 
+    assert(matrix_req.privilege_fields.size() == 3);
+
     assert(input_req.privilege_fields.size() == 1);
     const Legion::FieldID input_fid = *input_req.privilege_fields.begin();
 
-    assert(matrix_req.privilege_fields.size() == 3);
-    assert(task->arglen == 3 * sizeof(Legion::FieldID));
-    const Legion::FieldID *argptr =
-        reinterpret_cast<const Legion::FieldID *>(task->args);
-    const Legion::FieldID fid_i = argptr[0];
-    const Legion::FieldID fid_j = argptr[1];
-    const Legion::FieldID fid_entry = argptr[2];
+    assert(task->arglen == sizeof(Args));
+    const Args args = *reinterpret_cast<const Args *>(task->args);
+
+    const AffineSumAccessor<ENTRY_T, RANGE_DIM, RANGE_COORD_T>
+        output_writer(output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>);
+
+    const AffineReader<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T> entry_reader(
+        coo_matrix, args.fid_entry
+    );
 
     const AffineReader<
         Legion::Point<RANGE_DIM, RANGE_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
-        i_reader{coo_matrix, fid_i};
+        row_reader(coo_matrix, args.fid_row);
 
     const AffineReader<
         Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
-        j_reader{coo_matrix, fid_j};
+        col_reader(coo_matrix, args.fid_col);
 
-    const AffineReader<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T> entry_reader{
-        coo_matrix, fid_entry};
+    const AffineReader<ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T> input_reader(
+        input_vec, input_fid
+    );
 
-    const AffineReader<ENTRY_T, DOMAIN_DIM, DOMAIN_COORD_T> input_reader{
-        input_vec, input_fid};
+    const Legion::DomainT<DOMAIN_DIM, DOMAIN_COORD_T> input_domain =
+        input_vec.get_bounds<DOMAIN_DIM, DOMAIN_COORD_T>();
+    const Legion::DomainT<RANGE_DIM, RANGE_COORD_T> output_domain =
+        output_vec.get_bounds<RANGE_DIM, RANGE_COORD_T>();
 
-    const AffineSumAccessor<ENTRY_T, RANGE_DIM, RANGE_COORD_T> output_writer{
-        output_vec, output_fid, LEGION_REDOP_SUM<ENTRY_T>};
+    using KPointIter = Legion::PointInDomainIterator<KERNEL_DIM, KERNEL_COORD_T>;
 
-    using KRectIter = Legion::RectInDomainIterator<KERNEL_DIM, KERNEL_COORD_T>;
-    using KPointIter = Legion::PointInRectIterator<KERNEL_DIM, KERNEL_COORD_T>;
-    using DRectIter = Legion::RectInDomainIterator<DOMAIN_DIM, DOMAIN_COORD_T>;
-    using RRectIter = Legion::RectInDomainIterator<RANGE_DIM, RANGE_COORD_T>;
-
-    for (KRectIter k_it(coo_matrix); k_it(); ++k_it) {
-        const Legion::Rect<KERNEL_DIM, KERNEL_COORD_T> k_rect = *k_it;
-        for (KPointIter kp_it(k_rect); kp_it(); ++kp_it) {
-            const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> kp = *kp_it;
-            const Legion::Point<RANGE_DIM, RANGE_COORD_T> i = i_reader[kp];
-            const Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T> j = j_reader[kp];
-            const ENTRY_T entry = entry_reader[kp];
-            for (DRectIter d_it(input_vec); d_it(); ++d_it) {
-                const Legion::Rect<DOMAIN_DIM, DOMAIN_COORD_T> d_rect = *d_it;
-                for (RRectIter r_it(output_vec); r_it(); ++r_it) {
-                    const Legion::Rect<RANGE_DIM, RANGE_COORD_T> r_rect = *r_it;
-                    if (r_rect.contains(i) && d_rect.contains(j)) {
-                        output_writer[i] <<= entry * input_reader[j];
-                    }
-                }
-            }
+    for (KPointIter k_it(coo_matrix); k_it(); ++k_it) {
+        const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> kp = *k_it;
+        const Legion::Point<RANGE_DIM, RANGE_COORD_T> row = row_reader[kp];
+        const Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T> col = col_reader[kp];
+        if (input_domain.contains(col) && output_domain.contains(row)) {
+            output_writer[row] <<= entry_reader[kp] * input_reader[col];
         }
     }
 }
 
-template void LegionSolvers::COOMatvecTask<
-    float,
-    1,
-    1,
-    1,
-    Legion::coord_t,
-    Legion::coord_t,
-    Legion::coord_t>::
-    task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    );
-template void LegionSolvers::COOMatvecTask<
-    double,
-    1,
-    1,
-    1,
-    Legion::coord_t,
-    Legion::coord_t,
-    Legion::coord_t>::
-    task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    );
+
+LEGION_SOLVERS_KDR_TEMPLATE
+void COORmatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
+    LEGION_SOLVERS_TASK_ARGS
+) {
+    assert(false);
+}
+
+
+// clang-format off
+template void COOMatvecTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COORmatvecTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOMatvecTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COORmatvecTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+// clang-format on
