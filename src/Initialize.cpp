@@ -71,6 +71,76 @@ void LegionSolvers::initialize(bool verbose) {
             PrintIndexTask<3, long long>::preregister(verbose);
         #endif // LEGION_SOLVERS_MAX_DIM >= 3
     #endif // LEGION_SOLVERS_USE_S64_INDICES
+    #ifdef LEGION_SOLVERS_USE_F32
+        #ifdef LEGION_SOLVERS_USE_S32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                RandomFillTask<float, 1, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                RandomFillTask<float, 2, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                RandomFillTask<float, 3, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S32_INDICES
+        #ifdef LEGION_SOLVERS_USE_U32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                RandomFillTask<float, 1, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                RandomFillTask<float, 2, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                RandomFillTask<float, 3, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_U32_INDICES
+        #ifdef LEGION_SOLVERS_USE_S64_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                RandomFillTask<float, 1, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                RandomFillTask<float, 2, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                RandomFillTask<float, 3, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S64_INDICES
+    #endif // LEGION_SOLVERS_USE_F32
+    #ifdef LEGION_SOLVERS_USE_F64
+        #ifdef LEGION_SOLVERS_USE_S32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                RandomFillTask<double, 1, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                RandomFillTask<double, 2, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                RandomFillTask<double, 3, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S32_INDICES
+        #ifdef LEGION_SOLVERS_USE_U32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                RandomFillTask<double, 1, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                RandomFillTask<double, 2, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                RandomFillTask<double, 3, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_U32_INDICES
+        #ifdef LEGION_SOLVERS_USE_S64_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                RandomFillTask<double, 1, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                RandomFillTask<double, 2, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                RandomFillTask<double, 3, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S64_INDICES
+    #endif // LEGION_SOLVERS_USE_F64
 
     // LinearAlgebraTasks.hpp
     #ifdef LEGION_SOLVERS_USE_F32

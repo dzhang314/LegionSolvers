@@ -19,15 +19,6 @@ struct PrintScalarTask
 };
 
 
-template <int DIM, typename COORD_T>
-struct PrintIndexTask
-    : public TaskDI<PRINT_INDEX_TASK_BLOCK_ID, PrintIndexTask, DIM, COORD_T> {
-    static constexpr const char *task_base_name = "print_index";
-    static constexpr TaskFlags flags = TaskFlags::LEAF;
-    LEGION_SOLVERS_DECLARE_TASK(void);
-};
-
-
 template <typename T>
 struct NegateScalarTask
     : public TaskT<NEGATE_SCALAR_TASK_BLOCK_ID, NegateScalarTask, T> {
@@ -75,6 +66,28 @@ struct DivideScalarTask
     static constexpr TaskFlags flags =
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
     LEGION_SOLVERS_DECLARE_TASK(T);
+};
+
+
+template <int DIM, typename COORD_T>
+struct PrintIndexTask
+    : public TaskDI<PRINT_INDEX_TASK_BLOCK_ID, PrintIndexTask, DIM, COORD_T> {
+    static constexpr const char *task_base_name = "print_index";
+    static constexpr TaskFlags flags = TaskFlags::LEAF;
+    LEGION_SOLVERS_DECLARE_TASK(void);
+};
+
+
+template <typename ENTRY_T, int DIM, typename COORD_T>
+struct RandomFillTask : public TaskTDI<
+                            RANDOM_FILL_TASK_BLOCK_ID,
+                            RandomFillTask,
+                            ENTRY_T,
+                            DIM,
+                            COORD_T> {
+    static constexpr const char *task_base_name = "random_fill";
+    static constexpr TaskFlags flags = TaskFlags::LEAF;
+    LEGION_SOLVERS_DECLARE_TASK(void);
 };
 
 

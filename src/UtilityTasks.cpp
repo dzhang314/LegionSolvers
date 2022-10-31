@@ -1,8 +1,12 @@
 #include "UtilityTasks.hpp"
 
+#include <array>    // for std::array
+#include <cstddef>  // for std::size_t
 #include <iostream> // for std::cout, std::endl
+#include <random>   // for std::random_device, std::mt19937, std::seed_seq
 
-#include "LibraryOptions.hpp" // for LEGION_SOLVERS_USE_*
+#include "LegionUtilities.hpp" // for AffineWriter
+#include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
 
 using LegionSolvers::AddScalarTask;
 using LegionSolvers::DivideScalarTask;
@@ -10,6 +14,7 @@ using LegionSolvers::MultiplyScalarTask;
 using LegionSolvers::NegateScalarTask;
 using LegionSolvers::PrintIndexTask;
 using LegionSolvers::PrintScalarTask;
+using LegionSolvers::RandomFillTask;
 using LegionSolvers::SubtractScalarTask;
 
 
@@ -92,6 +97,47 @@ void PrintIndexTask<DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
 }
 
 
+inline std::mt19937 seeded_mersenne_twister() {
+    constexpr std::size_t seed_size =
+        std::mt19937::state_size * sizeof(typename std::mt19937::result_type);
+    std::random_device entropy_source;
+    constexpr std::size_t seed_len =
+        (seed_size - 1) / sizeof(entropy_source()) + 1;
+    std::array<std::random_device::result_type, seed_len> seed_data;
+    for (std::size_t i = 0; i < seed_len; ++i) {
+        seed_data[i] = entropy_source();
+    }
+    std::seed_seq seed(seed_data.begin(), seed_data.end());
+    return std::mt19937(seed);
+}
+
+
+template <typename ENTRY_T, int DIM, typename COORD_T>
+void RandomFillTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS
+) {
+    assert(regions.size() == 1);
+    const auto &region = regions[0];
+
+    assert(task->regions.size() == 1);
+    const auto &req = task->regions[0];
+
+    assert(req.privilege_fields.size() == 1);
+    const Legion::FieldID fid = *(req.privilege_fields.begin());
+
+    AffineWriter<ENTRY_T, DIM, COORD_T> writer(region, fid);
+
+    std::mt19937 rng = seeded_mersenne_twister();
+    std::uniform_real_distribution<ENTRY_T> dist(
+        static_cast<ENTRY_T>(0), static_cast<ENTRY_T>(1)
+    );
+
+    for (Legion::PointInDomainIterator<DIM, COORD_T> iter{region}; iter();
+         ++iter) {
+        entry_writer[*iter] = dist(rng);
+    }
+}
+
+
 // clang-format off
 #ifdef LEGION_SOLVERS_USE_F32
     template int PrintScalarTask<float>::task_body(LEGION_SOLVERS_TASK_ARGS);
@@ -142,4 +188,74 @@ void PrintIndexTask<DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
         template void PrintIndexTask<3, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
     #endif // LEGION_SOLVERS_MAX_DIM >= 3
 #endif // LEGION_SOLVERS_USE_S64_INDICES
+#ifdef LEGION_SOLVERS_USE_F32
+    #ifdef LEGION_SOLVERS_USE_S32_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            template void RandomFillTask<float, 1, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            template void RandomFillTask<float, 2, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            template void RandomFillTask<float, 3, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_S32_INDICES
+    #ifdef LEGION_SOLVERS_USE_U32_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            template void RandomFillTask<float, 1, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            template void RandomFillTask<float, 2, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            template void RandomFillTask<float, 3, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_U32_INDICES
+    #ifdef LEGION_SOLVERS_USE_S64_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            template void RandomFillTask<float, 1, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            template void RandomFillTask<float, 2, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            template void RandomFillTask<float, 3, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_S64_INDICES
+#endif // LEGION_SOLVERS_USE_F32
+#ifdef LEGION_SOLVERS_USE_F64
+    #ifdef LEGION_SOLVERS_USE_S32_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            template void RandomFillTask<double, 1, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            template void RandomFillTask<double, 2, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            template void RandomFillTask<double, 3, int>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_S32_INDICES
+    #ifdef LEGION_SOLVERS_USE_U32_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            template void RandomFillTask<double, 1, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            template void RandomFillTask<double, 2, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            template void RandomFillTask<double, 3, unsigned>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_U32_INDICES
+    #ifdef LEGION_SOLVERS_USE_S64_INDICES
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            template void RandomFillTask<double, 1, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            template void RandomFillTask<double, 2, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            template void RandomFillTask<double, 3, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    #endif // LEGION_SOLVERS_USE_S64_INDICES
+#endif // LEGION_SOLVERS_USE_F64
 // clang-format on
