@@ -133,7 +133,7 @@ void RandomFillTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS
 
     for (Legion::PointInDomainIterator<DIM, COORD_T> iter{region}; iter();
          ++iter) {
-        entry_writer[*iter] = dist(rng);
+        writer[*iter] = dist(rng);
     }
 }
 

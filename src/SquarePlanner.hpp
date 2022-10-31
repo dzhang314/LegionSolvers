@@ -9,6 +9,7 @@
 #include <legion.h> // for Legion::*
 
 #include "AbstractMatrix.hpp"
+#include "LegionUtilities.hpp"
 #include "PartitionedVector.hpp"
 
 namespace LegionSolvers {
