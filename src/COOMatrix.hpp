@@ -30,8 +30,12 @@ public:
         Legion::FieldID fid_row,
         Legion::FieldID fid_col
     )
-        : ctx(ctx), rt(rt), kernel_region(kernel_region), fid_entry(fid_entry),
-          fid_row(fid_row), fid_col(fid_col) {}
+        : ctx(ctx)
+        , rt(rt)
+        , kernel_region(kernel_region)
+        , fid_entry(fid_entry)
+        , fid_row(fid_row)
+        , fid_col(fid_col) {}
 
     virtual Legion::IndexSpace get_kernel_space() const override {
         return kernel_region.get_index_space();

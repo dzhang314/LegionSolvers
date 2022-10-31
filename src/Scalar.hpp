@@ -22,10 +22,14 @@ public:
     explicit Scalar(
         Legion::Context ctx, Legion::Runtime *rt, const Legion::Future &future
     )
-        : ctx(ctx), rt(rt), future(future) {}
+        : ctx(ctx)
+        , rt(rt)
+        , future(future) {}
 
     explicit Scalar(Legion::Context ctx, Legion::Runtime *rt, const T &value)
-        : ctx(ctx), rt(rt), future(Legion::Future::from_value(rt, value)) {}
+        : ctx(ctx)
+        , rt(rt)
+        , future(Legion::Future::from_value(rt, value)) {}
 
     Scalar(const Scalar &) = default;
 

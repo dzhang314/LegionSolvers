@@ -30,8 +30,9 @@ public:
 public:
 
     explicit CGSolver(SquarePlanner<ENTRY_T> &planner)
-        : planner(planner), residual_norm_squared(),
-          negative_one(
+        : planner(planner)
+        , residual_norm_squared()
+        , negative_one(
               planner.get_context(),
               planner.get_runtime(),
               static_cast<ENTRY_T>(-1)

@@ -23,7 +23,8 @@ StreamView::~StreamView() {
 }
 
 StreamView::StreamView(StreamView &&rhs)
-    : valid_(rhs.valid_), stream_(rhs.stream_) {
+    : valid_(rhs.valid_)
+    , stream_(rhs.stream_) {
     rhs.valid_ = false;
 }
 
@@ -34,7 +35,8 @@ StreamView &StreamView::operator=(StreamView &&rhs) {
     return *this;
 }
 
-CUDALibraries::CUDALibraries() : cusparse_(nullptr) {}
+CUDALibraries::CUDALibraries()
+    : cusparse_(nullptr) {}
 
 cudaStream_t CUDALibraries::get_stream() {
     if (this->stream_ == nullptr) {

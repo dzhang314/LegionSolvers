@@ -13,15 +13,18 @@ PartitionedVector<ENTRY_T>::PartitionedVector(
     const std::string &name,
     Legion::IndexPartition index_partition
 )
-    : ctx(ctx), rt(rt), name(name),
-      index_space(rt->get_parent_index_space(index_partition)), fid(0),
-      field_space(
+    : ctx(ctx)
+    , rt(rt)
+    , name(name)
+    , index_space(rt->get_parent_index_space(index_partition))
+    , fid(0)
+    , field_space(
           LegionSolvers::create_field_space(ctx, rt, {sizeof(ENTRY_T)}, {fid})
-      ),
-      logical_region(rt->create_logical_region(ctx, index_space, field_space)),
-      color_space(rt->get_index_partition_color_space_name(index_partition)),
-      index_partition(index_partition),
-      logical_partition(
+      )
+    , logical_region(rt->create_logical_region(ctx, index_space, field_space))
+    , color_space(rt->get_index_partition_color_space_name(index_partition))
+    , index_partition(index_partition)
+    , logical_partition(
           rt->get_logical_partition(logical_region, index_partition)
       ) {
 
@@ -50,17 +53,20 @@ PartitionedVector<ENTRY_T>::PartitionedVector(
     Legion::LogicalPartition logical_partition,
     Legion::FieldID fid
 )
-    : ctx(ctx), rt(rt), name(name),
-      index_space(
+    : ctx(ctx)
+    , rt(rt)
+    , name(name)
+    , index_space(
           rt->get_parent_index_space(logical_partition.get_index_partition())
-      ),
-      fid(fid), field_space(logical_partition.get_field_space()),
-      logical_region(rt->get_parent_logical_region(logical_partition)),
-      color_space(rt->get_index_partition_color_space_name(
+      )
+    , fid(fid)
+    , field_space(logical_partition.get_field_space())
+    , logical_region(rt->get_parent_logical_region(logical_partition))
+    , color_space(rt->get_index_partition_color_space_name(
           logical_partition.get_index_partition()
-      )),
-      index_partition(logical_partition.get_index_partition()),
-      logical_partition(logical_partition) {
+      ))
+    , index_partition(logical_partition.get_index_partition())
+    , logical_partition(logical_partition) {
 
     assert(rt->is_index_partition_disjoint(index_partition));
     assert(rt->is_index_partition_complete(index_partition));
@@ -75,10 +81,16 @@ PartitionedVector<ENTRY_T>::PartitionedVector(
 
 template <typename ENTRY_T>
 PartitionedVector<ENTRY_T>::PartitionedVector(const PartitionedVector &v)
-    : ctx(v.ctx), rt(v.rt), name(v.name), index_space(v.index_space),
-      fid(v.fid), field_space(v.field_space), logical_region(v.logical_region),
-      color_space(v.color_space), index_partition(v.index_partition),
-      logical_partition(v.logical_partition) {
+    : ctx(v.ctx)
+    , rt(v.rt)
+    , name(v.name)
+    , index_space(v.index_space)
+    , fid(v.fid)
+    , field_space(v.field_space)
+    , logical_region(v.logical_region)
+    , color_space(v.color_space)
+    , index_partition(v.index_partition)
+    , logical_partition(v.logical_partition) {
 
     rt->create_shared_ownership(ctx, index_space);
     rt->create_shared_ownership(ctx, field_space);

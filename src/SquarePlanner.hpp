@@ -48,12 +48,18 @@ class SquarePlanner {
 public:
 
     explicit SquarePlanner(Legion::Context ctx, Legion::Runtime *rt)
-        : ctx(ctx), rt(rt), canonical_index_spaces(),
-          canonical_index_partitions(),
-          workspace_fields(Legion::FieldSpace::NO_SPACE), workspace_regions(),
-          workspace_partitions(), sol_vectors(), rhs_vectors(),
-          workspace_vectors(), row_partitioned_matrices(),
-          tile_partitioned_matrices() {}
+        : ctx(ctx)
+        , rt(rt)
+        , canonical_index_spaces()
+        , canonical_index_partitions()
+        , workspace_fields(Legion::FieldSpace::NO_SPACE)
+        , workspace_regions()
+        , workspace_partitions()
+        , sol_vectors()
+        , rhs_vectors()
+        , workspace_vectors()
+        , row_partitioned_matrices()
+        , tile_partitioned_matrices() {}
 
     ~SquarePlanner() {
         for (const auto
@@ -340,21 +346,6 @@ public:
 
 
 } // namespace LegionSolvers
-
-
-// #include <cassert>
-// #include <cstddef>
-// #include <memory>
-// #include <tuple>
-
-// #include "AbstractMatrix.hpp"
-// #include "DenseDistributedVector.hpp"
-
-
-// namespace LegionSolvers {
-
-
-//     public:
 
 
 //         // mode 1: row-partitioned launch  V

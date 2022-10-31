@@ -68,6 +68,7 @@ SpacesInParentheses: false
 
 # classes
 AccessModifierOffset: -4
+BreakConstructorInitializers: BeforeComma
 SpaceBeforeCpp11BracedList: false
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
@@ -116,8 +117,6 @@ BreakBeforeBraces: Attach
 BreakBeforeInheritanceComma: false
 BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
-BreakConstructorInitializersBeforeComma: false
-BreakConstructorInitializers: BeforeColon
 BreakStringLiterals: true
 QualifierAlignment: Leave
 CompactNamespaces: false

@@ -96,7 +96,9 @@ inline size_t get_num_blocks_1d(size_t threads) {
 // inspired from Legate's CUDA StreamView.
 struct StreamView {
 public:
-    StreamView(cudaStream_t stream) : valid_(true), stream_(stream) {}
+    StreamView(cudaStream_t stream)
+        : valid_(true)
+        , stream_(stream) {}
     ~StreamView();
 
 public:

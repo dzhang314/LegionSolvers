@@ -33,9 +33,13 @@ public:
         Legion::LogicalRegion rowptr_region,
         Legion::FieldID fid_rowptr
     )
-        : ctx(ctx), rt(rt), kernel_region(kernel_region), fid_entry(fid_entry),
-          fid_col(fid_col), rowptr_region(rowptr_region),
-          fid_rowptr(fid_rowptr) {}
+        : ctx(ctx)
+        , rt(rt)
+        , kernel_region(kernel_region)
+        , fid_entry(fid_entry)
+        , fid_col(fid_col)
+        , rowptr_region(rowptr_region)
+        , fid_rowptr(fid_rowptr) {}
 
     virtual Legion::IndexSpace get_kernel_space() const override {
         return kernel_region.get_index_space();
