@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_SCALAR_HPP_INCLUDED
 #define LEGION_SOLVERS_SCALAR_HPP_INCLUDED
 
+#include <utility> // for std::move
+
 #include <legion.h> // for Legion::*
 
 namespace LegionSolvers {
@@ -15,6 +17,10 @@ class Scalar {
 
 public:
 
+    Scalar() = delete;
+
+    PartitionedVector &operator=(PartitionedVector &&) = delete;
+
     explicit Scalar(
         Legion::Context ctx, Legion::Runtime *rt, const Legion::Future &future
     )
@@ -23,10 +29,17 @@ public:
     explicit Scalar(Legion::Context ctx, Legion::Runtime *rt, const T &value)
         : ctx(ctx), rt(rt), future(Legion::Future::from_value(rt, value)) {}
 
-    Scalar(const Scalar &) = default; // NOTE: should not be explicit
+    Scalar(const Scalar &) = default;
+
+    Scalar(Scalar &&) = default;
 
     Scalar &operator=(const Scalar &rhs) {
         future = rhs.future;
+        return *this; // no need to overwrite ctx or rt
+    }
+
+    Scalar &operator=(Scalar &&rhs) {
+        future = std::move(rhs.future);
         return *this; // no need to overwrite ctx or rt
     }
 

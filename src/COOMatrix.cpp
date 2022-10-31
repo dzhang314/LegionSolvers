@@ -128,9 +128,9 @@ void COOMatrix<ENTRY_T>::matvec(
     launcher.add_region_requirement(Legion::RegionRequirement(
         kernel_partition, 0, LEGION_READ_ONLY, LEGION_EXCLUSIVE, kernel_region
     ));
+    launcher.add_field(1, fid_entry);
     launcher.add_field(1, fid_row);
     launcher.add_field(1, fid_col);
-    launcher.add_field(1, fid_entry);
 
     launcher.add_region_requirement(Legion::RegionRequirement(
         rt->get_logical_partition(

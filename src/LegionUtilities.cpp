@@ -2,7 +2,7 @@
 
 #include <cassert> // for assert
 
-#include "UtilityTasks.hpp"
+#include "UtilityTasks.hpp" // for PrintIndexTask
 
 
 Legion::FieldSpace LegionSolvers::create_field_space(
@@ -28,18 +28,18 @@ void LegionSolvers::print_index_partition(
     const Legion::IndexSpace color_space =
         rt->get_index_partition_color_space_name(index_partition);
     const Legion::FieldSpace dummy_field_space =
-        LegionSolvers::create_field_space(ctx, rt, {1}, {0});
+        create_field_space(ctx, rt, {1}, {0});
     const Legion::LogicalRegion dummy_region = rt->create_logical_region(
         ctx, rt->get_parent_index_space(index_partition), dummy_field_space
     );
     rt->fill_field(ctx, dummy_region, dummy_region, 0, '\0');
     Legion::IndexLauncher launcher(
-        LegionSolvers::PrintIndexTask<0, void>::task_id(color_space),
+        PrintIndexTask<0, void>::task_id(color_space),
         color_space,
         Legion::TaskArgument(name.c_str(), name.size() + 1),
         Legion::ArgumentMap()
     );
-    launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
+    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     launcher.add_region_requirement(Legion::RegionRequirement(
         rt->get_logical_partition(dummy_region, index_partition),
         0,
