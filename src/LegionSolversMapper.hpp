@@ -17,6 +17,19 @@ public:
         Legion::Processor local_proc
     );
 
+    virtual const char *get_mapper_name() const override {
+        return "legion_solvers_mapper";
+    }
+
+    virtual void memoize_operation(
+        const Legion::Mapping::MapperContext,
+        const Legion::Mappable &,
+        const MemoizeInput &,
+        MemoizeOutput &output
+    ) override {
+        output.memoize = true;
+    }
+
     // TODO: add rest of LegionSolversMapper + thermodynamic mapping strategy
 
 }; // class LegionSolversMapper
