@@ -11,6 +11,45 @@
 
 #include "LibraryOptions.hpp" // for LEGION_SOLVERS_CHECK_BOUNDS
 
+namespace LegionSolvers {
+
+
+Legion::FieldSpace create_field_space(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    const std::vector<std::size_t> &field_sizes,
+    const std::vector<Legion::FieldID> &field_ids
+);
+
+
+void print_index_partition(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    const std::string &name,
+    Legion::IndexPartition index_partition
+);
+
+
+enum class TaskFlags : std::uint8_t {
+    LEAF = 0x01,
+    INNER = 0x02,
+    IDEMPOTENT = 0x04,
+    REPLICABLE = 0x08,
+}; // enum class TaskFlags
+
+constexpr TaskFlags operator|(TaskFlags lhs, TaskFlags rhs) noexcept {
+    return static_cast<TaskFlags>(
+        static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs)
+    );
+}
+
+constexpr bool operator&(TaskFlags lhs, TaskFlags rhs) noexcept {
+    return static_cast<bool>(
+        static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs)
+    );
+}
+
+
 // clang-format off
 
 #define LEGION_SOLVERS_TASK_ARGS \
@@ -32,13 +71,6 @@
 #define LEGION_SOLVERS_KDR_TEMPLATE_ARGS \
     ENTRY_T, KERNEL_DIM, DOMAIN_DIM, RANGE_DIM, \
     KERNEL_COORD_T, DOMAIN_COORD_T, RANGE_COORD_T
-
-// clang-format on
-
-namespace LegionSolvers {
-
-
-// clang-format off
 
 template <typename FIELD_TYPE, int DIM, typename COORD_T>
 using AffineReader = Legion::FieldAccessor<
@@ -68,31 +100,6 @@ using AffineSumAccessor = Legion::ReductionAccessor<
     LEGION_SOLVERS_CHECK_BOUNDS
 >;
 
-// clang-format on
-
-
-enum class TaskFlags : std::uint8_t {
-    LEAF = 0x01,
-    INNER = 0x02,
-    IDEMPOTENT = 0x04,
-    REPLICABLE = 0x08,
-}; // enum class TaskFlags
-
-constexpr TaskFlags operator|(TaskFlags lhs, TaskFlags rhs) noexcept {
-    return static_cast<TaskFlags>(
-        static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs)
-    );
-}
-
-constexpr bool operator&(TaskFlags lhs, TaskFlags rhs) noexcept {
-    return static_cast<bool>(
-        static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs)
-    );
-}
-
-
-// clang-format off
-
 template <void (*TASK_PTR)(const Legion::Task *,
                            const std::vector<Legion::PhysicalRegion> &,
                            Legion::Context, Legion::Runtime *)>
@@ -190,22 +197,6 @@ void preregister_task(Legion::TaskID task_id,
 }
 
 // clang-format on
-
-
-Legion::FieldSpace create_field_space(
-    Legion::Context ctx,
-    Legion::Runtime *rt,
-    const std::vector<std::size_t> &field_sizes,
-    const std::vector<Legion::FieldID> &field_ids
-);
-
-
-void print_index_partition(
-    Legion::Context ctx,
-    Legion::Runtime *rt,
-    const std::string &name,
-    Legion::IndexPartition index_partition
-);
 
 
 } // namespace LegionSolvers
