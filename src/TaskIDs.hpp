@@ -6,17 +6,17 @@
 namespace LegionSolvers {
 
 
-// MetaTaskID is an enum for meta tasks, unrelated
-// to linear algebra computations.
 enum MetaTaskID : Legion::TaskID {
-    LOAD_CUDALIBS_TASK_ID,
-    META_TASK_LAST_ID, // Must be last.
+
+    LOAD_CUDA_LIBS_META_TASK_ID,
+    NUM_META_TASK_IDS, // must be last
+
 };
 
 
 enum TaskBlockID : Legion::TaskID {
 
-    PRINT_SCALAR_TASK_BLOCK_ID = META_TASK_LAST_ID + 1,
+    PRINT_SCALAR_TASK_BLOCK_ID,
     NEGATE_SCALAR_TASK_BLOCK_ID,
     ADD_SCALAR_TASK_BLOCK_ID,
     SUBTRACT_SCALAR_TASK_BLOCK_ID,

@@ -152,7 +152,7 @@ private:
 class LoadCUDALibsTask {
 public:
     static const int TASK_ID =
-        LEGION_SOLVERS_TASK_ID_ORIGIN + LOAD_CUDALIBS_TASK_ID;
+        LEGION_SOLVERS_TASK_ID_ORIGIN + LOAD_CUDA_LIBS_META_TASK_ID;
     static constexpr const char *task_name = "load_cuda_libs";
     using return_type = void;
     static return_type task_body(

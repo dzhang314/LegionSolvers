@@ -7,6 +7,7 @@
 
 #include "LibraryOptions.hpp"           // for LEGION_SOLVERS_USE_*
 #include "MetaprogrammingUtilities.hpp" // for TypeList, ListIndex, ...
+#include "TaskIDs.hpp"                  // for NUM_META_TASK_IDS
 
 namespace LegionSolvers {
 
@@ -96,7 +97,7 @@ template <
 struct TaskT {
 
     static constexpr Legion::TaskID task_id =
-        LEGION_SOLVERS_TASK_ID_ORIGIN +
+        LEGION_SOLVERS_TASK_ID_ORIGIN + NUM_META_TASK_IDS +
         LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
         LEGION_SOLVERS_ENTRY_TYPE_INDEX<T>;
 
@@ -129,7 +130,7 @@ template <
 struct TaskDI {
 
     static constexpr Legion::TaskID task_id =
-        LEGION_SOLVERS_TASK_ID_ORIGIN +
+        LEGION_SOLVERS_TASK_ID_ORIGIN + NUM_META_TASK_IDS +
         LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
         LEGION_SOLVERS_MAX_DIM * LEGION_SOLVERS_INDEX_TYPE_INDEX<I> + (N - 1);
 
@@ -157,7 +158,7 @@ template <Legion::TaskID BLOCK_ID, template <int, typename> typename TaskClass>
 struct TaskDI<BLOCK_ID, TaskClass, 0, void> {
 
     static constexpr Legion::TaskID task_id(int N, int I) {
-        return LEGION_SOLVERS_TASK_ID_ORIGIN +
+        return LEGION_SOLVERS_TASK_ID_ORIGIN + NUM_META_TASK_IDS +
                LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
                LEGION_SOLVERS_MAX_DIM * I + (N - 1);
     }
@@ -182,7 +183,7 @@ template <
 struct TaskTDI : HasCUDAVariantMixin {
 
     static constexpr Legion::TaskID task_id =
-        LEGION_SOLVERS_TASK_ID_ORIGIN +
+        LEGION_SOLVERS_TASK_ID_ORIGIN + NUM_META_TASK_IDS +
         LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
         LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM *
             LEGION_SOLVERS_INDEX_TYPE_INDEX<I> +
@@ -232,7 +233,7 @@ template <
 struct TaskTDI<BLOCK_ID, TaskClass, T, 0, void> {
 
     static constexpr Legion::TaskID task_id(int N, int I) {
-        return LEGION_SOLVERS_TASK_ID_ORIGIN +
+        return LEGION_SOLVERS_TASK_ID_ORIGIN + NUM_META_TASK_IDS +
                LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
                LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM * I +
                LEGION_SOLVERS_NUM_ENTRY_TYPES * (N - 1) +
@@ -263,7 +264,7 @@ template <
 struct TaskTDDDIII : HasCUDAVariantMixin {
 
     static constexpr Legion::TaskID task_id =
-        LEGION_SOLVERS_TASK_ID_ORIGIN +
+        LEGION_SOLVERS_TASK_ID_ORIGIN + NUM_META_TASK_IDS +
         LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
         LEGION_SOLVERS_NUM_INDEX_TYPES_3 * LEGION_SOLVERS_NUM_ENTRY_TYPES *
             LEGION_SOLVERS_MAX_DIM_2 * (N1 - 1) +
@@ -327,7 +328,7 @@ struct TaskTDDDIII<BLOCK_ID, TaskClass, T, 0, 0, 0, void, void, void> {
 
     static constexpr Legion::TaskID
     task_id(int N1, int N2, int N3, int I1, int I2, int I3) {
-        return LEGION_SOLVERS_TASK_ID_ORIGIN +
+        return LEGION_SOLVERS_TASK_ID_ORIGIN + NUM_META_TASK_IDS +
                LEGION_SOLVERS_TASK_BLOCK_SIZE * BLOCK_ID +
                LEGION_SOLVERS_NUM_INDEX_TYPES_3 *
                    LEGION_SOLVERS_NUM_ENTRY_TYPES * LEGION_SOLVERS_MAX_DIM_2 *
