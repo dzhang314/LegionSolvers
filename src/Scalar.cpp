@@ -94,25 +94,25 @@ Legion::Future Scalar<T>::print(Legion::Future dummy) const {
 }
 
 
+// clang-format off
 #ifdef LEGION_SOLVERS_USE_F32
-template Scalar<float> Scalar<float>::operator+() const;
-template Scalar<float> Scalar<float>::operator-() const;
-template Scalar<float> Scalar<float>::operator+(const Scalar<float> &) const;
-template Scalar<float> Scalar<float>::operator-(const Scalar<float> &) const;
-template Scalar<float> Scalar<float>::operator*(const Scalar<float> &) const;
-template Scalar<float> Scalar<float>::operator/(const Scalar<float> &) const;
-template Legion::Future Scalar<float>::print() const;
-template Legion::Future Scalar<float>::print(Legion::Future) const;
+    template Scalar<float> Scalar<float>::operator+() const;
+    template Scalar<float> Scalar<float>::operator-() const;
+    template Scalar<float> Scalar<float>::operator+(const Scalar<float> &) const;
+    template Scalar<float> Scalar<float>::operator-(const Scalar<float> &) const;
+    template Scalar<float> Scalar<float>::operator*(const Scalar<float> &) const;
+    template Scalar<float> Scalar<float>::operator/(const Scalar<float> &) const;
+    template Legion::Future Scalar<float>::print() const;
+    template Legion::Future Scalar<float>::print(Legion::Future) const;
 #endif // LEGION_SOLVERS_USE_F32
-
-
 #ifdef LEGION_SOLVERS_USE_F64
-template Scalar<double> Scalar<double>::operator+() const;
-template Scalar<double> Scalar<double>::operator-() const;
-template Scalar<double> Scalar<double>::operator+(const Scalar<double> &) const;
-template Scalar<double> Scalar<double>::operator-(const Scalar<double> &) const;
-template Scalar<double> Scalar<double>::operator*(const Scalar<double> &) const;
-template Scalar<double> Scalar<double>::operator/(const Scalar<double> &) const;
-template Legion::Future Scalar<double>::print() const;
-template Legion::Future Scalar<double>::print(Legion::Future) const;
+    template Scalar<double> Scalar<double>::operator+() const;
+    template Scalar<double> Scalar<double>::operator-() const;
+    template Scalar<double> Scalar<double>::operator+(const Scalar<double> &) const;
+    template Scalar<double> Scalar<double>::operator-(const Scalar<double> &) const;
+    template Scalar<double> Scalar<double>::operator*(const Scalar<double> &) const;
+    template Scalar<double> Scalar<double>::operator/(const Scalar<double> &) const;
+    template Legion::Future Scalar<double>::print() const;
+    template Legion::Future Scalar<double>::print(Legion::Future) const;
 #endif // LEGION_SOLVERS_USE_F64
+// clang-format on

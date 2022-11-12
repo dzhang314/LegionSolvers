@@ -1,7 +1,7 @@
 #include "COOMatrix.hpp"
 
 #include "COOMatrixTasks.hpp" // for COOMatvecTask, COORmatvecTask
-#include "LibraryOptions.hpp" // for LEIGON_USE_*, LEGION_SOLVERS_MAPPER_ID
+#include "LibraryOptions.hpp" // for LEGION_SOLVERS_*
 
 using LegionSolvers::COOMatrix;
 

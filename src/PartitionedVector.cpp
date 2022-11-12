@@ -1,9 +1,25 @@
 #include "PartitionedVector.hpp"
 
+#include <set>    // for std::set
+#include <vector> // for std::vector
+
 #include "LinearAlgebraTasks.hpp" // for ScalTask, AxpyTask, XpayTask, DotTask
 
 using LegionSolvers::PartitionedVector;
 using LegionSolvers::Scalar;
+
+
+// Every PartitionedVector contains five members that need to be explicitly
+// freed using Legion runtime calls: an index space, a field space, a logical
+// region, a color space, and an index partition. The PartitionedVector
+// destructor explicitly calls rt->destroy_*() on each of these members.
+
+// Thus, in every PartitionedVector constructor, each of these five members
+// should either be created using an rt->create_*() call, or have its reference
+// count incremented by explicitly calling rt->create_shared_ownership().
+
+// Also, each member which is created using an rt->create_*() call should have
+// a name attached using rt->attach_name().
 
 
 template <typename ENTRY_T>
@@ -111,6 +127,25 @@ PartitionedVector<ENTRY_T>::~PartitionedVector() {
 
 
 template <typename ENTRY_T>
+Legion::RegionRequirement PartitionedVector<ENTRY_T>::get_requirement(
+    Legion::PrivilegeMode privileges, Legion::CoherenceProperty coherence
+) const {
+    constexpr Legion::ProjectionID IDENTITY_PROJECTION = 0;
+    const std::set<Legion::FieldID> privilege_fields = {fid};
+    const std::vector<Legion::FieldID> instance_fields = {fid};
+    return Legion::RegionRequirement(
+        logical_partition,
+        IDENTITY_PROJECTION,
+        privilege_fields,
+        instance_fields,
+        privileges,
+        coherence,
+        logical_region
+    );
+}
+
+
+template <typename ENTRY_T>
 void PartitionedVector<ENTRY_T>::constant_fill(ENTRY_T value) {
     Legion::IndexFillLauncher launcher(
         color_space,
@@ -146,23 +181,9 @@ PartitionedVector<ENTRY_T>::operator=(const PartitionedVector &x) {
     Legion::IndexCopyLauncher launcher(color_space);
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     launcher.add_copy_requirements(
-        Legion::RegionRequirement(
-            x.get_logical_partition(),
-            0,
-            LEGION_READ_ONLY,
-            LEGION_EXCLUSIVE,
-            x.get_logical_region()
-        ),
-        Legion::RegionRequirement(
-            logical_partition,
-            0,
-            LEGION_WRITE_DISCARD,
-            LEGION_EXCLUSIVE,
-            logical_region
-        )
+        x.get_requirement(LEGION_READ_ONLY),
+        get_requirement(LEGION_WRITE_DISCARD)
     );
-    launcher.add_src_field(0, x.get_fid());
-    launcher.add_dst_field(0, fid);
     rt->issue_copy_operation(ctx, launcher);
     return x;
 }
@@ -184,24 +205,8 @@ void PartitionedVector<ENTRY_T>::axpy(
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     launcher.add_future(alpha.get_future());
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        logical_partition,
-        0,
-        LEGION_READ_WRITE,
-        LEGION_EXCLUSIVE,
-        logical_region
-    ));
-    launcher.add_field(0, fid);
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        x.get_logical_partition(),
-        0,
-        LEGION_READ_ONLY,
-        LEGION_EXCLUSIVE,
-        x.get_logical_region()
-    ));
-    launcher.add_field(1, x.get_fid());
+    launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
+    launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -226,24 +231,8 @@ void PartitionedVector<ENTRY_T>::axpy(
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     launcher.add_future(numer.get_future());
     launcher.add_future(denom.get_future());
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        logical_partition,
-        0,
-        LEGION_READ_WRITE,
-        LEGION_EXCLUSIVE,
-        logical_region
-    ));
-    launcher.add_field(0, fid);
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        x.get_logical_partition(),
-        0,
-        LEGION_READ_ONLY,
-        LEGION_EXCLUSIVE,
-        x.get_logical_region()
-    ));
-    launcher.add_field(1, x.get_fid());
+    launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
+    launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -270,24 +259,8 @@ void PartitionedVector<ENTRY_T>::axpy(
     launcher.add_future(numer1.get_future());
     launcher.add_future(numer2.get_future());
     launcher.add_future(denom.get_future());
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        logical_partition,
-        0,
-        LEGION_READ_WRITE,
-        LEGION_EXCLUSIVE,
-        logical_region
-    ));
-    launcher.add_field(0, fid);
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        x.get_logical_partition(),
-        0,
-        LEGION_READ_ONLY,
-        LEGION_EXCLUSIVE,
-        x.get_logical_region()
-    ));
-    launcher.add_field(1, x.get_fid());
+    launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
+    launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -309,24 +282,8 @@ void PartitionedVector<ENTRY_T>::xpay(
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     launcher.add_future(alpha.get_future());
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        logical_partition,
-        0,
-        LEGION_READ_WRITE,
-        LEGION_EXCLUSIVE,
-        logical_region
-    ));
-    launcher.add_field(0, fid);
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        x.get_logical_partition(),
-        0,
-        LEGION_READ_ONLY,
-        LEGION_EXCLUSIVE,
-        x.get_logical_region()
-    ));
-    launcher.add_field(1, x.get_fid());
+    launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
+    launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -351,24 +308,8 @@ void PartitionedVector<ENTRY_T>::xpay(
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     launcher.add_future(numer.get_future());
     launcher.add_future(denom.get_future());
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        logical_partition,
-        0,
-        LEGION_READ_WRITE,
-        LEGION_EXCLUSIVE,
-        logical_region
-    ));
-    launcher.add_field(0, fid);
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        x.get_logical_partition(),
-        0,
-        LEGION_READ_ONLY,
-        LEGION_EXCLUSIVE,
-        x.get_logical_region()
-    ));
-    launcher.add_field(1, x.get_fid());
+    launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
+    launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -377,7 +318,6 @@ void PartitionedVector<ENTRY_T>::xpay(
 template <typename ENTRY_T>
 Scalar<ENTRY_T> PartitionedVector<ENTRY_T>::dot(const PartitionedVector &x
 ) const {
-
     assert(index_space == x.get_index_space());
     assert(color_space == x.get_color_space());
     assert(index_partition == x.get_index_partition());
@@ -389,20 +329,8 @@ Scalar<ENTRY_T> PartitionedVector<ENTRY_T>::dot(const PartitionedVector &x
         Legion::ArgumentMap()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        logical_partition, 0, LEGION_READ_ONLY, LEGION_EXCLUSIVE, logical_region
-    ));
-    launcher.add_field(0, fid);
-
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        x.get_logical_partition(),
-        0,
-        LEGION_READ_ONLY,
-        LEGION_EXCLUSIVE,
-        x.get_logical_region()
-    ));
-    launcher.add_field(1, x.get_fid());
+    launcher.add_region_requirement(get_requirement(LEGION_READ_ONLY));
+    launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
 
     return Scalar<ENTRY_T>{
         ctx,
@@ -418,6 +346,7 @@ Scalar<ENTRY_T> PartitionedVector<ENTRY_T>::dot(const PartitionedVector &x
     template PartitionedVector<float>::PartitionedVector(Legion::Context, Legion::Runtime *, const std::string &, Legion::LogicalPartition, Legion::FieldID);
     template PartitionedVector<float>::PartitionedVector(const PartitionedVector<float> &);
     template PartitionedVector<float>::~PartitionedVector();
+    template Legion::RegionRequirement PartitionedVector<float>::get_requirement(Legion::PrivilegeMode, Legion::CoherenceProperty) const;
     template void PartitionedVector<float>::constant_fill(float);
     template void PartitionedVector<float>::constant_fill(const Scalar<float> &);
     template const PartitionedVector<float> &PartitionedVector<float>::operator=(const PartitionedVector<float> &);
@@ -433,6 +362,7 @@ Scalar<ENTRY_T> PartitionedVector<ENTRY_T>::dot(const PartitionedVector &x
     template PartitionedVector<double>::PartitionedVector(Legion::Context, Legion::Runtime *, const std::string &, Legion::LogicalPartition, Legion::FieldID);
     template PartitionedVector<double>::PartitionedVector(const PartitionedVector<double> &);
     template PartitionedVector<double>::~PartitionedVector();
+    template Legion::RegionRequirement PartitionedVector<double>::get_requirement(Legion::PrivilegeMode, Legion::CoherenceProperty) const;
     template void PartitionedVector<double>::constant_fill(double);
     template void PartitionedVector<double>::constant_fill(const Scalar<double> &);
     template const PartitionedVector<double> &PartitionedVector<double>::operator=(const PartitionedVector<double> &);

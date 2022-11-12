@@ -1,7 +1,7 @@
 #include "CSRMatrix.hpp"
 
 #include "CSRMatrixTasks.hpp" // for CSRMatvecTask, CSRRmatvecTask
-#include "LibraryOptions.hpp" // for LEGION_USE_*, LEGION_SOLVERS_MAPPER_ID
+#include "LibraryOptions.hpp" // for LEGION_SOLVERS_*
 
 using LegionSolvers::CSRMatrix;
 

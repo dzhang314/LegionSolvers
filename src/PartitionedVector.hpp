@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_PARTITIONED_VECTOR_HPP_INCLUDED
 #define LEGION_SOLVERS_PARTITIONED_VECTOR_HPP_INCLUDED
 
+#include <string> // for std::string
+
 #include <legion.h> // for Legion::*
 
 #include "Scalar.hpp" // for Scalar
@@ -68,6 +70,11 @@ public:
     Legion::LogicalPartition get_logical_partition() const {
         return logical_partition;
     }
+
+    Legion::RegionRequirement get_requirement(
+        Legion::PrivilegeMode privileges,
+        Legion::CoherenceProperty coherence = LEGION_EXCLUSIVE
+    ) const;
 
     void constant_fill(ENTRY_T value);
 
