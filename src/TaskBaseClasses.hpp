@@ -112,8 +112,8 @@ struct TaskT {
             TaskClass<T>::task_body>(
             task_id,
             task_name(),
-            TaskClass<T>::flags,
             Legion::Processor::LOC_PROC,
+            TaskClass<T>::flags,
             verbose
         );
     }
@@ -145,8 +145,8 @@ struct TaskDI {
             TaskClass<N, I>::task_body>(
             task_id,
             task_name(),
-            TaskClass<N, I>::flags,
             Legion::Processor::LOC_PROC,
+            TaskClass<N, I>::flags,
             verbose
         );
     }
@@ -202,8 +202,8 @@ struct TaskTDI : HasCUDAVariantMixin {
             TaskClass<T, N, I>::task_body>(
             task_id,
             task_name(),
-            TaskClass<T, N, I>::flags,
             Legion::Processor::LOC_PROC,
+            TaskClass<T, N, I>::flags,
             verbose
         );
 
@@ -214,8 +214,8 @@ struct TaskTDI : HasCUDAVariantMixin {
                 TaskClass<T, N, I>::cuda_task_body>(
                 task_id,
                 task_name(),
-                TaskClass<T, N, I>::flags,
                 Legion::Processor::TOC_PROC,
+                TaskClass<T, N, I>::flags,
                 verbose
             );
         }
@@ -295,8 +295,8 @@ struct TaskTDDDIII : HasCUDAVariantMixin {
             TaskClass<T, N1, N2, N3, I1, I2, I3>::task_body>(
             task_id,
             task_name(),
-            TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
             Legion::Processor::LOC_PROC,
+            TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
             verbose
         );
 
@@ -308,8 +308,8 @@ struct TaskTDDDIII : HasCUDAVariantMixin {
                 TaskClass<T, N1, N2, N3, I1, I2, I3>::cuda_task_body>(
                 task_id,
                 task_name(),
-                TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
                 Legion::Processor::TOC_PROC,
+                TaskClass<T, N1, N2, N3, I1, I2, I3>::flags,
                 verbose
             );
         }

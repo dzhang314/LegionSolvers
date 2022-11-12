@@ -2,6 +2,7 @@
 
 #include <legion.h> // for LEGION_USE_CUDA, REALM_USE_KOKKOS
 
+
 int main() {
 
 #ifdef LEGION_USE_CUDA

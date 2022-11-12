@@ -123,8 +123,8 @@ template <void (*TASK_PTR)(const Legion::Task *,
                            Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
-                      TaskFlags task_flags,
                       Legion::Processor::Kind proc_kind,
+                      TaskFlags task_flags,
                       bool verbose = true) {
     if (verbose) {
         std::cout << "[LegionSolvers] Registering task " << task_name
@@ -172,8 +172,8 @@ template <typename RETURN_T,
                                Legion::Context, Legion::Runtime *)>
 void preregister_task(Legion::TaskID task_id,
                       const std::string &task_name,
-                      TaskFlags task_flags,
                       Legion::Processor::Kind proc_kind,
+                      TaskFlags task_flags,
                       bool verbose = true) {
     if (verbose) {
         std::cout << "[LegionSolvers] Registering task " << task_name
