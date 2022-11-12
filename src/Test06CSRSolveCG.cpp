@@ -206,6 +206,7 @@ void top_level_task(
     rt->destroy_index_space(ctx, vector_color_space);
     rt->destroy_index_space(ctx, matrix_index_space);
     rt->destroy_field_space(ctx, matrix_field_space);
+    rt->destroy_field_space(ctx, rowptr_field_space);
 }
 
 

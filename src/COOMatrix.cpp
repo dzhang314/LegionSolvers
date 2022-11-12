@@ -7,6 +7,51 @@ using LegionSolvers::COOMatrix;
 
 
 template <typename ENTRY_T>
+COOMatrix<ENTRY_T>::COOMatrix(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    Legion::LogicalRegion kernel_region,
+    Legion::FieldID fid_entry,
+    Legion::FieldID fid_row,
+    Legion::FieldID fid_col
+)
+    : ctx(ctx)
+    , rt(rt)
+    , kernel_region(kernel_region)
+    , fid_entry(fid_entry)
+    , fid_row(fid_row)
+    , fid_col(fid_col) {
+
+    rt->create_shared_ownership(ctx, kernel_region.get_index_space());
+    rt->create_shared_ownership(ctx, kernel_region.get_field_space());
+    rt->create_shared_ownership(ctx, kernel_region);
+}
+
+
+template <typename ENTRY_T>
+COOMatrix<ENTRY_T>::COOMatrix(const COOMatrix &m)
+    : ctx(m.ctx)
+    , rt(m.rt)
+    , kernel_region(m.kernel_region)
+    , fid_entry(m.fid_entry)
+    , fid_row(m.fid_row)
+    , fid_col(m.fid_col) {
+
+    rt->create_shared_ownership(ctx, kernel_region.get_index_space());
+    rt->create_shared_ownership(ctx, kernel_region.get_field_space());
+    rt->create_shared_ownership(ctx, kernel_region);
+}
+
+
+template <typename ENTRY_T>
+COOMatrix<ENTRY_T>::~COOMatrix() {
+    rt->destroy_logical_region(ctx, kernel_region);
+    rt->destroy_field_space(ctx, kernel_region.get_field_space());
+    rt->destroy_index_space(ctx, kernel_region.get_index_space());
+}
+
+
+template <typename ENTRY_T>
 Legion::IndexPartition
 COOMatrix<ENTRY_T>::kernel_partition_from_domain_partition(
     Legion::IndexPartition domain_partition
@@ -119,14 +164,8 @@ void COOMatrix<ENTRY_T>::matvec(
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
 
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        dst_vector.get_logical_partition(),
-        0,
-        LEGION_READ_WRITE,
-        LEGION_EXCLUSIVE,
-        dst_vector.get_logical_region()
+    launcher.add_region_requirement(dst_vector.get_requirement(LEGION_READ_WRITE
     ));
-    launcher.add_field(0, dst_vector.get_fid());
 
     launcher.add_region_requirement(Legion::RegionRequirement(
         kernel_partition, 0, LEGION_READ_ONLY, LEGION_EXCLUSIVE, kernel_region
@@ -152,6 +191,9 @@ void COOMatrix<ENTRY_T>::matvec(
 
 // clang-format off
 #ifdef LEGION_SOLVERS_USE_F32
+    template COOMatrix<float>::COOMatrix(Legion::Context, Legion::Runtime *, Legion::LogicalRegion, Legion::FieldID, Legion::FieldID, Legion::FieldID);
+    template COOMatrix<float>::COOMatrix(const COOMatrix<float> &);
+    template COOMatrix<float>::~COOMatrix();
     template Legion::IndexPartition COOMatrix<float>::kernel_partition_from_domain_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition COOMatrix<float>::kernel_partition_from_range_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition COOMatrix<float>::domain_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;
@@ -159,6 +201,9 @@ void COOMatrix<ENTRY_T>::matvec(
     template void COOMatrix<float>::matvec(PartitionedVector<float> &, const PartitionedVector<float> &, Legion::LogicalPartition, Legion::IndexPartition) const;
 #endif // LEGION_SOLVERS_USE_F32
 #ifdef LEGION_SOLVERS_USE_F64
+    template COOMatrix<double>::COOMatrix(Legion::Context, Legion::Runtime *, Legion::LogicalRegion, Legion::FieldID, Legion::FieldID, Legion::FieldID);
+    template COOMatrix<double>::COOMatrix(const COOMatrix<double> &);
+    template COOMatrix<double>::~COOMatrix();
     template Legion::IndexPartition COOMatrix<double>::kernel_partition_from_domain_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition COOMatrix<double>::kernel_partition_from_range_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition COOMatrix<double>::domain_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;

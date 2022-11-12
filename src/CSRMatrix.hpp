@@ -24,6 +24,8 @@ class CSRMatrix : public AbstractMatrix<ENTRY_T> {
 
 public:
 
+    CSRMatrix() = delete;
+
     explicit CSRMatrix(
         Legion::Context ctx,
         Legion::Runtime *rt,
@@ -32,14 +34,17 @@ public:
         Legion::FieldID fid_col,
         Legion::LogicalRegion rowptr_region,
         Legion::FieldID fid_rowptr
-    )
-        : ctx(ctx)
-        , rt(rt)
-        , kernel_region(kernel_region)
-        , fid_entry(fid_entry)
-        , fid_col(fid_col)
-        , rowptr_region(rowptr_region)
-        , fid_rowptr(fid_rowptr) {}
+    );
+
+    CSRMatrix(const CSRMatrix &);
+
+    CSRMatrix(CSRMatrix &&) = delete;
+
+    ~CSRMatrix();
+
+    CSRMatrix &operator=(const CSRMatrix &) = delete;
+
+    CSRMatrix &operator=(CSRMatrix &&) = delete;
 
     virtual Legion::IndexSpace get_kernel_space() const override {
         return kernel_region.get_index_space();

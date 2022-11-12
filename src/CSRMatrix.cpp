@@ -7,6 +7,63 @@ using LegionSolvers::CSRMatrix;
 
 
 template <typename ENTRY_T>
+CSRMatrix<ENTRY_T>::CSRMatrix(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    Legion::LogicalRegion kernel_region,
+    Legion::FieldID fid_entry,
+    Legion::FieldID fid_col,
+    Legion::LogicalRegion rowptr_region,
+    Legion::FieldID fid_rowptr
+)
+    : ctx(ctx)
+    , rt(rt)
+    , kernel_region(kernel_region)
+    , fid_entry(fid_entry)
+    , fid_col(fid_col)
+    , rowptr_region(rowptr_region)
+    , fid_rowptr(fid_rowptr) {
+
+    rt->create_shared_ownership(ctx, kernel_region.get_index_space());
+    rt->create_shared_ownership(ctx, kernel_region.get_field_space());
+    rt->create_shared_ownership(ctx, kernel_region);
+    rt->create_shared_ownership(ctx, rowptr_region.get_index_space());
+    rt->create_shared_ownership(ctx, rowptr_region.get_field_space());
+    rt->create_shared_ownership(ctx, rowptr_region);
+}
+
+
+template <typename ENTRY_T>
+CSRMatrix<ENTRY_T>::CSRMatrix(const CSRMatrix &m)
+    : ctx(m.ctx)
+    , rt(m.rt)
+    , kernel_region(m.kernel_region)
+    , fid_entry(m.fid_entry)
+    , fid_col(m.fid_col)
+    , rowptr_region(m.rowptr_region)
+    , fid_rowptr(m.fid_rowptr) {
+
+    rt->create_shared_ownership(ctx, kernel_region.get_index_space());
+    rt->create_shared_ownership(ctx, kernel_region.get_field_space());
+    rt->create_shared_ownership(ctx, kernel_region);
+    rt->create_shared_ownership(ctx, rowptr_region.get_index_space());
+    rt->create_shared_ownership(ctx, rowptr_region.get_field_space());
+    rt->create_shared_ownership(ctx, rowptr_region);
+}
+
+
+template <typename ENTRY_T>
+CSRMatrix<ENTRY_T>::~CSRMatrix() {
+    rt->destroy_logical_region(ctx, kernel_region);
+    rt->destroy_field_space(ctx, kernel_region.get_field_space());
+    rt->destroy_index_space(ctx, kernel_region.get_index_space());
+    rt->destroy_logical_region(ctx, rowptr_region);
+    rt->destroy_field_space(ctx, rowptr_region.get_field_space());
+    rt->destroy_index_space(ctx, rowptr_region.get_index_space());
+}
+
+
+template <typename ENTRY_T>
 Legion::IndexPartition
 CSRMatrix<ENTRY_T>::kernel_partition_from_domain_partition(
     Legion::IndexPartition domain_partition
@@ -119,14 +176,8 @@ void CSRMatrix<ENTRY_T>::matvec(
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
 
-    launcher.add_region_requirement(Legion::RegionRequirement(
-        dst_vector.get_logical_partition(),
-        0,
-        LEGION_READ_WRITE,
-        LEGION_EXCLUSIVE,
-        dst_vector.get_logical_region()
+    launcher.add_region_requirement(dst_vector.get_requirement(LEGION_READ_WRITE
     ));
-    launcher.add_field(0, dst_vector.get_fid());
 
     launcher.add_region_requirement(Legion::RegionRequirement(
         kernel_partition, 0, LEGION_READ_ONLY, LEGION_EXCLUSIVE, kernel_region
@@ -162,6 +213,9 @@ void CSRMatrix<ENTRY_T>::matvec(
 
 // clang-format off
 #ifdef LEGION_SOLVERS_USE_F32
+    template CSRMatrix<float>::CSRMatrix(Legion::Context, Legion::Runtime *, Legion::LogicalRegion, Legion::FieldID, Legion::FieldID, Legion::LogicalRegion, Legion::FieldID);
+    template CSRMatrix<float>::CSRMatrix(const CSRMatrix<float> &);
+    template CSRMatrix<float>::~CSRMatrix();
     template Legion::IndexPartition CSRMatrix<float>::kernel_partition_from_domain_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition CSRMatrix<float>::kernel_partition_from_range_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition CSRMatrix<float>::domain_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;
@@ -169,6 +223,9 @@ void CSRMatrix<ENTRY_T>::matvec(
     template void CSRMatrix<float>::matvec(PartitionedVector<float> &, const PartitionedVector<float> &, Legion::LogicalPartition, Legion::IndexPartition) const;
 #endif // LEGION_SOLVERS_USE_F32
 #ifdef LEGION_SOLVERS_USE_F64
+    template CSRMatrix<double>::CSRMatrix(Legion::Context, Legion::Runtime *, Legion::LogicalRegion, Legion::FieldID, Legion::FieldID, Legion::LogicalRegion, Legion::FieldID);
+    template CSRMatrix<double>::CSRMatrix(const CSRMatrix<double> &);
+    template CSRMatrix<double>::~CSRMatrix();
     template Legion::IndexPartition CSRMatrix<double>::kernel_partition_from_domain_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition CSRMatrix<double>::kernel_partition_from_range_partition(Legion::IndexPartition) const;
     template Legion::IndexPartition CSRMatrix<double>::domain_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;

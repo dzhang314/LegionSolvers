@@ -1,6 +1,8 @@
 #ifndef LEGION_SOLVERS_COO_MATRIX_HPP_INCLUDED
 #define LEGION_SOLVERS_COO_MATRIX_HPP_INCLUDED
 
+#include <string> // for std::string
+
 #include <legion.h> // for Legion::*
 
 #include "AbstractMatrix.hpp"    // for AbstractMatrix
@@ -22,6 +24,8 @@ class COOMatrix : public AbstractMatrix<ENTRY_T> {
 
 public:
 
+    COOMatrix() = delete;
+
     explicit COOMatrix(
         Legion::Context ctx,
         Legion::Runtime *rt,
@@ -29,13 +33,17 @@ public:
         Legion::FieldID fid_entry,
         Legion::FieldID fid_row,
         Legion::FieldID fid_col
-    )
-        : ctx(ctx)
-        , rt(rt)
-        , kernel_region(kernel_region)
-        , fid_entry(fid_entry)
-        , fid_row(fid_row)
-        , fid_col(fid_col) {}
+    );
+
+    COOMatrix(const COOMatrix &);
+
+    COOMatrix(COOMatrix &&) = delete;
+
+    ~COOMatrix();
+
+    COOMatrix &operator=(const COOMatrix &) = delete;
+
+    COOMatrix &operator=(COOMatrix &&) = delete;
 
     virtual Legion::IndexSpace get_kernel_space() const override {
         return kernel_region.get_index_space();
