@@ -5,39 +5,6 @@
 
 namespace LegionSolvers {
 
-// Template dispatch for value type.
-template <typename ENTRY_T>
-cudaDataType cusparseDataType();
-
-template <>
-inline cudaDataType cusparseDataType<float>() {
-    return CUDA_R_32F;
-}
-
-template <>
-inline cudaDataType cusparseDataType<double>() {
-    return CUDA_R_64F;
-}
-
-// Template dispatch for the index type.
-template <typename COORD_T>
-cusparseIndexType_t cusparseIndexType();
-
-// TODO (rohany): Can we handle unsigned integers?
-template <>
-inline cusparseIndexType_t cusparseIndexType<int32_t>() {
-    return CUSPARSE_INDEX_32I;
-}
-
-template <>
-inline cusparseIndexType_t cusparseIndexType<int64_t>() {
-    return CUSPARSE_INDEX_64I;
-}
-
-template <>
-inline cusparseIndexType_t cusparseIndexType<long long>() {
-    return CUSPARSE_INDEX_64I;
-}
 
 template <typename KERNEL_COORD_T, typename RANGE_COORD_T>
 __global__ void convertGlobalRowptrToLocalIndPtr(
@@ -76,7 +43,7 @@ template <
     typename DOMAIN_COORD_T,
     typename RANGE_COORD_T>
 cusparseSpMatDescr_t makeCuSparseCSR(
-    StreamView &stream,
+    CUDAStreamView &stream,
     int64_t num_rows,
     int64_t num_cols,
     const Legion::Domain rowptr_domain,
@@ -125,10 +92,10 @@ cusparseSpMatDescr_t makeCuSparseCSR(
         const_cast<void *>(
             static_cast<const void *>(entries.ptr(kernel_domain.lo()))
         ),
-        cusparseIndexType<KERNEL_COORD_T>(),
-        cusparseIndexType<DOMAIN_COORD_T>(),
+        CUSPARSE_INDEX_TYPE<KERNEL_COORD_T>,
+        CUSPARSE_INDEX_TYPE<DOMAIN_COORD_T>,
         CUSPARSE_INDEX_BASE_ZERO,
-        cusparseDataType<ENTRY_T>()
+        CUDA_DATA_TYPE<ENTRY_T>
     ));
     return descr;
 }
@@ -180,9 +147,9 @@ cusparseSpMatDescr_t makeCuSparseCOO(
         const_cast<void *>(static_cast<const void *>(row.ptr(domain.lo()))),
         const_cast<void *>(static_cast<const void *>(col.ptr(domain.lo()))),
         const_cast<void *>(static_cast<const void *>(entries.ptr(domain.lo()))),
-        cusparseIndexType<KERNEL_COORD_T>(),
+        CUSPARSE_INDEX_TYPE<KERNEL_COORD_T>,
         CUSPARSE_INDEX_BASE_ZERO,
-        cusparseDataType<ENTRY_T>()
+        CUDA_DATA_TYPE<ENTRY_T>
     ));
     return descr;
 }
@@ -200,7 +167,7 @@ makeCuSparseDnVec(const Legion::Domain domain, Accessor acc) {
         &descr,
         domain.get_volume(),
         const_cast<void *>(static_cast<const void *>(acc.ptr(domain.lo()))),
-        cusparseDataType<ENTRY_T>()
+        CUDA_DATA_TYPE<ENTRY_T>
     ));
     return descr;
 }
@@ -228,7 +195,7 @@ cusparseDnVecDescr_t makeShiftedCuSparseDnVec(
         const_cast<void *>(static_cast<const void *>(
             (acc.ptr(domain.lo()) - size_t(domain.lo()[0]))
         )),
-        cusparseDataType<ENTRY_T>()
+        CUDA_DATA_TYPE<ENTRY_T>
     ));
     return descr;
 }

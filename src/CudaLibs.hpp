@@ -9,77 +9,13 @@
 #include <cusparse.h>
 #include <legion.h>
 
-#define CHECK_CUDA(expr)                                                       \
-    do {                                                                       \
-        cudaError_t __result__ = (expr);                                       \
-        LegionSolvers::check_cuda(__result__, __FILE__, __LINE__);             \
-    } while (false)
+#include "CUDAUtilities.hpp"
 
-#define CHECK_CUDA_STREAM(stream)                                              \
-    do {                                                                       \
-        CHECK_CUDA(cudaStreamSynchronize(stream));                             \
-        CHECK_CUDA(cudaPeekAtLastError());                                     \
-    } while (false)
-
-#define CHECK_CUBLAS(expr)                                                     \
-    do {                                                                       \
-        cublasStatus_t __result__ = (expr);                                    \
-        LegionSolvers::check_cublas(__result__, __FILE__, __LINE__);           \
-    } while (false)
-
-#define CHECK_CUSPARSE(expr)                                                   \
-    do {                                                                       \
-        cusparseStatus_t __result__ = (expr);                                  \
-        LegionSolvers::check_cusparse(__result__, __FILE__, __LINE__);         \
-    } while (false)
 
 #define THREADS_PER_BLOCK 128
 
 namespace LegionSolvers {
 
-__host__ inline void check_cuda(cudaError_t error, const char *file, int line) {
-    if (error != cudaSuccess) {
-        fprintf(
-            stderr,
-            "CUDA failure with error %s (%s) in file %s at line %d\n",
-            cudaGetErrorString(error),
-            cudaGetErrorName(error),
-            file,
-            line
-        );
-        assert(false);
-    }
-}
-
-__host__ inline void
-check_cublas(cublasStatus_t status, const char *file, int line) {
-    if (status != CUBLAS_STATUS_SUCCESS) {
-        fprintf(
-            stderr,
-            "cuBLAS failure with error code %d in file %s at line %d\n",
-            status,
-            file,
-            line
-        );
-        assert(false);
-    }
-}
-
-
-__host__ inline void
-check_cusparse(cusparseStatus_t status, const char *file, int line) {
-    if (status != CUSPARSE_STATUS_SUCCESS) {
-        fprintf(
-            stderr,
-            "CUSPARSE failure with error code %d (%s) in file %s at line %d\n",
-            status,
-            cusparseGetErrorString(status),
-            file,
-            line
-        );
-        assert(false);
-    }
-}
 
 #ifdef __CUDACC__
 __device__ inline size_t global_tid_1d() {
@@ -91,61 +27,6 @@ inline size_t get_num_blocks_1d(size_t threads) {
     return (threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 }
 
-
-// StreamView is a managed view of a CUDA stream. This code is
-// inspired from Legate's CUDA StreamView.
-struct StreamView {
-public:
-    StreamView(cudaStream_t stream)
-        : valid_(true)
-        , stream_(stream) {}
-    ~StreamView();
-
-public:
-    StreamView(const StreamView &) = delete;
-    StreamView &operator=(const StreamView &) = delete;
-
-public:
-    StreamView(StreamView &&);
-    StreamView &operator=(StreamView &&);
-
-public:
-    operator cudaStream_t() const { return stream_; }
-
-private:
-    bool valid_;
-    cudaStream_t stream_;
-};
-
-// Return a cached stream for the current GPU.
-StreamView get_cached_stream();
-// Method to get the cuSPARSE handle associated with the executing GPU.
-cusparseHandle_t get_cusparse();
-// Method to get the cuBLAS handle associated with the executing GPU.
-cublasHandle_t get_cublas();
-
-// CUDALibraries is a struct that manages handles on libraries
-// like cuSPARSE and (in the future) cuBLAS, as well as what
-// stream should kernels execute on.
-struct CUDALibraries {
-public:
-    CUDALibraries();
-
-private:
-    // Prevent copying and overwriting.
-    CUDALibraries(const CUDALibraries &rhs) = delete;
-    CUDALibraries &operator=(const CUDALibraries &rhs) = delete;
-
-public:
-    cublasHandle_t get_cublas();
-    cusparseHandle_t get_cusparse();
-    cudaStream_t get_stream();
-
-private:
-    cublasHandle_t cublas_;
-    cusparseHandle_t cusparse_;
-    cudaStream_t stream_;
-};
 
 // LoadCUDALibsTask is a task that loads the CUDA libraries
 // on each GPU in the system.

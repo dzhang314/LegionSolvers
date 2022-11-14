@@ -1,6 +1,5 @@
 #include "LinearAlgebraTasks.hpp"
 
-#include "CuBLASHelpers.hpp"
 #include "CudaLibs.hpp"
 #include "LegionUtilities.hpp" // for AffineReader, AffineWriter, ...
 #include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
@@ -18,8 +17,8 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     Legion::Runtime *rt
 ) {
     // Grab our stream and cuBLAS handle.
-    auto stream = get_cached_stream();
-    auto handle = get_cublas();
+    auto stream = get_cuda_stream();
+    auto handle = get_cublas_handle();
     CHECK_CUBLAS(cublasSetStream(handle, stream));
 
     assert(regions.size() == 1);
@@ -49,7 +48,7 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     //  If we're getting some subslice of a larger region then this probably
     //  won't work.
     // Finally make the cuBLAS call.
-    cublasSCAL<ENTRY_T>(
+    cublas_scal<ENTRY_T>(
         handle,
         x_domain.get_volume(),
         &alpha,
@@ -66,8 +65,8 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     Legion::Runtime *rt
 ) {
     // Grab our stream and cuBLAS handle.
-    auto stream = get_cached_stream();
-    auto handle = get_cublas();
+    auto stream = get_cuda_stream();
+    auto handle = get_cublas_handle();
     CHECK_CUBLAS(cublasSetStream(handle, stream));
 
     assert(regions.size() == 2);
@@ -107,7 +106,7 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     //  If we're getting some subslice of a larger region then this probably
     //  won't work.
     // Finally make the cuBLAS call.
-    cublasAXPY<ENTRY_T>(
+    cublas_axpy<ENTRY_T>(
         handle,
         y_domain.get_volume(),
         &alpha,
@@ -173,7 +172,7 @@ void XpayTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     // If there are no points to process, exit.
     if (y_domain.empty()) return;
 
-    auto stream = get_cached_stream();
+    auto stream = get_cuda_stream();
     Pitches<DIM - 1, COORD_T> pitches;
     auto volume = pitches.flatten(y_domain.bounds<DIM, COORD_T>());
     auto blocks = get_num_blocks_1d(volume);
@@ -191,8 +190,8 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     Legion::Runtime *rt
 ) {
     // Grab our stream and cuBLAS handle.
-    auto stream = get_cached_stream();
-    auto handle = get_cublas();
+    auto stream = get_cuda_stream();
+    auto handle = get_cublas_handle();
     CHECK_CUBLAS(cublasSetStream(handle, stream));
 
     assert(regions.size() == 2);
@@ -230,7 +229,7 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     //  If we're getting some subslice of a larger region then this probably
     //  won't work.
     // Finally make the cuBLAS call.
-    cublasDOT<ENTRY_T>(
+    cublas_dot<ENTRY_T>(
         handle,
         v_domain.get_volume(),
         v_reader.ptr(v_domain.lo()),

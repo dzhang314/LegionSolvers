@@ -63,8 +63,8 @@ void COOMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
         input_vec, input_fid
     );
 
-    auto stream = get_cached_stream();
-    auto handle = get_cusparse();
+    auto stream = get_cuda_stream();
+    auto handle = get_cusparse_handle();
     CHECK_CUSPARSE(cusparseSetStream(handle, stream));
 
     const Legion::Domain coo_bounds =
@@ -115,7 +115,7 @@ void COOMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
         cusparse_input,
         &beta,
         cusparse_output,
-        cusparseDataType<ENTRY_T>(),
+        CUDA_DATA_TYPE<ENTRY_T>,
         CUSPARSE_MV_ALG_DEFAULT,
         &bufSize
     ));
@@ -134,7 +134,7 @@ void COOMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
         cusparse_input,
         &beta,
         cusparse_output,
-        cusparseDataType<ENTRY_T>(),
+        CUDA_DATA_TYPE<ENTRY_T>,
         CUSPARSE_MV_ALG_DEFAULT,
         workspace
     ));

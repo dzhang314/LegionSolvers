@@ -33,10 +33,11 @@ endif()
 
 if(Legion_USE_CUDA AND NOT Legion_USE_Kokkos)
     list(APPEND LegionSolvers_SOURCES
-        src/COOMatrixTasks.cu
-        src/CSRMatrixTasks.cu
+        src/CUDAUtilities.cpp
         src/CudaLibs.cu
         src/LinearAlgebraTasks.cu
+        src/COOMatrixTasks.cu
+        src/CSRMatrixTasks.cu
     )
 endif()
 
@@ -48,7 +49,7 @@ target_link_libraries(LegionSolvers Legion::Legion)
 if(Legion_USE_Kokkos)
     target_link_libraries(Kokkos::kokkoscore)
 endif()
-# If Legion has CUDA support, link in the appopriate CUDA libraries.
+# If Legion has CUDA support, link in the appropriate CUDA libraries.
 if(Legion_USE_CUDA)
     if(NOT Legion_USE_Kokkos)
         target_link_libraries(LegionSolvers

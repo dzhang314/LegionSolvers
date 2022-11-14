@@ -7,91 +7,6 @@ namespace LegionSolvers {
 
 using namespace Legion;
 
-StreamView::~StreamView() {
-    // TODO (rohany): We can have a static variable that controls whether
-    //  or not we will do synchronization at the end of tasks.
-    if (valid_) {
-#ifndef NDEBUG
-        CHECK_CUDA_STREAM(stream_);
-#endif
-        // We don't currently use the CUDA hijack, so we'll let realm handle
-        // checking the stream for us at the end of the
-        // #else
-        //     CHECK_CUDA(cudaStreamSynchronize(stream_));
-        // #endif
-    }
-}
-
-StreamView::StreamView(StreamView &&rhs)
-    : valid_(rhs.valid_)
-    , stream_(rhs.stream_) {
-    rhs.valid_ = false;
-}
-
-StreamView &StreamView::operator=(StreamView &&rhs) {
-    valid_ = rhs.valid_;
-    stream_ = rhs.stream_;
-    rhs.valid_ = false;
-    return *this;
-}
-
-CUDALibraries::CUDALibraries()
-    : cusparse_(nullptr) {}
-
-cudaStream_t CUDALibraries::get_stream() {
-    if (this->stream_ == nullptr) {
-        CHECK_CUDA(
-            cudaStreamCreateWithFlags(&this->stream_, cudaStreamNonBlocking)
-        );
-    }
-    return this->stream_;
-}
-
-cublasHandle_t CUDALibraries::get_cublas() {
-    if (this->cublas_ == nullptr) {
-        CHECK_CUBLAS(cublasCreate(&this->cublas_));
-    }
-    return this->cublas_;
-}
-
-cusparseHandle_t CUDALibraries::get_cusparse() {
-    if (this->cusparse_ == nullptr) {
-        CHECK_CUSPARSE(cusparseCreate(&this->cusparse_));
-    }
-    return this->cusparse_;
-}
-
-static CUDALibraries &get_cuda_libraries(Processor proc) {
-    if (proc.kind() != Processor::TOC_PROC) {
-        fprintf(
-            stderr, "Illegal request for CUDA libraries for non-GPU processor"
-        );
-        assert(false);
-    }
-
-    static CUDALibraries cuda_libraries[LEGION_MAX_NUM_PROCS];
-    const auto proc_id = proc.id & (LEGION_MAX_NUM_PROCS - 1);
-    return cuda_libraries[proc_id];
-}
-
-StreamView get_cached_stream() {
-    const auto proc = Processor::get_executing_processor();
-    auto &lib = get_cuda_libraries(proc);
-    return StreamView(lib.get_stream());
-}
-
-cublasHandle_t get_cublas() {
-    const auto proc = Processor::get_executing_processor();
-    auto &lib = get_cuda_libraries(proc);
-    return lib.get_cublas();
-}
-
-cusparseHandle_t get_cusparse() {
-    const auto proc = Processor::get_executing_processor();
-    auto &lib = get_cuda_libraries(proc);
-    return lib.get_cusparse();
-}
-
 /* static */
 LoadCUDALibsTask::return_type LoadCUDALibsTask::task_body(
     const Legion::Task *task,
@@ -99,11 +14,9 @@ LoadCUDALibsTask::return_type LoadCUDALibsTask::task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-    const auto proc = Processor::get_executing_processor();
-    auto &lib = get_cuda_libraries(proc);
-    lib.get_stream();
-    lib.get_cublas();
-    lib.get_cusparse();
+    get_cuda_stream();
+    get_cublas_handle();
+    get_cusparse_handle();
 }
 
 /* static */

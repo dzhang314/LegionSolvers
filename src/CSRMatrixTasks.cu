@@ -79,8 +79,8 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
     static_assert(DOMAIN_DIM == 1);
     auto cols = input_domain.bounds.hi[0] + 1;
 
-    auto stream = get_cached_stream();
-    auto handle = get_cusparse();
+    auto stream = get_cuda_stream();
+    auto handle = get_cusparse_handle();
     CHECK_CUSPARSE(cusparseSetStream(handle, stream));
 
     auto cusparse_csr = makeCuSparseCSR<
@@ -123,7 +123,7 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
         cusparse_input,
         &beta,
         cusparse_output,
-        cusparseDataType<ENTRY_T>(),
+        CUDA_DATA_TYPE<ENTRY_T>,
         CUSPARSE_MV_ALG_DEFAULT,
         &bufSize
     ));
@@ -142,7 +142,7 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
         cusparse_input,
         &beta,
         cusparse_output,
-        cusparseDataType<ENTRY_T>(),
+        CUDA_DATA_TYPE<ENTRY_T>,
         CUSPARSE_MV_ALG_DEFAULT,
         workspace
     ));
