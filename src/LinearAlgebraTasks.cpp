@@ -2,7 +2,6 @@
 
 #include <cassert> // for assert
 #include <cmath>   // for std::fma
-#include <vector>  // for std::vector
 
 #include "LegionUtilities.hpp" // for AffineReader, AffineWriter, ...
 #include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
@@ -14,12 +13,8 @@ using LegionSolvers::XpayTask;
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
-void ScalTask<ENTRY_T, DIM, COORD_T>::task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
-) {
+void ScalTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+
     assert(regions.size() == 1);
     const auto &x = regions[0];
 
@@ -50,12 +45,8 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::task_body(
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
-void AxpyTask<ENTRY_T, DIM, COORD_T>::task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
-) {
+void AxpyTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+
     assert(regions.size() == 2);
     const auto &y = regions[0];
     const auto &x = regions[1];
@@ -98,12 +89,8 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::task_body(
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
-void XpayTask<ENTRY_T, DIM, COORD_T>::task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
-) {
+void XpayTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+
     assert(regions.size() == 2);
     const auto &y = regions[0];
     const auto &x = regions[1];
@@ -146,12 +133,8 @@ void XpayTask<ENTRY_T, DIM, COORD_T>::task_body(
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
-ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
-) {
+ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+
     assert(regions.size() == 2);
     const auto &v = regions[0];
     const auto &w = regions[1];

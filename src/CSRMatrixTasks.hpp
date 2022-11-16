@@ -21,9 +21,7 @@ struct CSRMatvecTask : public TaskTDDDIII<
         Legion::FieldID fid_col;
     };
     LEGION_SOLVERS_DECLARE_TASK(void);
-#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     LEGION_SOLVERS_DECLARE_CUDA_TASK;
-#endif
 };
 
 
@@ -40,9 +38,7 @@ struct CSRRmatvecTask : public TaskTDDDIII<
         Legion::FieldID fid_col;
     };
     LEGION_SOLVERS_DECLARE_TASK(void);
-#if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     LEGION_SOLVERS_DECLARE_CUDA_TASK;
-#endif
 };
 
 

@@ -30,6 +30,10 @@ void print_index_partition(
 );
 
 
+template <typename ENTRY_T>
+ENTRY_T get_alpha(const std::vector<Legion::Future> &futures);
+
+
 enum class TaskFlags : std::uint8_t {
     LEAF = 0x01,
     INNER = 0x02,
@@ -61,8 +65,13 @@ constexpr bool operator&(TaskFlags lhs, TaskFlags rhs) noexcept {
     using return_type = RETURN_TYPE; \
     static return_type task_body(LEGION_SOLVERS_TASK_ARGS)
 
-#define LEGION_SOLVERS_DECLARE_CUDA_TASK \
-    static return_type cuda_task_body(LEGION_SOLVERS_TASK_ARGS)
+#ifdef LEGION_USE_CUDA
+    #define LEGION_SOLVERS_DECLARE_CUDA_TASK \
+        static return_type cuda_task_body(LEGION_SOLVERS_TASK_ARGS)
+#else
+    #define LEGION_SOLVERS_DECLARE_CUDA_TASK \
+        static_assert(true, "")
+#endif // LEGION_USE_CUDA
 
 #define LEGION_SOLVERS_KDR_TEMPLATE template < \
     typename ENTRY_T, int KERNEL_DIM, int DOMAIN_DIM, int RANGE_DIM, \

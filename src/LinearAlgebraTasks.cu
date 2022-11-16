@@ -1,21 +1,19 @@
 #include "LinearAlgebraTasks.hpp"
 
+#include <cassert> // for assert
+#include <cmath>   // for std::fma
+
 #include "CudaLibs.hpp"
 #include "LegionUtilities.hpp" // for AffineReader, AffineWriter, ...
 #include "LibraryOptions.hpp"  // for LEGION_SOLVERS_USE_*
 #include "Pitches.hpp"
 
-#include <cmath> // for std::fma
-
 using namespace LegionSolvers;
 
+
 template <typename ENTRY_T, int DIM, typename COORD_T>
-void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
-) {
+void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
+
     // Grab our stream and cuBLAS handle.
     auto stream = get_cuda_stream();
     auto handle = get_cublas_handle();
@@ -57,13 +55,10 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     );
 }
 
+
 template <typename ENTRY_T, int DIM, typename COORD_T>
-void AxpyTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
-) {
+void AxpyTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
+
     // Grab our stream and cuBLAS handle.
     auto stream = get_cuda_stream();
     auto handle = get_cublas_handle();
@@ -117,6 +112,7 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
     );
 }
 
+
 // cuBLAS doesn't have a XPAY kernel for some reason, so just
 // write it out by hand.
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -134,13 +130,10 @@ __global__ void xpay_kernel(
     y[point] = std::fma(alpha, y[point], x[point]);
 }
 
+
 template <typename ENTRY_T, int DIM, typename COORD_T>
-void XpayTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
-) {
+void XpayTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
+
     assert(regions.size() == 2);
     const auto &y = regions[0];
     const auto &x = regions[1];
@@ -182,12 +175,9 @@ void XpayTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
         );
 }
 
+
 template <typename ENTRY_T, int DIM, typename COORD_T>
-ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
-    const Legion::Task *task,
-    const std::vector<Legion::PhysicalRegion> &regions,
-    Legion::Context ctx,
-    Legion::Runtime *rt
+ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS
 ) {
     // Grab our stream and cuBLAS handle.
     auto stream = get_cuda_stream();
@@ -241,6 +231,7 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(
 
     return result;
 }
+
 
 // clang-format off
 #ifdef LEGION_SOLVERS_USE_F32
