@@ -1,119 +1,7 @@
 #!/usr/bin/env python3
 
-from contextlib import contextmanager
-from enum import Enum
+from build_utilities import *
 import os
-import shutil
-import subprocess
-import socket
-
-
-################################################################################
-
-
-def remove_file(path):
-    if os.path.exists(path):
-        os.remove(path)
-
-
-def remove_directory(path):
-    if os.path.exists(path):
-        shutil.rmtree(path)
-
-
-@contextmanager
-def pushd(path):
-    prev_path = os.getcwd()
-    print("NOTE: Changing directory to", path)
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        print("NOTE: Changing directory to", prev_path)
-        os.chdir(prev_path)
-
-
-def run(*command, check=True):
-    print("NOTE: Running command", ' '.join(command))
-    subprocess.run(command, check=check)
-
-
-def download(url):
-    run("wget", url)
-
-
-def clone(url, branch=None):
-    if branch is not None:
-        run("git", "clone", "--branch", branch, url)
-    else:
-        run("git", "clone", url)
-
-
-def cmake(build_dir="build", defines={}, build=True, test=False, install=True,
-          cmake_cmd=("cmake", "..")):
-    print("NOTE: Creating directory", build_dir)
-    os.mkdir(build_dir)
-    with pushd(build_dir):
-        cmake_cmd = list(cmake_cmd)
-        for key, value in defines.items():
-            assert isinstance(key, str)
-            if isinstance(value, bool):
-                cmake_cmd.append(
-                    "-D{0}={1}".format(key, "ON" if value else "OFF")
-                )
-            elif isinstance(value, str) or isinstance(value, int):
-                cmake_cmd.append("-D{0}={1}".format(key, value))
-            else:
-                raise TypeError("Unsupported type: {0}".format(type(value)))
-        run(*cmake_cmd)
-        if build:
-            run("cmake", "--build", ".", "--parallel", "20", check=True)
-        if test:
-            run("make", "test", check=False)
-        if install:
-            run("make", "install", check=True)
-
-
-################################################################################
-
-
-class Machines(Enum):
-    UNKNOWN = 0
-    SAPLING = 1
-    LASSEN = 2
-    PIZDAINT = 3
-
-
-HOSTNAME = socket.gethostname()
-
-
-if HOSTNAME.startswith("lassen"):
-    MACHINE = Machines.LASSEN
-elif HOSTNAME in ["g0001.stanford.edu", "g0002.stanford.edu",
-                  "g0003.stanford.edu", "g0004.stanford.edu"]:
-    MACHINE = Machines.SAPLING
-elif HOSTNAME.startswith("daint") or HOSTNAME.startswith("nid"):
-    MACHINE = Machines.PIZDAINT
-else:
-    print("WARNING: Running on unknown machine with hostname: " + HOSTNAME)
-    MACHINE = Machines.UNKNOWN
-
-
-if MACHINE == Machines.LASSEN:
-    SCRATCH_DIR = "/p/gpfs1/zhang70"
-    LIB_PREFIX = "/p/gpfs1/zhang70/lib"
-elif MACHINE == Machines.SAPLING:
-    SCRATCH_DIR = "/scratch2/dkzhang"
-    LIB_PREFIX = "/scratch2/dkzhang/lib"
-elif MACHINE == Machines.PIZDAINT:
-    SCRATCH_DIR = "/users/dzhang"
-    LIB_PREFIX = "/users/dzhang/lib"
-else:
-    SCRATCH_DIR = "/home/dkzhang"
-    LIB_PREFIX = "/home/dkzhang/lib"
-
-
-################################################################################
 
 
 def main():
@@ -141,7 +29,7 @@ def main():
     kokkos_compiler = os.path.join(
         SCRATCH_DIR, "kokkos-3.7.00", "bin", "nvcc_wrapper"
     )
-    with pushd("kokkos-3.7.00"):
+    with change_directory("kokkos-3.7.00"):
         cmake("build-cuda", {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
@@ -175,7 +63,7 @@ def main():
     kokkos_compiler = os.path.join(
         SCRATCH_DIR, "kokkos-3.0.00", "bin", "nvcc_wrapper"
     )
-    with pushd("kokkos-3.0.00"):
+    with change_directory("kokkos-3.0.00"):
         defines = {
             "CMAKE_CXX_STANDARD": 14,
             "CMAKE_BUILD_TYPE": "Release",
