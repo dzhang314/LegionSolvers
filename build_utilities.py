@@ -33,6 +33,10 @@ KOKKOS_TYPES = [("kokkos", True), ("nokokkos", False)]
 ################################################################################
 
 
+def underscore_join(*args):
+    return '_'.join(arg for arg in args if arg)
+
+
 def create_directory(path):
     print("[LegionSolversBuild] Creating directory", path)
     assert not _os.path.exists(path)

@@ -9,12 +9,8 @@ from build_utilities import *
 ################################################################################
 
 
-def join(*args):
-    return "_".join(arg for arg in args if arg)
-
-
 def clone_legion(branch_tag, branch_name):
-    output_dir = join("legion", branch_tag)
+    output_dir = underscore_join("legion", branch_tag)
     remove_directory("legion")
     remove_directory(output_dir)
     clone(LEGION_GIT_URL, branch=branch_name)
@@ -25,7 +21,7 @@ def clone_legion(branch_tag, branch_name):
 def cmake_legion(branch_tag, network_tag, network_key, network_val,
                  cuda_tag, use_cuda, kokkos_tag, use_kokkos,
                  build_tag, build_type):
-    lib_path = os.path.join(LIB_PREFIX, join(
+    lib_path = os.path.join(LIB_PREFIX, underscore_join(
         "legion", branch_tag, network_tag,
         cuda_tag, kokkos_tag, build_tag
     ))
@@ -46,7 +42,7 @@ def cmake_legion(branch_tag, network_tag, network_key, network_val,
         defines["KOKKOS_CXX_COMPILER"] = KOKKOS_CXX_COMPILER[use_cuda]
     if MACHINE == Machines.PIZDAINT:
         defines["CUDA_NVCC_FLAGS"] = "-allow-unsupported-compiler"
-    cmake(join(
+    cmake(underscore_join(
         "build", branch_tag, network_tag,
         cuda_tag, kokkos_tag, build_tag
     ), defines)

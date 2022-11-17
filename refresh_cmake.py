@@ -1,36 +1,33 @@
 #!/usr/bin/env python3
 
 import os
-from build_legion_dependencies import (
-    remove_directory, cmake, Machines, MACHINE, LIB_PREFIX
-)
-from build_legion_variants import (
-    LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES, CUDA_TYPES, KOKKOS_TYPES,
-    KOKKOS_DIR, join
-)
+
+from build_utilities import *
 
 
 ################################################################################
 
+
 # TODO (rohany, dkzhang): This script should be repurposed to a more general
 #  installation script that sets the right cmake flags for the target machine etc.
 
+
 def main():
-    for dir_name, branch_name in LEGION_BRANCHES:
-        for build_type in BUILD_TYPES:
+    for branch_tag, branch_name in LEGION_BRANCHES:
+        for build_tag, build_type in BUILD_TYPES:
             for network_tag, _ in NETWORK_TYPES:
                 for cuda_tag, use_cuda in CUDA_TYPES:
                     for kokkos_tag, use_kokkos in KOKKOS_TYPES:
                         build_name = os.path.join(
                             "build",
-                            join(
-                                dir_name, network_tag, cuda_tag,
-                                kokkos_tag, build_type.lower()
+                            underscore_join(
+                                branch_tag, network_tag,
+                                cuda_tag, kokkos_tag, build_tag
                             )
                         )
-                        lib_name = join(
-                            "legion", dir_name, network_tag,
-                            cuda_tag, kokkos_tag, build_type.lower()
+                        lib_name = underscore_join(
+                            "legion", branch_tag, network_tag,
+                            cuda_tag, kokkos_tag, build_tag
                         )
                         remove_directory(build_name)
                         defines = {
