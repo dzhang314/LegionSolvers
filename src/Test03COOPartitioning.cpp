@@ -104,8 +104,9 @@ void top_level_task(
             rt->execute_task(ctx, launcher);
         }
 
-        LegionSolvers::COOMatrix<ENTRY_T> coo_matrix{
-            ctx, rt, matrix_region, FID_I, FID_J, FID_ENTRY};
+        LegionSolvers::COOMatrix<ENTRY_T> coo_matrix(
+            ctx, rt, matrix_region, FID_I, FID_J, FID_ENTRY
+        );
 
         const auto matrix_partition =
             coo_matrix.kernel_partition_from_range_partition(range_partition);

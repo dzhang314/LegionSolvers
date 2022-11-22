@@ -1,6 +1,7 @@
 #include "LegionUtilities.hpp"
 
-#include <cassert> // for assert
+#include <cassert>  // for assert
+#include <iostream> // for std::cout
 
 #include "LibraryOptions.hpp" // for LEGION_SOLVERS_USE_*
 #include "UtilityTasks.hpp"   // for PrintIndexTask
@@ -28,6 +29,9 @@ void LegionSolvers::print_index_partition(
 ) {
     const Legion::IndexSpace color_space =
         rt->get_index_partition_color_space_name(index_partition);
+    std::cout << "[LegionSolvers] Printing index partition " << name << " with "
+              << rt->get_index_space_domain(color_space).get_volume()
+              << " pieces." << std::endl;
     const Legion::FieldSpace dummy_field_space =
         create_field_space(ctx, rt, {1}, {0});
     const Legion::LogicalRegion dummy_region = rt->create_logical_region(

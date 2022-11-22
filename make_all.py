@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-from build_legion_dependencies import run
-from build_legion_variants import (
-    LEGION_BRANCHES, BUILD_TYPES, NETWORK_TYPES, CUDA_TYPES, KOKKOS_TYPES,
-    join, pushd
-)
+
+from build_utilities import *
 
 
 ################################################################################
@@ -13,29 +10,39 @@ from build_legion_variants import (
 
 DESIRED_VARIANTS = [
     "master_gex_nocuda_nokokkos_debug",
+    "master_gex_nocuda_nokokkos_release",
     "master_gex_cuda_nokokkos_debug",
+    "master_gex_cuda_nokokkos_release",
+    # "master_gex_cuda_kokkos_debug",
+    # "master_gex_cuda_kokkos_release",
     "cr_gex_nocuda_nokokkos_debug",
+    "cr_gex_nocuda_nokokkos_release",
     "cr_gex_cuda_nokokkos_debug",
-    "coll_gex_nocuda_nokokkos_debug",
-    "coll_gex_cuda_nokokkos_debug",
+    "cr_gex_cuda_nokokkos_release",
+    # "cr_gex_cuda_kokkos_debug",
+    # "cr_gex_cuda_kokkos_release",
 ]
 
 
 def main():
-    for dir_name, branch_name in LEGION_BRANCHES:
-        for build_type in BUILD_TYPES:
+    for branch_tag, branch_name in LEGION_BRANCHES:
+        for build_tag, build_type in BUILD_TYPES:
             for network_tag, _ in NETWORK_TYPES:
                 for cuda_tag, use_cuda in CUDA_TYPES:
                     for kokkos_tag, use_kokkos in KOKKOS_TYPES:
-                        if use_kokkos and not use_cuda:
-                            continue
-                        build_name = join(
-                            dir_name, network_tag, cuda_tag,
-                            kokkos_tag, build_type.lower()
+                        build_name = underscore_join(
+                            branch_tag, network_tag,
+                            cuda_tag, kokkos_tag, build_tag
                         )
-                        if build_name in DESIRED_VARIANTS:
-                            with pushd(os.path.join("build", build_name)):
-                                run("cmake", "--build", ".", "--parallel", "20")
+                        if build_name not in DESIRED_VARIANTS:
+                            continue
+                        build_dir = os.path.join(
+                            SCRATCH_DIR,
+                            "LegionSolversBuild",
+                            build_name
+                        )
+                        with change_directory(build_dir):
+                            run("cmake", "--build", ".", "--parallel", "20")
 
 
 ################################################################################
