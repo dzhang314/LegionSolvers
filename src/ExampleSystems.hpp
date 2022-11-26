@@ -1,6 +1,10 @@
 #ifndef LEGION_SOLVERS_EXAMPLE_SYSTEMS_HPP_INCLUDED
 #define LEGION_SOLVERS_EXAMPLE_SYSTEMS_HPP_INCLUDED
 
+#include <legion.h> // for Legion::*
+
+#include "COOMatrix.hpp"       // for COOMatrix
+#include "CSRMatrix.hpp"       // for CSRMatrix
 #include "LegionUtilities.hpp" // for TaskFlags
 #include "TaskBaseClasses.hpp" // for TaskTDDDIII
 #include "TaskIDs.hpp"         // for *_TASK_BLOCK_ID
@@ -8,10 +12,13 @@
 namespace LegionSolvers {
 
 
-template <typename T>
-constexpr T laplacian_1d_kernel_size(T length) {
-    return 3 * length - 2;
-}
+template <typename ENTRY_T>
+COOMatrix<ENTRY_T> coo_negative_laplacian_1d(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    Legion::coord_t grid_size,
+    Legion::IndexSpace launch_space
+);
 
 
 template <typename T>
@@ -52,9 +59,9 @@ struct FillCOONegativeLaplacianTask
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
 
     struct Args {
-        Legion::FieldID fid_i;
-        Legion::FieldID fid_j;
         Legion::FieldID fid_entry;
+        Legion::FieldID fid_row;
+        Legion::FieldID fid_col;
         KERNEL_COORD_T grid_shape[KERNEL_DIM];
     };
 
@@ -96,8 +103,8 @@ struct FillCSRNegativeLaplacianTask
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
 
     struct Args {
-        Legion::FieldID fid_col;
         Legion::FieldID fid_entry;
+        Legion::FieldID fid_col;
         KERNEL_COORD_T grid_shape[KERNEL_DIM];
     };
 

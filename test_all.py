@@ -117,7 +117,7 @@ def test_03(use_cuda, use_kokkos):
         line for line in proc.stderr.splitlines()
         if not line in IGNORED_STDERR_LINES
     ]
-    # print(stdout)
+    print(stdout)
     assert not stderr
     print("TEST 03 PASSED" if proc.returncode == 0 else "TEST 03 FAILED")
 

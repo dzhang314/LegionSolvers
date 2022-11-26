@@ -2,9 +2,105 @@
 
 #include <cassert> // for assert
 
+using LegionSolvers::COOMatrix;
+using LegionSolvers::CSRMatrix;
 using LegionSolvers::FillCOONegativeLaplacianTask;
 using LegionSolvers::FillCSRNegativeLaplacianRowptrTask;
 using LegionSolvers::FillCSRNegativeLaplacianTask;
+
+
+template <typename ENTRY_T>
+COOMatrix<ENTRY_T> LegionSolvers::coo_negative_laplacian_1d(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    Legion::coord_t grid_size,
+    Legion::IndexSpace launch_space
+) {
+    constexpr int KERNEL_DIM = 1;
+    constexpr int DOMAIN_DIM = 1;
+    constexpr int RANGE_DIM = 1;
+
+    using KERNEL_COORD_T = Legion::coord_t;
+    using DOMAIN_COORD_T = Legion::coord_t;
+    using RANGE_COORD_T = Legion::coord_t;
+
+    using KernelRect = Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>;
+    using DomainIndex = Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>;
+    using RangeIndex = Legion::Point<RANGE_DIM, RANGE_COORD_T>;
+
+    constexpr Legion::FieldID FID_ENTRY = 0;
+    constexpr Legion::FieldID FID_ROW = 1;
+    constexpr Legion::FieldID FID_COL = 2;
+
+    const KERNEL_COORD_T kernel_size = 3 * grid_size - 2;
+
+    const Legion::IndexSpace kernel_space =
+        rt->create_index_space(ctx, KernelRect{0, kernel_size - 1});
+
+    const Legion::FieldSpace field_space = create_field_space(
+        ctx,
+        rt,
+        {sizeof(ENTRY_T), sizeof(RangeIndex), sizeof(DomainIndex)},
+        {FID_ENTRY, FID_ROW, FID_COL}
+    );
+
+    const Legion::LogicalRegion kernel_region =
+        rt->create_logical_region(ctx, kernel_space, field_space);
+
+    const auto kernel_partition =
+        rt->create_equal_partition(ctx, kernel_space, launch_space);
+
+    typename FillCOONegativeLaplacianTask<
+        ENTRY_T,
+        KERNEL_DIM,
+        DOMAIN_DIM,
+        RANGE_DIM,
+        KERNEL_COORD_T,
+        DOMAIN_COORD_T,
+        RANGE_COORD_T>::Args args;
+    args.fid_entry = FID_ENTRY;
+    args.fid_row = FID_ROW;
+    args.fid_col = FID_COL;
+    args.grid_shape[0] = grid_size;
+
+    Legion::IndexTaskLauncher launcher(
+        LegionSolvers::FillCOONegativeLaplacianTask<
+            ENTRY_T,
+            KERNEL_DIM,
+            DOMAIN_DIM,
+            RANGE_DIM,
+            KERNEL_COORD_T,
+            DOMAIN_COORD_T,
+            RANGE_COORD_T>::task_id,
+        launch_space,
+        Legion::TaskArgument(&args, sizeof(args)),
+        Legion::ArgumentMap()
+    );
+
+    launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
+    launcher.add_region_requirement(Legion::RegionRequirement(
+        rt->get_logical_partition(kernel_region, kernel_partition),
+        0,
+        LEGION_WRITE_DISCARD,
+        LEGION_EXCLUSIVE,
+        kernel_region
+    ));
+    launcher.add_field(0, FID_ENTRY);
+    launcher.add_field(0, FID_ROW);
+    launcher.add_field(0, FID_COL);
+    rt->execute_index_space(ctx, launcher);
+
+    COOMatrix<ENTRY_T> result(
+        ctx, rt, kernel_region, FID_ENTRY, FID_ROW, FID_COL
+    );
+
+    rt->destroy_index_partition(ctx, kernel_partition);
+    rt->destroy_logical_region(ctx, kernel_region);
+    rt->destroy_field_space(ctx, field_space);
+    rt->destroy_index_space(ctx, kernel_space);
+
+    return result;
+}
 
 
 template <
@@ -51,12 +147,12 @@ void FillCOONegativeLaplacianTask<
         Legion::Point<RANGE_DIM, RANGE_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
-        i_writer(matrix, args.fid_i);
+        row_writer(matrix, args.fid_row);
     const AffineWriter<
         Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
         KERNEL_DIM,
         KERNEL_COORD_T>
-        j_writer(matrix, args.fid_j);
+        col_writer(matrix, args.fid_col);
     const AffineWriter<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T> entry_writer(
         matrix, args.fid_entry
     );
@@ -69,10 +165,10 @@ void FillCOONegativeLaplacianTask<
     for (PointIter it{matrix_domain}; it(); ++it) {
         const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> p = *it;
         const KERNEL_COORD_T k = p[0];
-        i_writer[p] = Legion::Point<RANGE_DIM, RANGE_COORD_T>(
+        row_writer[p] = Legion::Point<RANGE_DIM, RANGE_COORD_T>(
             static_cast<RANGE_COORD_T>((k + 1) / 3)
         );
-        j_writer[p] = Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>(
+        col_writer[p] = Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>(
             static_cast<DOMAIN_COORD_T>(k - 2 * ((k + 1) / 3))
         );
         entry_writer[p] = static_cast<ENTRY_T>((k % 3) ? -1.0 : +2.0);
@@ -226,6 +322,16 @@ void FillCSRNegativeLaplacianRowptrTask<
     std::cout << "[LegionSolvers] Finished constructing CSR 1D Laplacian "
               << "row pointers." << std::endl;
 }
+
+
+// clang-format off
+#ifdef LEGION_SOLVERS_USE_F32
+    template COOMatrix<float> LegionSolvers::coo_negative_laplacian_1d<float>(Legion::Context, Legion::Runtime *, Legion::coord_t, Legion::IndexSpace);
+#endif // LEGION_SOLVERS_USE_F32
+#ifdef LEGION_SOLVERS_USE_F64
+    template COOMatrix<double> LegionSolvers::coo_negative_laplacian_1d<double>(Legion::Context, Legion::Runtime *, Legion::coord_t, Legion::IndexSpace);
+#endif // LEGION_SOLVERS_USE_F64
+// clang-format on
 
 
 // TODO: conditionally compile all coordinate types
