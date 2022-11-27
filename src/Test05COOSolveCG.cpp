@@ -30,7 +30,6 @@ void top_level_task(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-
     VECTOR_COORD_T grid_size = 100;
     VECTOR_COLOR_COORD_T num_vector_pieces = 4;
     std::size_t num_iterations = 10;
@@ -61,12 +60,14 @@ void top_level_task(
             ctx, rt, grid_size, vector_color_space
         );
 
-    LegionSolvers::PartitionedVector<ENTRY_T> rhs{
-        ctx, rt, "rhs", disjoint_vector_partition};
-    LegionSolvers::PartitionedVector<ENTRY_T> sol{
-        ctx, rt, "sol", disjoint_vector_partition};
-
+    LegionSolvers::PartitionedVector<ENTRY_T> rhs(
+        ctx, rt, "rhs", disjoint_vector_partition
+    );
     rhs.constant_fill(1.0);
+
+    LegionSolvers::PartitionedVector<ENTRY_T> sol(
+        ctx, rt, "sol", disjoint_vector_partition
+    );
     sol.zero_fill();
 
     LegionSolvers::SquarePlanner<ENTRY_T> planner{ctx, rt};
@@ -76,10 +77,12 @@ void top_level_task(
 
     LegionSolvers::CGSolver<ENTRY_T> solver{planner};
 
+    const Legion::TraceID trace_id = rt->generate_dynamic_trace_id();
+
     for (std::size_t i = 0; i < num_iterations; ++i) {
-        rt->begin_trace(ctx, 51);
+        rt->begin_trace(ctx, trace_id);
         solver.step();
-        rt->end_trace(ctx, 51);
+        rt->end_trace(ctx, trace_id);
     }
 
     if (!no_print_results) {

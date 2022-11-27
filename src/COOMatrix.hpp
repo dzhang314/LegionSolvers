@@ -58,19 +58,21 @@ public:
         return {};
     }
 
-    virtual Legion::IndexPartition kernel_partition_from_domain_partition(
+    virtual Legion::IndexPartition
+    create_kernel_partition_from_domain_partition(
         Legion::IndexPartition domain_partition
     ) const override;
 
-    virtual Legion::IndexPartition
-    kernel_partition_from_range_partition(Legion::IndexPartition range_partition
+    virtual Legion::IndexPartition create_kernel_partition_from_range_partition(
+        Legion::IndexPartition range_partition
     ) const override;
 
-    virtual Legion::IndexPartition domain_partition_from_kernel_partition(
+    virtual Legion::IndexPartition
+    create_domain_partition_from_kernel_partition(
         Legion::IndexSpace domain_space, Legion::IndexPartition kernel_partition
     ) const override;
 
-    virtual Legion::IndexPartition range_partition_from_kernel_partition(
+    virtual Legion::IndexPartition create_range_partition_from_kernel_partition(
         Legion::IndexSpace range_space, Legion::IndexPartition kernel_partition
     ) const override;
 

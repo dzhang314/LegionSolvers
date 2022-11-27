@@ -10,8 +10,9 @@ Legion::IndexPartition
 AbstractMatrix<ENTRY_T>::domain_partition_from_range_partition(
     Legion::IndexSpace domain_space, Legion::IndexPartition range_partition
 ) const {
-    return domain_partition_from_kernel_partition(
-        domain_space, kernel_partition_from_range_partition(range_partition)
+    return create_domain_partition_from_kernel_partition(
+        domain_space,
+        create_kernel_partition_from_range_partition(range_partition)
     );
 }
 
@@ -21,8 +22,9 @@ Legion::IndexPartition
 AbstractMatrix<ENTRY_T>::range_partition_from_domain_partition(
     Legion::IndexSpace range_space, Legion::IndexPartition domain_partition
 ) const {
-    return range_partition_from_kernel_partition(
-        range_space, kernel_partition_from_domain_partition(domain_partition)
+    return create_range_partition_from_kernel_partition(
+        range_space,
+        create_kernel_partition_from_domain_partition(domain_partition)
     );
 }
 

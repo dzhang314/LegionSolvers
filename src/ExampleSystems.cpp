@@ -47,7 +47,7 @@ COOMatrix<ENTRY_T> LegionSolvers::coo_negative_laplacian_1d(
     const Legion::LogicalRegion kernel_region =
         rt->create_logical_region(ctx, kernel_space, field_space);
 
-    const auto kernel_partition =
+    const Legion::IndexPartition kernel_partition =
         rt->create_equal_partition(ctx, kernel_space, launch_space);
 
     typename FillCOONegativeLaplacianTask<
@@ -97,6 +97,148 @@ COOMatrix<ENTRY_T> LegionSolvers::coo_negative_laplacian_1d(
     rt->destroy_index_partition(ctx, kernel_partition);
     rt->destroy_logical_region(ctx, kernel_region);
     rt->destroy_field_space(ctx, field_space);
+    rt->destroy_index_space(ctx, kernel_space);
+
+    return result;
+}
+
+
+template <typename ENTRY_T>
+CSRMatrix<ENTRY_T> LegionSolvers::csr_negative_laplacian_1d(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    Legion::coord_t grid_size,
+    Legion::IndexSpace launch_space
+) {
+    constexpr int KERNEL_DIM = 1;
+    constexpr int DOMAIN_DIM = 1;
+    constexpr int RANGE_DIM = 1;
+
+    using KERNEL_COORD_T = Legion::coord_t;
+    using DOMAIN_COORD_T = Legion::coord_t;
+    using RANGE_COORD_T = Legion::coord_t;
+
+    using KernelRect = Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>;
+    using DomainIndex = Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>;
+    using RangeRect = Legion::Rect<RANGE_DIM, RANGE_COORD_T>;
+
+    constexpr Legion::FieldID FID_ENTRY = 0;
+    constexpr Legion::FieldID FID_COL = 1;
+    constexpr Legion::FieldID FID_ROWPTR = 0;
+
+    const KERNEL_COORD_T kernel_size = 3 * grid_size - 2;
+
+    const Legion::IndexSpace kernel_space =
+        rt->create_index_space(ctx, KernelRect{0, kernel_size - 1});
+
+    const Legion::FieldSpace kernel_field_space = create_field_space(
+        ctx, rt, {sizeof(ENTRY_T), sizeof(DomainIndex)}, {FID_ENTRY, FID_COL}
+    );
+
+    const Legion::LogicalRegion kernel_region =
+        rt->create_logical_region(ctx, kernel_space, kernel_field_space);
+
+    const Legion::IndexPartition kernel_partition =
+        rt->create_equal_partition(ctx, kernel_space, launch_space);
+
+    typename LegionSolvers::FillCSRNegativeLaplacianTask<
+        ENTRY_T,
+        KERNEL_DIM,
+        DOMAIN_DIM,
+        RANGE_DIM,
+        KERNEL_COORD_T,
+        DOMAIN_COORD_T,
+        RANGE_COORD_T>::Args kernel_args;
+    kernel_args.fid_entry = FID_ENTRY;
+    kernel_args.fid_col = FID_COL;
+    kernel_args.grid_shape[0] = grid_size;
+
+    Legion::IndexTaskLauncher kernel_launcher(
+        LegionSolvers::FillCSRNegativeLaplacianTask<
+            ENTRY_T,
+            KERNEL_DIM,
+            DOMAIN_DIM,
+            RANGE_DIM,
+            KERNEL_COORD_T,
+            DOMAIN_COORD_T,
+            RANGE_COORD_T>::task_id,
+        launch_space,
+        Legion::TaskArgument(&kernel_args, sizeof(kernel_args)),
+        Legion::ArgumentMap()
+    );
+
+    kernel_launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
+    kernel_launcher.add_region_requirement(Legion::RegionRequirement(
+        rt->get_logical_partition(kernel_region, kernel_partition),
+        0,
+        LEGION_WRITE_DISCARD,
+        LEGION_EXCLUSIVE,
+        kernel_region
+    ));
+    kernel_launcher.add_field(0, FID_COL);
+    kernel_launcher.add_field(0, FID_ENTRY);
+    rt->execute_index_space(ctx, kernel_launcher);
+
+    const Legion::IndexSpace range_space =
+        rt->create_index_space(ctx, RangeRect{0, grid_size - 1});
+
+    const Legion::FieldSpace rowptr_field_space =
+        create_field_space(ctx, rt, {sizeof(KernelRect)}, {FID_ROWPTR});
+
+    const Legion::LogicalRegion rowptr_region =
+        rt->create_logical_region(ctx, range_space, rowptr_field_space);
+
+    const Legion::IndexPartition rowptr_partition =
+        rt->create_equal_partition(ctx, range_space, launch_space);
+
+    typename LegionSolvers::FillCSRNegativeLaplacianRowptrTask<
+        ENTRY_T,
+        KERNEL_DIM,
+        DOMAIN_DIM,
+        RANGE_DIM,
+        KERNEL_COORD_T,
+        DOMAIN_COORD_T,
+        RANGE_COORD_T>::Args rowptr_args;
+    rowptr_args.fid_rowptr = FID_ROWPTR;
+    rowptr_args.grid_shape[0] = grid_size;
+
+    Legion::IndexTaskLauncher rowptr_launcher(
+        LegionSolvers::FillCSRNegativeLaplacianRowptrTask<
+            ENTRY_T,
+            KERNEL_DIM,
+            DOMAIN_DIM,
+            RANGE_DIM,
+            KERNEL_COORD_T,
+            DOMAIN_COORD_T,
+            RANGE_COORD_T>::task_id,
+        launch_space,
+        Legion::TaskArgument(&rowptr_args, sizeof(rowptr_args)),
+        Legion::ArgumentMap()
+    );
+
+    rowptr_launcher.map_id = LegionSolvers::LEGION_SOLVERS_MAPPER_ID;
+    rowptr_launcher.add_region_requirement(Legion::RegionRequirement(
+        rt->get_logical_partition(rowptr_region, rowptr_partition),
+        0,
+        LEGION_WRITE_DISCARD,
+        LEGION_EXCLUSIVE,
+        rowptr_region
+    ));
+    rowptr_launcher.add_field(0, FID_ROWPTR);
+    rt->execute_index_space(ctx, rowptr_launcher);
+
+    CSRMatrix<ENTRY_T> result(
+        ctx, rt, kernel_region, FID_ENTRY, FID_COL, rowptr_region, FID_ROWPTR
+    );
+
+    rt->destroy_index_partition(ctx, rowptr_partition);
+    rt->destroy_logical_region(ctx, rowptr_region);
+    rt->destroy_field_space(ctx, rowptr_field_space);
+    rt->destroy_index_space(ctx, range_space);
+
+    rt->destroy_index_partition(ctx, kernel_partition);
+    rt->destroy_logical_region(ctx, kernel_region);
+    rt->destroy_field_space(ctx, kernel_field_space);
     rt->destroy_index_space(ctx, kernel_space);
 
     return result;
@@ -327,9 +469,11 @@ void FillCSRNegativeLaplacianRowptrTask<
 // clang-format off
 #ifdef LEGION_SOLVERS_USE_F32
     template COOMatrix<float> LegionSolvers::coo_negative_laplacian_1d<float>(Legion::Context, Legion::Runtime *, Legion::coord_t, Legion::IndexSpace);
+    template CSRMatrix<float> LegionSolvers::csr_negative_laplacian_1d<float>(Legion::Context, Legion::Runtime *, Legion::coord_t, Legion::IndexSpace);
 #endif // LEGION_SOLVERS_USE_F32
 #ifdef LEGION_SOLVERS_USE_F64
     template COOMatrix<double> LegionSolvers::coo_negative_laplacian_1d<double>(Legion::Context, Legion::Runtime *, Legion::coord_t, Legion::IndexSpace);
+    template CSRMatrix<double> LegionSolvers::csr_negative_laplacian_1d<double>(Legion::Context, Legion::Runtime *, Legion::coord_t, Legion::IndexSpace);
 #endif // LEGION_SOLVERS_USE_F64
 // clang-format on
 

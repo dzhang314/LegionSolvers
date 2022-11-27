@@ -24,9 +24,16 @@ void top_level_task(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-
     constexpr VECTOR_COORD_T grid_size = 20;
     constexpr VECTOR_COLOR_COORD_T num_range_pieces = 4;
+
+    const auto color_space =
+        rt->create_index_space(ctx, VectorColorRect{0, num_range_pieces - 1});
+
+    LegionSolvers::COOMatrix<ENTRY_T> coo_matrix =
+        LegionSolvers::coo_negative_laplacian_1d<ENTRY_T>(
+            ctx, rt, grid_size, color_space
+        );
 
     const auto domain_space =
         rt->create_index_space(ctx, VectorRect{0, grid_size - 1});
@@ -34,30 +41,23 @@ void top_level_task(
     const auto range_space =
         rt->create_index_space(ctx, VectorRect{0, grid_size - 1});
 
-    const auto range_color_space =
-        rt->create_index_space(ctx, VectorColorRect{0, num_range_pieces - 1});
-
     const auto range_partition =
-        rt->create_equal_partition(ctx, range_space, range_color_space);
+        rt->create_equal_partition(ctx, range_space, color_space);
 
     LegionSolvers::print_index_partition(
         ctx, rt, "range_partition", range_partition
     );
 
-    LegionSolvers::COOMatrix<ENTRY_T> coo_matrix =
-        LegionSolvers::coo_negative_laplacian_1d<ENTRY_T>(
-            ctx, rt, grid_size, range_color_space
-        );
-
     const auto matrix_partition =
-        coo_matrix.kernel_partition_from_range_partition(range_partition);
+        coo_matrix.create_kernel_partition_from_range_partition(range_partition
+        );
 
     LegionSolvers::print_index_partition(
         ctx, rt, "matrix_partition", matrix_partition
     );
 
     const auto domain_partition =
-        coo_matrix.domain_partition_from_kernel_partition(
+        coo_matrix.create_domain_partition_from_kernel_partition(
             domain_space, matrix_partition
         );
 
@@ -68,9 +68,9 @@ void top_level_task(
     rt->destroy_index_partition(ctx, domain_partition);
     rt->destroy_index_partition(ctx, matrix_partition);
     rt->destroy_index_partition(ctx, range_partition);
-    rt->destroy_index_space(ctx, domain_space);
+    rt->destroy_index_space(ctx, color_space);
     rt->destroy_index_space(ctx, range_space);
-    rt->destroy_index_space(ctx, range_color_space);
+    rt->destroy_index_space(ctx, domain_space);
 }
 
 

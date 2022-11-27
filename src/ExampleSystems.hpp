@@ -21,6 +21,15 @@ COOMatrix<ENTRY_T> coo_negative_laplacian_1d(
 );
 
 
+template <typename ENTRY_T>
+CSRMatrix<ENTRY_T> csr_negative_laplacian_1d(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    Legion::coord_t grid_size,
+    Legion::IndexSpace launch_space
+);
+
+
 template <typename T>
 constexpr T laplacian_2d_kernel_size(T height, T width) {
     return (

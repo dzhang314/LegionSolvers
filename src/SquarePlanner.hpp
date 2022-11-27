@@ -213,11 +213,11 @@ public:
         assert(domain_index < num_spaces);
         assert(range_index < num_spaces);
         const Legion::IndexPartition kernel_partition =
-            matrix.kernel_partition_from_range_partition(
+            matrix.create_kernel_partition_from_range_partition(
                 canonical_index_partitions[range_index]
             );
         const Legion::IndexPartition ghost_partition =
-            matrix.domain_partition_from_kernel_partition(
+            matrix.create_domain_partition_from_kernel_partition(
                 canonical_index_spaces[domain_index], kernel_partition
             );
         row_partitioned_matrices.emplace_back(
