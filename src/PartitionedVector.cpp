@@ -118,11 +118,13 @@ PartitionedVector<ENTRY_T>::PartitionedVector(const PartitionedVector &v)
 
 template <typename ENTRY_T>
 PartitionedVector<ENTRY_T>::~PartitionedVector() {
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, index_partition);
     rt->destroy_index_space(ctx, color_space);
     rt->destroy_logical_region(ctx, logical_region);
     rt->destroy_field_space(ctx, field_space);
     rt->destroy_index_space(ctx, index_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 

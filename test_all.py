@@ -376,7 +376,7 @@ def main():
                         with change_directory(build_dir):
                             test_00(use_cuda, use_kokkos)
                             test_01(use_cuda, use_kokkos)
-                            test_02(use_cuda, use_kokkos)
+                            # test_02(use_cuda, use_kokkos)
                             test_03(use_cuda, use_kokkos)
                             test_04(use_cuda, use_kokkos)
                             test_05(use_cuda, use_kokkos)

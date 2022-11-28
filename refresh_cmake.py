@@ -42,6 +42,8 @@ def main():
                             "Kokkos_DIR": KOKKOS_DIR[use_cuda],
                             "Legion_DIR": os.path.join(LIB_PREFIX, lib_name, "share", "Legion", "cmake"),
                         }
+                        if branch_tag == "cr" and build_tag == "release":
+                            defines["CMAKE_CXX_FLAGS"] += " -DLEGION_SOLVERS_DISABLE_CLEANUP"
                         if MACHINE == Machines.LASSEN:
                             defines["CMAKE_CXX_FLAGS"] += " -maltivec -mabi=altivec"
                         cmake(

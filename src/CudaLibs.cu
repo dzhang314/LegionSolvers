@@ -59,7 +59,10 @@ void loadCUDALibs(Legion::Context ctx, Legion::Runtime *runtime) {
                 LEGION_SOLVERS_MAPPER_ID}
         )
         .wait_all_results(true /* silence_warnings */);
+
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     runtime->destroy_index_space(ctx, launch_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 } // namespace LegionSolvers

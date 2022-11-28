@@ -1,5 +1,7 @@
 #include "CSRMatrixTasks.hpp"
 
+#include <chrono> // TODO: temp benchmarking code
+
 #include "CuSPARSEHelpers.hpp"
 #include "CudaLibs.hpp"
 #include "LegionUtilities.hpp" // for AffineReader, AffineWriter, ...
@@ -151,6 +153,12 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
     CHECK_CUSPARSE(cusparseDestroyDnVec(cusparse_input));
     CHECK_CUSPARSE(cusparseDestroyDnVec(cusparse_output));
     CHECK_CUSPARSE(cusparseDestroySpMat(cusparse_csr));
+
+    const auto now =
+        std::chrono::high_resolution_clock::now().time_since_epoch();
+    const auto now_ns =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    std::cout << static_cast<long long>(now_ns) << std::endl;
 }
 
 

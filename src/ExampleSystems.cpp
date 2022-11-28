@@ -94,10 +94,12 @@ COOMatrix<ENTRY_T> LegionSolvers::coo_negative_laplacian_1d(
         ctx, rt, kernel_region, FID_ENTRY, FID_ROW, FID_COL
     );
 
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, kernel_partition);
     rt->destroy_logical_region(ctx, kernel_region);
     rt->destroy_field_space(ctx, field_space);
     rt->destroy_index_space(ctx, kernel_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 
     return result;
 }
@@ -231,6 +233,7 @@ CSRMatrix<ENTRY_T> LegionSolvers::csr_negative_laplacian_1d(
         ctx, rt, kernel_region, FID_ENTRY, FID_COL, rowptr_region, FID_ROWPTR
     );
 
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, rowptr_partition);
     rt->destroy_logical_region(ctx, rowptr_region);
     rt->destroy_field_space(ctx, rowptr_field_space);
@@ -240,6 +243,7 @@ CSRMatrix<ENTRY_T> LegionSolvers::csr_negative_laplacian_1d(
     rt->destroy_logical_region(ctx, kernel_region);
     rt->destroy_field_space(ctx, kernel_field_space);
     rt->destroy_index_space(ctx, kernel_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 
     return result;
 }

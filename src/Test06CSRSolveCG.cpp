@@ -78,21 +78,39 @@ void top_level_task(
 
     const Legion::TraceID trace_id = rt->generate_dynamic_trace_id();
 
+    // std::vector<Legion::Future> futures;
+
     for (std::size_t i = 0; i < num_iterations; ++i) {
+        // futures.push_back(rt->get_current_time_in_nanoseconds(
+        //     ctx, solver.residual_norm_squared[i].get_future()
+        // ));
         rt->begin_trace(ctx, trace_id);
         solver.step();
         rt->end_trace(ctx, trace_id);
     }
 
-    if (!no_print_results) {
-        Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
-        for (std::size_t i = 0; i <= num_iterations; ++i) {
-            dummy = solver.residual_norm_squared[i].print(dummy);
-        }
-    }
+    // futures.push_back(rt->get_current_time_in_nanoseconds(
+    //     ctx, solver.residual_norm_squared[num_iterations].get_future()
+    // ));
 
+    // const Legion::ShardID shard_id = rt->get_shard_id(ctx, true);
+
+    // for (std::size_t i = 0; i <= num_iterations; ++i) {
+    //     const long long t = futures[i].get_result<long long>();
+    //     if (shard_id == 0) { std::cout << i << " : " << t << std::endl; }
+    // }
+
+    // if (!no_print_results) {
+    //     Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
+    //     for (std::size_t i = 0; i <= num_iterations; ++i) {
+    //         dummy = solver.residual_norm_squared[i].print(dummy);
+    //     }
+    // }
+
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, disjoint_vector_partition);
     rt->destroy_index_space(ctx, vector_color_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 

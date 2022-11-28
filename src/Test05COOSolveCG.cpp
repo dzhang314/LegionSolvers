@@ -92,9 +92,11 @@ void top_level_task(
         }
     }
 
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, disjoint_vector_partition);
     rt->destroy_index_space(ctx, vector_index_space);
     rt->destroy_index_space(ctx, vector_color_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 

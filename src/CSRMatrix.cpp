@@ -54,12 +54,14 @@ CSRMatrix<ENTRY_T>::CSRMatrix(const CSRMatrix &m)
 
 template <typename ENTRY_T>
 CSRMatrix<ENTRY_T>::~CSRMatrix() {
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_logical_region(ctx, kernel_region);
     rt->destroy_field_space(ctx, kernel_region.get_field_space());
     rt->destroy_index_space(ctx, kernel_region.get_index_space());
     rt->destroy_logical_region(ctx, rowptr_region);
     rt->destroy_field_space(ctx, rowptr_region.get_field_space());
     rt->destroy_index_space(ctx, rowptr_region.get_index_space());
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 

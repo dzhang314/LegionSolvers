@@ -67,6 +67,7 @@ public:
         , tile_partitioned_matrices() {}
 
     ~SquarePlanner() {
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
         for (const auto
                  &[matrix,
                    domain_index,
@@ -89,6 +90,7 @@ public:
         for (const auto &index_space : canonical_index_spaces) {
             rt->destroy_index_space(ctx, index_space);
         }
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
     }
 
     Legion::Context get_context() const { return ctx; }

@@ -33,6 +33,13 @@ KOKKOS_TYPES = [("kokkos", True), ("nokokkos", False)]
 ################################################################################
 
 
+def quiet_print(quiet, *msg):
+    if quiet:
+        pass
+    else:
+        print(*msg)
+
+
 def underscore_join(*args):
     return '_'.join(arg for arg in args if arg)
 
@@ -43,22 +50,23 @@ def create_directory(path):
     _os.mkdir(path)
 
 
-def remove_file(path):
+def remove_file(path, quiet=False):
     if _os.path.exists(path):
-        print("[LegionSolversBuild] Removing file", path)
+        quiet_print(quiet, "[LegionSolversBuild] Removing file", path)
         assert _os.path.isfile(path)
         _os.remove(path)
     else:
-        print("[LegionSolversBuild] File", path, "does not exist")
+        quiet_print(quiet, "[LegionSolversBuild] File", path, "does not exist")
 
 
-def remove_directory(path):
+def remove_directory(path, quiet=False):
     if _os.path.exists(path):
-        print("[LegionSolversBuild] Removing directory", path)
+        quiet_print(quiet, "[LegionSolversBuild] Removing directory", path)
         assert _os.path.isdir(path)
         _shutil.rmtree(path)
     else:
-        print("[LegionSolversBuild] Directory", path, "does not exist")
+        quiet_print(quiet, "[LegionSolversBuild] Directory",
+                    path, "does not exist")
 
 
 @_contextmanager

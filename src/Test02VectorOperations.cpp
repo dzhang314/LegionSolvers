@@ -137,9 +137,11 @@ void test_task(
         u.dot(u).print();
     }
 
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, index_partition);
     rt->destroy_index_space(ctx, color_space);
     rt->destroy_index_space(ctx, index_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 

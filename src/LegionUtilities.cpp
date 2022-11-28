@@ -54,8 +54,11 @@ void LegionSolvers::print_index_partition(
     ));
     launcher.add_field(0, 0);
     rt->execute_index_space(ctx, launcher);
+
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_logical_region(ctx, dummy_region);
     rt->destroy_field_space(ctx, dummy_field_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 
