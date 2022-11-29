@@ -154,11 +154,13 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
     CHECK_CUSPARSE(cusparseDestroyDnVec(cusparse_output));
     CHECK_CUSPARSE(cusparseDestroySpMat(cusparse_csr));
 
-    const auto now =
-        std::chrono::high_resolution_clock::now().time_since_epoch();
-    const auto now_ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-    std::cout << static_cast<long long>(now_ns) << std::endl;
+    if ((task->index_point.get_dim() == 1) && (task->index_point[0] == 0)) {
+        const auto now =
+            std::chrono::high_resolution_clock::now().time_since_epoch();
+        const auto now_ns =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+        std::cout << static_cast<long long>(now_ns) << std::endl;
+    }
 }
 
 

@@ -28,14 +28,16 @@ def main():
     for branch_tag, _ in LEGION_BRANCHES:
         for build_tag, _ in BUILD_TYPES:
             for network_tag, _ in NETWORK_TYPES:
-                for cuda_tag, _ in CUDA_TYPES:
-                    for kokkos_tag, _ in KOKKOS_TYPES:
+                for cuda_tag, use_cuda in CUDA_TYPES:
+                    for kokkos_tag, use_kokkos in KOKKOS_TYPES:
                         build_name = underscore_join(
                             branch_tag, network_tag,
                             cuda_tag, kokkos_tag, build_tag
                         )
-                        if build_name not in DESIRED_VARIANTS:
+                        if use_kokkos and not use_cuda:
                             continue
+                        # if build_name not in DESIRED_VARIANTS:
+                        #     continue
                         build_dir = os.path.join(
                             SCRATCH_DIR,
                             "LegionSolversBuild",
