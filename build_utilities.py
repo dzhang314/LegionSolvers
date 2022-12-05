@@ -2,7 +2,6 @@ from contextlib import contextmanager as _contextmanager
 from enum import Enum as _Enum
 import os as _os
 import shutil as _shutil
-import socket as _socket
 import subprocess as _subprocess
 
 
@@ -10,12 +9,12 @@ import subprocess as _subprocess
 
 
 LEGION_GIT_URL = "https://gitlab.com/StanfordLegion/legion.git"
+GASNET_GIT_URL = "https://github.com/StanfordLegion/gasnet.git"
 
 
 LEGION_BRANCHES = [
     ("master", "master"),
     ("cr", "control_replication"),
-    ("coll", "collective"),
 ]
 
 
@@ -140,35 +139,26 @@ class Machines(_Enum):
     SUMMIT = 4
 
 
-HOSTNAME = _socket.gethostname()
+env_machine = _os.getenv("LEGION_SOLVERS_MACHINE")
+assert env_machine is not None
+
+MACHINE = {
+    "SAPLING": Machines.SAPLING,
+    "PIZDAINT": Machines.PIZDAINT,
+    "LASSEN": Machines.LASSEN,
+    "SUMMIT": Machines.SUMMIT,
+}.get(env_machine.upper(), Machines.UNKNOWN)
+
+if MACHINE == Machines.UNKNOWN:
+    print("[LegionSolversBuild] WARNING: Unknown machine")
 
 
-if HOSTNAME in ["g0001.stanford.edu", "g0002.stanford.edu",
-                "g0003.stanford.edu", "g0004.stanford.edu"]:
-    MACHINE = Machines.SAPLING
-elif HOSTNAME.startswith("daint") or HOSTNAME.startswith("nid"):
-    MACHINE = Machines.PIZDAINT
-elif HOSTNAME.startswith("lassen"):
-    MACHINE = Machines.LASSEN
-elif HOSTNAME.startswith("summit"):
-    MACHINE = Machines.SUMMIT
-else:
-    print("[LegionSolversBuild] WARNING: Unknown machine", HOSTNAME)
-    MACHINE = Machines.UNKNOWN
-
-
-if MACHINE == Machines.LASSEN:
-    SCRATCH_DIR = "/p/gpfs1/zhang70"
-    LIB_PREFIX = "/p/gpfs1/zhang70/lib"
-elif MACHINE == Machines.SAPLING:
-    SCRATCH_DIR = "/scratch2/dkzhang"
-    LIB_PREFIX = "/scratch2/dkzhang/lib"
-elif MACHINE == Machines.PIZDAINT:
-    SCRATCH_DIR = "/users/dzhang"
-    LIB_PREFIX = "/users/dzhang/lib"
-else:
-    SCRATCH_DIR = "/home/dkzhang"
-    LIB_PREFIX = "/home/dkzhang/lib"
+SCRATCH_DIR = _os.getenv("LEGION_SOLVERS_SCRATCH_DIR")
+LIB_PREFIX = _os.getenv("LEGION_SOLVERS_LIB_PREFIX")
+assert SCRATCH_DIR is not None
+assert LIB_PREFIX is not None
+assert _os.path.isdir(SCRATCH_DIR)
+assert _os.path.isdir(LIB_PREFIX)
 
 
 KOKKOS_DIR = {
