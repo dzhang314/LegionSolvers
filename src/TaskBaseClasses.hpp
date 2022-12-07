@@ -5,6 +5,7 @@
 
 #include <legion.h> // for Legion::*
 
+#include "LegionUtilities.hpp"          // for preregister_task
 #include "LibraryOptions.hpp"           // for LEGION_SOLVERS_USE_*
 #include "MetaprogrammingUtilities.hpp" // for TypeList, ListIndex, ...
 #include "TaskIDs.hpp"                  // for NUM_META_TASK_IDS
