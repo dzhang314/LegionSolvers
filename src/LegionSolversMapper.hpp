@@ -1,13 +1,21 @@
 #ifndef LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP_INCLUDED
 #define LEGION_SOLVERS_LEGION_SOLVERS_MAPPER_HPP_INCLUDED
 
+#include <map>    // for std::map
+#include <vector> // for std::vector
+
 #include <legion.h>                 // for Legion::*
 #include <mappers/default_mapper.h> // for Legion::Mapping::DefaultMapper
+
 
 namespace LegionSolvers {
 
 
 class LegionSolversMapper : public Legion::Mapping::DefaultMapper {
+
+    std::vector<Legion::AddressSpace> address_spaces;
+    std::map<Legion::AddressSpace, std::vector<Legion::Processor>> cpus;
+    std::map<Legion::AddressSpace, std::vector<Legion::Processor>> gpus;
 
 public:
 
@@ -17,20 +25,32 @@ public:
         Legion::Processor local_proc
     );
 
-    virtual const char *get_mapper_name() const override {
-        return "legion_solvers_mapper";
-    }
+    virtual const char *get_mapper_name() const override;
 
     virtual void memoize_operation(
-        const Legion::Mapping::MapperContext,
-        const Legion::Mappable &,
-        const MemoizeInput &,
+        const Legion::Mapping::MapperContext ctx,
+        const Legion::Mappable &mappable,
+        const MemoizeInput &input,
         MemoizeOutput &output
-    ) override {
-        output.memoize = true;
-    }
+    ) override;
 
-    // TODO: add rest of LegionSolversMapper + thermodynamic mapping strategy
+    virtual void slice_task(
+        const Legion::Mapping::MapperContext ctx,
+        const Legion::Task &task,
+        const SliceTaskInput &input,
+        SliceTaskOutput &output
+    ) override;
+
+    virtual void select_sharding_functor(
+        const Legion::Mapping::MapperContext ctx,
+        const Legion::Task &task,
+        const SelectShardingFunctorInput &input,
+        SelectShardingFunctorOutput &output
+    ) override;
+
+    Legion::Processor get_gpu(Legion::coord_t i);
+
+    static bool is_task(Legion::TaskID task_id, Legion::TaskID block_id);
 
 }; // class LegionSolversMapper
 
@@ -40,6 +60,17 @@ void mapper_registration_callback(
     Legion::Runtime *rt,
     const std::set<Legion::Processor> &local_procs
 );
+
+
+struct BlockingShardingFunctor : public Legion::ShardingFunctor {
+
+    virtual Legion::ShardID shard(
+        const Legion::DomainPoint &point,
+        const Legion::Domain &domain,
+        std::size_t total_shards
+    ) override;
+
+}; // struct BlockingShardingFunctor
 
 
 } // namespace LegionSolvers

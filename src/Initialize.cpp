@@ -20,6 +20,10 @@ void LegionSolvers::initialize(bool verbose) {
     Legion::Runtime::add_registration_callback(
         LegionSolvers::mapper_registration_callback
     );
+    Legion::Runtime::preregister_sharding_functor(
+        LEGION_SOLVERS_SHARDING_FUNCTOR_ID,
+        new BlockingShardingFunctor()
+    );
 
     // UtilityTasks.hpp
     #ifdef LEGION_SOLVERS_USE_F32
