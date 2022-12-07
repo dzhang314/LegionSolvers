@@ -10,6 +10,8 @@ import subprocess as _subprocess
 
 LEGION_GIT_URL = "https://gitlab.com/StanfordLegion/legion.git"
 GASNET_GIT_URL = "https://github.com/StanfordLegion/gasnet.git"
+KOKKOS_3_7_URL = "https://github.com/kokkos/kokkos/archive/refs/tags/3.7.01.zip"
+KOKKOS_3_0_URL = "https://github.com/kokkos/kokkos/archive/refs/tags/3.0.00.zip"
 
 
 LEGION_BRANCHES = [
@@ -163,12 +165,12 @@ assert _os.path.isdir(LIB_PREFIX)
 
 KOKKOS_DIR = {
     True: _os.path.join(
-        LIB_PREFIX, "kokkos-3.7.00-cuda",
+        LIB_PREFIX, "kokkos-3.7.01-cuda",
         "lib64" if MACHINE != Machines.SAPLING else "lib",
         "cmake", "Kokkos"
     ),
     False: _os.path.join(
-        LIB_PREFIX, "kokkos-3.7.00-nocuda",
+        LIB_PREFIX, "kokkos-3.7.01-nocuda",
         "lib64" if MACHINE != Machines.SAPLING else "lib",
         "cmake", "Kokkos"
     )
@@ -177,9 +179,9 @@ KOKKOS_DIR = {
 
 KOKKOS_CXX_COMPILER = {
     True: _os.path.join(
-        LIB_PREFIX, "kokkos-3.7.00-cuda", "bin", "nvcc_wrapper"
+        LIB_PREFIX, "kokkos-3.7.01-cuda", "bin", "nvcc_wrapper"
     ),
     False: _os.path.join(
-        LIB_PREFIX, "kokkos-3.7.00-nocuda", "bin", "nvcc_wrapper"
+        LIB_PREFIX, "kokkos-3.7.01-nocuda", "bin", "nvcc_wrapper"
     )
 }

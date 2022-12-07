@@ -17,14 +17,14 @@ def main():
 
     os.chdir(SCRATCH_DIR)
 
-    remove_file("3.7.00.zip")
-    download("https://github.com/kokkos/kokkos/archive/refs/tags/3.7.00.zip")
-    remove_directory("kokkos-3.7.00")
-    run("unzip", "3.7.00.zip")
+    remove_file("3.7.01.zip")
+    download(KOKKOS_3_7_URL)
+    remove_directory("kokkos-3.7.01")
+    run("unzip", "3.7.01.zip")
     kokkos_compiler = os.path.join(
-        SCRATCH_DIR, "kokkos-3.7.00", "bin", "nvcc_wrapper"
+        SCRATCH_DIR, "kokkos-3.7.01", "bin", "nvcc_wrapper"
     )
-    with change_directory("kokkos-3.7.00"):
+    with change_directory("kokkos-3.7.01"):
         cmake("build-cuda", {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
@@ -32,7 +32,7 @@ def main():
             "CMAKE_CXX_COMPILER": kokkos_compiler,
             "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
             "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.7.00-cuda"),
+            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.7.01-cuda"),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_CUDA": True,
@@ -44,15 +44,14 @@ def main():
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
             "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.7.00-nocuda"),
+            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.7.01-nocuda"),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_TESTS": True,
         }, test=True, install=True)
-        # tests are known to fail on Sapling and Piz Daint
 
     remove_file("3.0.00.zip")
-    download("https://github.com/kokkos/kokkos/archive/refs/tags/3.0.00.zip")
+    download(KOKKOS_3_0_URL)
     remove_directory("kokkos-3.0.00")
     run("unzip", "3.0.00.zip")
     kokkos_compiler = os.path.join(
@@ -95,7 +94,6 @@ def main():
         if MACHINE in [Machines.LASSEN, Machines.SUMMIT]:
             defines["Kokkos_ARCH_POWER9"] = True
         cmake("build-nocuda", defines, test=True, install=True)
-        # tests are known to fail on Piz Daint
 
 
 ################################################################################
