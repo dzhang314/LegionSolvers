@@ -22,7 +22,7 @@ NUM_NODES = len(count_output)
 NUM_RANKS_PER_NODE = 1
 NUM_GPUS_PER_RANK = 4
 NUM_CPU_CORES_PER_NODE = 40
-NUM_UTIL_CORES_PER_RANK = 1
+NUM_UTIL_CORES_PER_RANK = 4
 
 for PROBLEM_SIZE in [2**i for i in range(10, 40)]:
 
@@ -75,6 +75,7 @@ for PROBLEM_SIZE in [2**i for i in range(10, 40)]:
     try:
         times = [int(line) for line in output]
         diffs = [times[i + 1] - times[i] for i in range(len(times) - 1)]
+        diffs = diffs[5:] # discard first few iterations
         print(diffs)
         print(PROBLEM_SIZE, "AVG", sum(diffs) / len(diffs) / 1000000, "ms")
     except:
