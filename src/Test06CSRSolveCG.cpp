@@ -81,6 +81,8 @@ void top_level_task(
     const std::size_t num_traces = num_iterations / num_iterations_per_trace;
     const std::size_t num_extra = num_iterations % num_iterations_per_trace;
 
+    for (std::size_t i = 0; i < num_extra; ++i) { solver.step(); }
+
     for (std::size_t i = 0; i < num_traces; ++i) {
         rt->begin_trace(ctx, trace_id);
         for (std::size_t j = 0; j < num_iterations_per_trace; ++j) {
@@ -88,8 +90,6 @@ void top_level_task(
         }
         rt->end_trace(ctx, trace_id);
     }
-
-    for (std::size_t i = 0; i < num_extra; ++i) { solver.step(); }
 
     // if (!no_print_results) {
     //     Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
