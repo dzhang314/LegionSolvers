@@ -33,6 +33,7 @@ void top_level_task(
     VECTOR_COORD_T grid_size = 100;
     VECTOR_COLOR_COORD_T num_vector_pieces = 4;
     std::size_t num_iterations = 10;
+    std::size_t num_iterations_per_trace = 1;
     bool no_print_results = false;
 
     const Legion::InputArgs &args = Legion::Runtime::get_input_args();
@@ -40,6 +41,7 @@ void top_level_task(
                   .add_option_int("-n", grid_size)
                   .add_option_int("-vp", num_vector_pieces)
                   .add_option_int("-it", num_iterations)
+                  .add_option_int("-pt", num_iterations_per_trace)
                   .add_option_bool("-np", no_print_results)
                   .parse_command_line(args.argc, (const char **) args.argv);
     assert(ok);
@@ -57,7 +59,6 @@ void top_level_task(
 
     const auto disjoint_vector_partition =
         rt->create_equal_partition(ctx, vector_index_space, vector_color_space);
-
 
     LegionSolvers::PartitionedVector<ENTRY_T> rhs(
         ctx, rt, "rhs", disjoint_vector_partition
@@ -77,28 +78,18 @@ void top_level_task(
     LegionSolvers::CGSolver<ENTRY_T> solver{planner};
 
     const Legion::TraceID trace_id = rt->generate_dynamic_trace_id();
+    const std::size_t num_traces = num_iterations / num_iterations_per_trace;
+    const std::size_t num_extra = num_iterations % num_iterations_per_trace;
 
-    // std::vector<Legion::Future> futures;
-
-    for (std::size_t i = 0; i < num_iterations; ++i) {
-        // futures.push_back(rt->get_current_time_in_nanoseconds(
-        //     ctx, solver.residual_norm_squared[i].get_future()
-        // ));
+    for (std::size_t i = 0; i < num_traces; ++i) {
         rt->begin_trace(ctx, trace_id);
-        solver.step();
+        for (std::size_t j = 0; j < num_iterations_per_trace; ++j) {
+            solver.step();
+        }
         rt->end_trace(ctx, trace_id);
     }
 
-    // futures.push_back(rt->get_current_time_in_nanoseconds(
-    //     ctx, solver.residual_norm_squared[num_iterations].get_future()
-    // ));
-
-    // const Legion::ShardID shard_id = rt->get_shard_id(ctx, true);
-
-    // for (std::size_t i = 0; i <= num_iterations; ++i) {
-    //     const long long t = futures[i].get_result<long long>();
-    //     if (shard_id == 0) { std::cout << i << " : " << t << std::endl; }
-    // }
+    for (std::size_t i = 0; i < num_extra; ++i) { solver.step(); }
 
     // if (!no_print_results) {
     //     Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
