@@ -10,8 +10,11 @@
 #include "TaskBaseClasses.hpp" // for LEGION_SOLVERS_TASK_BLOCK_SIZE
 #include "TaskIDs.hpp"         // for NUM_META_TASK_IDS
 
-using LegionSolvers::BlockingShardingFunctor;
 using LegionSolvers::LegionSolversMapper;
+
+#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
+using LegionSolvers::BlockingShardingFunctor;
+#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION
 
 
 LegionSolversMapper::LegionSolversMapper(
@@ -20,28 +23,27 @@ LegionSolversMapper::LegionSolversMapper(
     Legion::Processor local_proc
 )
     : Legion::Mapping::DefaultMapper(rt, machine, local_proc) {
-
-    std::set<Legion::Processor> all_procs;
-    Legion::Machine::get_machine().get_all_processors(all_procs);
-    for (const Legion::Processor &proc : all_procs) {
-        const Legion::AddressSpace addr = proc.address_space();
-        const Legion::Processor::Kind kind = proc.kind();
-        address_spaces.push_back(addr);
-        if (kind == Legion::Processor::LOC_PROC) {
-            cpus[addr].push_back(proc);
-        } else if (kind == Legion::Processor::TOC_PROC) {
-            gpus[addr].push_back(proc);
-        }
-    }
-    std::sort(address_spaces.begin(), address_spaces.end());
-    const auto last = std::unique(address_spaces.begin(), address_spaces.end());
-    address_spaces.erase(last, address_spaces.end());
-    assert(address_spaces.size() == cpus.size());
-    assert(address_spaces.size() == gpus.size());
-    for (const auto &addr : address_spaces) {
-        std::sort(cpus[addr].begin(), cpus[addr].end());
-        std::sort(gpus[addr].begin(), gpus[addr].end());
-    }
+    // std::set<Legion::Processor> all_procs;
+    // Legion::Machine::get_machine().get_all_processors(all_procs);
+    // for (const Legion::Processor &proc : all_procs) {
+    //     const Legion::AddressSpace addr = proc.address_space();
+    //     const Legion::Processor::Kind kind = proc.kind();
+    //     address_spaces.push_back(addr);
+    //     if (kind == Legion::Processor::LOC_PROC) {
+    //         cpus[addr].push_back(proc);
+    //     } else if (kind == Legion::Processor::TOC_PROC) {
+    //         gpus[addr].push_back(proc);
+    //     }
+    // }
+    // std::sort(address_spaces.begin(), address_spaces.end());
+    // const auto last = std::unique(address_spaces.begin(),
+    // address_spaces.end()); address_spaces.erase(last, address_spaces.end());
+    // assert(address_spaces.size() == cpus.size());
+    // assert(address_spaces.size() == gpus.size());
+    // for (const auto &addr : address_spaces) {
+    //     std::sort(cpus[addr].begin(), cpus[addr].end());
+    //     std::sort(gpus[addr].begin(), gpus[addr].end());
+    // }
 }
 
 
@@ -70,6 +72,7 @@ void LegionSolversMapper::slice_task(
 }
 
 
+#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
 void LegionSolversMapper::select_sharding_functor(
     const Legion::Mapping::MapperContext ctx,
     const Legion::Task &task,
@@ -78,19 +81,20 @@ void LegionSolversMapper::select_sharding_functor(
 ) {
     output.chosen_functor = LEGION_SOLVERS_SHARDING_FUNCTOR_ID;
 }
+#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION
 
 
-Legion::Processor LegionSolversMapper::get_gpu(Legion::coord_t i) {
-    while (true) {
-        for (const auto &addr : address_spaces) {
-            // cast to avoid signed/unsigned comparison
-            if (i < static_cast<Legion::coord_t>(gpus[addr].size())) {
-                return gpus[addr][i];
-            }
-            i -= gpus[addr].size();
-        }
-    }
-}
+// Legion::Processor LegionSolversMapper::get_gpu(Legion::coord_t i) {
+//     while (true) {
+//         for (const auto &addr : address_spaces) {
+//             // cast to avoid signed/unsigned comparison
+//             if (i < static_cast<Legion::coord_t>(gpus[addr].size())) {
+//                 return gpus[addr][i];
+//             }
+//             i -= gpus[addr].size();
+//         }
+//     }
+// }
 
 
 bool LegionSolversMapper::is_task(
@@ -119,6 +123,8 @@ void LegionSolvers::mapper_registration_callback(
 }
 
 
+#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
+
 Legion::ShardID BlockingShardingFunctor::shard(
     const Legion::DomainPoint &point,
     const Legion::Domain &domain,
@@ -131,3 +137,5 @@ Legion::ShardID BlockingShardingFunctor::shard(
         (domain.get_volume() + total_shards - 1) / total_shards;
     return static_cast<Legion::ShardID>(point[0] / points_per_shard);
 }
+
+#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION

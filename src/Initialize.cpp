@@ -20,10 +20,13 @@ void LegionSolvers::initialize(bool verbose) {
     Legion::Runtime::add_registration_callback(
         LegionSolvers::mapper_registration_callback
     );
-    Legion::Runtime::preregister_sharding_functor(
-        LEGION_SOLVERS_SHARDING_FUNCTOR_ID,
-        new BlockingShardingFunctor()
-    );
+
+    #ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
+        Legion::Runtime::preregister_sharding_functor(
+            LEGION_SOLVERS_SHARDING_FUNCTOR_ID,
+            new BlockingShardingFunctor()
+        );
+    #endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION
 
     // UtilityTasks.hpp
     #ifdef LEGION_SOLVERS_USE_F32
@@ -273,86 +276,16 @@ void LegionSolvers::initialize(bool verbose) {
     #endif // LEGION_SOLVERS_USE_F64
 
     // TODO: proper guards
-    FillCOONegativeLaplacianTask<
-        float,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    FillCOONegativeLaplacianTask<
-        double,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianTask<
-        float,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianTask<
-        double,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianRowptrTask<
-        float,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    FillCSRNegativeLaplacianRowptrTask<
-        double,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    COOMatvecTask<
-        float,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    COOMatvecTask<
-        double,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    CSRMatvecTask<
-        float,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
-    CSRMatvecTask<
-        double,
-        1,
-        1,
-        1,
-        Legion::coord_t,
-        Legion::coord_t,
-        Legion::coord_t>::preregister(verbose);
+    FillCOONegativeLaplacianTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCOONegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianRowptrTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    FillCSRNegativeLaplacianRowptrTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    COOMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    COOMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    CSRMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    CSRMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     LoadCUDALibsTask::preregister(verbose);
