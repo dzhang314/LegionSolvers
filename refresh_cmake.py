@@ -44,8 +44,6 @@ def main():
                         }
                         if branch_tag == "cr":
                             defines["CMAKE_CXX_FLAGS"] += " -DLEGION_SOLVERS_USE_CONTROL_REPLICATION"
-                        if branch_tag == "cr" and build_tag == "release":
-                            defines["CMAKE_CXX_FLAGS"] += " -DLEGION_SOLVERS_DISABLE_CLEANUP"
                         if MACHINE == Machines.LASSEN:
                             defines["CMAKE_CXX_FLAGS"] += " -maltivec -mabi=altivec"
                         cmake(

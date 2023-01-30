@@ -376,10 +376,7 @@ def main():
                         with change_directory(build_dir):
                             test_00(use_cuda, use_kokkos)
                             test_01(use_cuda, use_kokkos)
-                            if branch_tag == "cr" and network_tag == "gex" and not use_kokkos and build_tag == "release":
-                                pass
-                            else:
-                                test_02(use_cuda, use_kokkos)
+                            test_02(use_cuda, use_kokkos)
                             test_03(use_cuda, use_kokkos)
                             test_04(use_cuda, use_kokkos)
                             test_05(use_cuda, use_kokkos)

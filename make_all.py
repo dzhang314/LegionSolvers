@@ -9,14 +9,14 @@ from build_utilities import *
 
 
 DESIRED_VARIANTS = [
-    "master_gex_nocuda_nokokkos_debug",
-    "master_gex_nocuda_nokokkos_release",
-    "master_gex_cuda_nokokkos_debug",
-    "master_gex_cuda_nokokkos_release",
+    # "master_gex_nocuda_nokokkos_debug",
+    # "master_gex_nocuda_nokokkos_release",
+    # "master_gex_cuda_nokokkos_debug",
+    # "master_gex_cuda_nokokkos_release",
     # "master_gex_cuda_kokkos_debug",
     # "master_gex_cuda_kokkos_release",
-    "cr_gex_nocuda_nokokkos_debug",
-    "cr_gex_nocuda_nokokkos_release",
+    # "cr_gex_nocuda_nokokkos_debug",
+    # "cr_gex_nocuda_nokokkos_release",
     "cr_gex_cuda_nokokkos_debug",
     "cr_gex_cuda_nokokkos_release",
     # "cr_gex_cuda_kokkos_debug",
@@ -36,8 +36,8 @@ def main():
                         )
                         if use_kokkos and not use_cuda:
                             continue
-                        # if build_name not in DESIRED_VARIANTS:
-                        #     continue
+                        if build_name not in DESIRED_VARIANTS:
+                            continue
                         build_dir = os.path.join(
                             SCRATCH_DIR,
                             "LegionSolversBuild",
