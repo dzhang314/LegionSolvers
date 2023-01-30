@@ -35,6 +35,8 @@ void top_level_task(
             ctx, rt, grid_size, color_space
         );
 
+    rt->issue_execution_fence(ctx);
+
     const auto domain_space =
         rt->create_index_space(ctx, VectorRect{0, grid_size - 1});
 
@@ -82,7 +84,7 @@ int main(int argc, char **argv) {
         Legion::Processor::LOC_PROC,
         TaskFlags::INNER | TaskFlags::REPLICABLE
     );
-    LegionSolvers::initialize(false);
+    LegionSolvers::initialize(false, false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     Legion::Runtime::set_top_level_task_mapper_id(
         LegionSolvers::LEGION_SOLVERS_MAPPER_ID

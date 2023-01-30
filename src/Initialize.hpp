@@ -4,7 +4,7 @@
 namespace LegionSolvers {
 
 
-void initialize(bool verbose = true);
+void initialize(bool print_info = true, bool verbose = false);
 
 
 } // namespace LegionSolvers

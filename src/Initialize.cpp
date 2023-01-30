@@ -1,5 +1,7 @@
 #include "Initialize.hpp"
 
+#include <iostream> // for std::cout, std::endl
+
 #include "COOMatrixTasks.hpp"
 #include "CSRMatrixTasks.hpp"
 #include "ExampleSystems.hpp"      // for Fill*NegativeLaplacianTask
@@ -14,7 +16,53 @@
 
 
 // clang-format off
-void LegionSolvers::initialize(bool verbose) {
+void LegionSolvers::initialize(bool print_info, bool verbose) {
+
+    if (print_info) {
+        std::cout << "[LegionSolvers] Initializing library..." << std::endl;
+
+        #ifdef LEGION_USE_CUDA
+            std::cout << "[LegionSolvers] CUDA support enabled." << std::endl;
+        #else
+            std::cout << "[LegionSolvers] CUDA support disabled." << std::endl;
+        #endif // LEGION_USE_CUDA
+
+        #ifdef REALM_USE_KOKKOS
+            std::cout << "[LegionSolvers] Kokkos support enabled." << std::endl;
+        #else
+            std::cout << "[LegionSolvers] Kokkos support disabled." << std::endl;
+        #endif // REALM_USE_KOKKOS
+
+        std::cout << "[LegionSolvers] Supported entry types:" << std::endl;
+        #ifdef LEGION_SOLVERS_USE_F32
+            std::cout << "[LegionSolvers]   * 32-bit floating-point" << std::endl;
+        #endif // LEGION_SOLVERS_USE_F32
+        #ifdef LEGION_SOLVERS_USE_F64
+            std::cout << "[LegionSolvers]   * 64-bit floating-point" << std::endl;
+        #endif // LEGION_SOLVERS_USE_F64
+
+        std::cout << "[LegionSolvers] Supported index types:" << std::endl;
+        #ifdef LEGION_SOLVERS_USE_S32_INDICES
+            std::cout << "[LegionSolvers]   * signed 32-bit integer" << std::endl;
+        #endif // LEGION_SOLVERS_USE_S32_INDICES
+        #ifdef LEGION_SOLVERS_USE_U32_INDICES
+            std::cout << "[LegionSolvers]   * unsigned 32-bit integer" << std::endl;
+        #endif // LEGION_SOLVERS_USE_U32_INDICES
+        #ifdef LEGION_SOLVERS_USE_S64_INDICES
+            std::cout << "[LegionSolvers]   * signed 64-bit integer" << std::endl;
+        #endif // LEGION_SOLVERS_USE_S64_INDICES
+
+        std::cout << "[LegionSolvers] Supported dimensions:" << std::endl;
+        #if LEGION_SOLVERS_MAX_DIM >= 1
+            std::cout << "[LegionSolvers]   * 1" << std::endl;
+        #endif // LEGION_SOLVERS_MAX_DIM >= 1
+        #if LEGION_SOLVERS_MAX_DIM >= 2
+            std::cout << "[LegionSolvers]   * 2" << std::endl;
+        #endif // LEGION_SOLVERS_MAX_DIM >= 2
+        #if LEGION_SOLVERS_MAX_DIM >= 3
+            std::cout << "[LegionSolvers]   * 3" << std::endl;
+        #endif // LEGION_SOLVERS_MAX_DIM >= 3
+    }
 
     // LegionSolversMapper.hpp
     Legion::Runtime::add_registration_callback(

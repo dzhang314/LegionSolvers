@@ -35,6 +35,8 @@ void top_level_task(
             ctx, rt, grid_size, color_space
         );
 
+    rt->issue_execution_fence(ctx);
+
     const auto domain_space =
         rt->create_index_space(ctx, VectorRect{0, grid_size - 1});
 
@@ -75,7 +77,7 @@ void top_level_task(
 
 int main(int argc, char **argv) {
     using LegionSolvers::TaskFlags;
-    LegionSolvers::initialize(false);
+    LegionSolvers::initialize(false, false);
     LegionSolvers::preregister_task<top_level_task>(
         TOP_LEVEL_TASK_ID,
         "top_level",

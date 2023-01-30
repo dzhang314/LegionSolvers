@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
         Legion::Processor::LOC_PROC,
         TaskFlags::INNER | TaskFlags::REPLICABLE
     );
-    LegionSolvers::initialize(false);
+    LegionSolvers::initialize(false, false);
     Legion::Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
     Legion::Runtime::set_top_level_task_mapper_id(
         LegionSolvers::LEGION_SOLVERS_MAPPER_ID

@@ -91,12 +91,12 @@ void top_level_task(
         rt->end_trace(ctx, trace_id);
     }
 
-    // if (!no_print_results) {
-    //     Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
-    //     for (std::size_t i = 0; i <= num_iterations; ++i) {
-    //         dummy = solver.residual_norm_squared[i].print(dummy);
-    //     }
-    // }
+    if (!no_print_results) {
+        Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
+        for (std::size_t i = 0; i <= num_iterations; ++i) {
+            dummy = solver.residual_norm_squared[i].print(dummy);
+        }
+    }
 
 #ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, disjoint_vector_partition);
@@ -107,7 +107,7 @@ void top_level_task(
 
 int main(int argc, char **argv) {
     using LegionSolvers::TaskFlags;
-    LegionSolvers::initialize(false);
+    LegionSolvers::initialize(false, false);
     LegionSolvers::preregister_task<top_level_task>(
         TOP_LEVEL_TASK_ID,
         "top_level",

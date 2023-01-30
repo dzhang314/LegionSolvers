@@ -102,7 +102,7 @@ void top_level_task(
 
 int main(int argc, char **argv) {
     using LegionSolvers::TaskFlags;
-    LegionSolvers::initialize(false);
+    LegionSolvers::initialize(false, false);
     LegionSolvers::preregister_task<top_level_task>(
         TOP_LEVEL_TASK_ID,
         "top_level",
