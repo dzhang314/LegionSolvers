@@ -200,7 +200,7 @@ public:
         );
         assert(num_spaces == sol_vectors.size());
         assert(num_spaces == rhs_vectors.size());
-        for (const auto &v : workspace_vectors) {
+        for ([[maybe_unused]] const auto &v : workspace_vectors) {
             assert(num_spaces == v.size());
         }
         return num_spaces;
@@ -211,7 +211,7 @@ public:
         std::size_t domain_index,
         std::size_t range_index
     ) {
-        const std::size_t num_spaces = get_num_spaces();
+        [[maybe_unused]] const std::size_t num_spaces = get_num_spaces();
         assert(domain_index < num_spaces);
         assert(range_index < num_spaces);
         const Legion::IndexPartition kernel_partition =

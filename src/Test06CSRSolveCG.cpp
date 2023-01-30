@@ -37,13 +37,14 @@ void top_level_task(
     bool no_print_results = false;
 
     const Legion::InputArgs &args = Legion::Runtime::get_input_args();
-    bool ok = Realm::CommandLineParser()
-                  .add_option_int("-n", grid_size)
-                  .add_option_int("-vp", num_vector_pieces)
-                  .add_option_int("-it", num_iterations)
-                  .add_option_int("-pt", num_iterations_per_trace)
-                  .add_option_bool("-np", no_print_results)
-                  .parse_command_line(args.argc, (const char **) args.argv);
+    [[maybe_unused]] bool ok =
+        Realm::CommandLineParser()
+            .add_option_int("-n", grid_size)
+            .add_option_int("-vp", num_vector_pieces)
+            .add_option_int("-it", num_iterations)
+            .add_option_int("-pt", num_iterations_per_trace)
+            .add_option_bool("-np", no_print_results)
+            .parse_command_line(args.argc, (const char **) args.argv);
     assert(ok);
 
     const auto vector_color_space =

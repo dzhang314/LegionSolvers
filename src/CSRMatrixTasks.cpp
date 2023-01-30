@@ -15,10 +15,10 @@ void LegionSolvers::CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
     const auto &input_vec = regions[3];
 
     assert(task->regions.size() == 4);
-    const auto &output_req = task->regions[0];
-    const auto &matrix_req = task->regions[1];
-    const auto &rowptr_req = task->regions[2];
-    const auto &input_req = task->regions[3];
+    [[maybe_unused]] const auto &output_req = task->regions[0];
+    [[maybe_unused]] const auto &matrix_req = task->regions[1];
+    [[maybe_unused]] const auto &rowptr_req = task->regions[2];
+    [[maybe_unused]] const auto &input_req = task->regions[3];
 
     assert(output_req.privilege_fields.size() == 1);
     const Legion::FieldID output_fid = *output_req.privilege_fields.begin();
@@ -72,7 +72,7 @@ void LegionSolvers::CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
         const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> kp = *k_it;
 
         Legion::Point<RANGE_DIM, RANGE_COORD_T> row;
-        bool row_found = false;
+        [[maybe_unused]] bool row_found = false;
         for (DPointIter rowptr_it(rowptr_region); rowptr_it(); ++rowptr_it) {
             const Legion::Point<RANGE_DIM, RANGE_COORD_T> cur_row = *rowptr_it;
             const Legion::Rect<KERNEL_DIM, KERNEL_COORD_T> rect =

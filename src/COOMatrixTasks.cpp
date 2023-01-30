@@ -14,9 +14,9 @@ void COOMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
     const auto &input_vec = regions[2];
 
     assert(task->regions.size() == 3);
-    const auto &output_req = task->regions[0];
-    const auto &matrix_req = task->regions[1];
-    const auto &input_req = task->regions[2];
+    [[maybe_unused]] const auto &output_req = task->regions[0];
+    [[maybe_unused]] const auto &matrix_req = task->regions[1];
+    [[maybe_unused]] const auto &input_req = task->regions[2];
 
     assert(output_req.privilege_fields.size() == 1);
     const Legion::FieldID output_fid = *output_req.privilege_fields.begin();

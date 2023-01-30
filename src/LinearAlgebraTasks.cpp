@@ -66,10 +66,10 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
     AffineReaderWriter<ENTRY_T, DIM, COORD_T> y_reader_writer{y, y_fid};
     AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
 
-    const Legion::Domain y_domain =
+    [[maybe_unused]] const Legion::Domain y_domain =
         rt->get_index_space_domain(ctx, y_req.region.get_index_space());
 
-    const Legion::Domain x_domain =
+    [[maybe_unused]] const Legion::Domain x_domain =
         rt->get_index_space_domain(ctx, x_req.region.get_index_space());
 
     assert(y_domain == x_domain);
@@ -110,10 +110,10 @@ void XpayTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
     AffineReaderWriter<ENTRY_T, DIM, COORD_T> y_reader_writer{y, y_fid};
     AffineReader<ENTRY_T, DIM, COORD_T> x_reader{x, x_fid};
 
-    const Legion::Domain y_domain =
+    [[maybe_unused]] const Legion::Domain y_domain =
         rt->get_index_space_domain(ctx, y_req.region.get_index_space());
 
-    const Legion::Domain x_domain =
+    [[maybe_unused]] const Legion::Domain x_domain =
         rt->get_index_space_domain(ctx, x_req.region.get_index_space());
 
     assert(y_domain == x_domain);
@@ -152,10 +152,10 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
     AffineReader<ENTRY_T, DIM, COORD_T> v_reader{v, v_fid};
     AffineReader<ENTRY_T, DIM, COORD_T> w_reader{w, w_fid};
 
-    const Legion::Domain v_domain =
+    [[maybe_unused]] const Legion::Domain v_domain =
         rt->get_index_space_domain(ctx, v_req.region.get_index_space());
 
-    const Legion::Domain w_domain =
+    [[maybe_unused]] const Legion::Domain w_domain =
         rt->get_index_space_domain(ctx, w_req.region.get_index_space());
 
     assert(v_domain == w_domain);
