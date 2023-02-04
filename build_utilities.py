@@ -168,7 +168,7 @@ class Machines(_Enum):
 def _getenv(name: str) -> str:
     result = _os.getenv(name)
     if result is None:
-        raise RuntimeError("Environment variable " + name " does not exist")
+        raise RuntimeError("Environment variable " + name + " does not exist")
     return result
 
 
