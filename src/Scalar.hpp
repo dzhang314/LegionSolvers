@@ -61,6 +61,10 @@ public:
 
     Scalar operator/(const Scalar &rhs) const;
 
+    Scalar sqrt() const;
+
+    Scalar rsqrt() const;
+
     Legion::Future print() const;
 
     Legion::Future print(Legion::Future dummy) const;

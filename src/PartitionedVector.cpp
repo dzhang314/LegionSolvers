@@ -192,6 +192,22 @@ PartitionedVector<ENTRY_T>::operator=(const PartitionedVector &x) {
 
 
 template <typename ENTRY_T>
+void PartitionedVector<ENTRY_T>::scal(const Scalar<ENTRY_T> &alpha) {
+    Legion::IndexTaskLauncher launcher(
+        ScalTask<ENTRY_T, 0, void>::task_id(index_space),
+        color_space,
+        Legion::UntypedBuffer(),
+        Legion::ArgumentMap()
+    );
+    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+    launcher.add_future(alpha.get_future());
+    launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
+
+    rt->execute_index_space(ctx, launcher);
+}
+
+
+template <typename ENTRY_T>
 void PartitionedVector<ENTRY_T>::axpy(
     const Scalar<ENTRY_T> &alpha, const PartitionedVector &x
 ) {
@@ -352,6 +368,7 @@ Scalar<ENTRY_T> PartitionedVector<ENTRY_T>::dot(const PartitionedVector &x
     template void PartitionedVector<float>::constant_fill(float);
     template void PartitionedVector<float>::constant_fill(const Scalar<float> &);
     template const PartitionedVector<float> &PartitionedVector<float>::operator=(const PartitionedVector<float> &);
+    template void PartitionedVector<float>::scal(const Scalar<float> &);
     template void PartitionedVector<float>::axpy(const Scalar<float> &, const PartitionedVector<float> &);
     template void PartitionedVector<float>::axpy(const Scalar<float> &, const Scalar<float> &, const PartitionedVector<float> &);
     template void PartitionedVector<float>::axpy(const Scalar<float> &, const Scalar<float> &, const Scalar<float> &, const PartitionedVector<float> &);
@@ -368,6 +385,7 @@ Scalar<ENTRY_T> PartitionedVector<ENTRY_T>::dot(const PartitionedVector &x
     template void PartitionedVector<double>::constant_fill(double);
     template void PartitionedVector<double>::constant_fill(const Scalar<double> &);
     template const PartitionedVector<double> &PartitionedVector<double>::operator=(const PartitionedVector<double> &);
+    template void PartitionedVector<double>::scal(const Scalar<double> &);
     template void PartitionedVector<double>::axpy(const Scalar<double> &, const PartitionedVector<double> &);
     template void PartitionedVector<double>::axpy(const Scalar<double> &, const Scalar<double> &, const PartitionedVector<double> &);
     template void PartitionedVector<double>::axpy(const Scalar<double> &, const Scalar<double> &, const Scalar<double> &, const PartitionedVector<double> &);

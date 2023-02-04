@@ -72,6 +72,28 @@ Scalar<T> Scalar<T>::operator/(const Scalar<T> &rhs) const {
 
 
 template <typename T>
+Scalar<T> Scalar<T>::sqrt() const {
+    Legion::TaskLauncher launcher(
+        SqrtScalarTask<T>::task_id, Legion::TaskArgument()
+    );
+    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+    launcher.add_future(future);
+    return Scalar<T>{ctx, rt, rt->execute_task(ctx, launcher)};
+}
+
+
+template <typename T>
+Scalar<T> Scalar<T>::rsqrt() const {
+    Legion::TaskLauncher launcher(
+        RSqrtScalarTask<T>::task_id, Legion::TaskArgument()
+    );
+    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+    launcher.add_future(future);
+    return Scalar<T>{ctx, rt, rt->execute_task(ctx, launcher)};
+}
+
+
+template <typename T>
 Legion::Future Scalar<T>::print() const {
     Legion::TaskLauncher launcher(
         PrintScalarTask<T>::task_id, Legion::TaskArgument()
@@ -102,6 +124,8 @@ Legion::Future Scalar<T>::print(Legion::Future dummy) const {
     template Scalar<float> Scalar<float>::operator-(const Scalar<float> &) const;
     template Scalar<float> Scalar<float>::operator*(const Scalar<float> &) const;
     template Scalar<float> Scalar<float>::operator/(const Scalar<float> &) const;
+    template Scalar<float> Scalar<float>::sqrt() const;
+    template Scalar<float> Scalar<float>::rsqrt() const;
     template Legion::Future Scalar<float>::print() const;
     template Legion::Future Scalar<float>::print(Legion::Future) const;
 #endif // LEGION_SOLVERS_USE_F32
@@ -112,6 +136,8 @@ Legion::Future Scalar<T>::print(Legion::Future dummy) const {
     template Scalar<double> Scalar<double>::operator-(const Scalar<double> &) const;
     template Scalar<double> Scalar<double>::operator*(const Scalar<double> &) const;
     template Scalar<double> Scalar<double>::operator/(const Scalar<double> &) const;
+    template Scalar<double> Scalar<double>::sqrt() const;
+    template Scalar<double> Scalar<double>::rsqrt() const;
     template Legion::Future Scalar<double>::print() const;
     template Legion::Future Scalar<double>::print(Legion::Future) const;
 #endif // LEGION_SOLVERS_USE_F64

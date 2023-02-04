@@ -96,7 +96,7 @@ public:
 
     PartitionedVector &operator=(PartitionedVector &&) = delete;
 
-    // TODO: operator*=(Scalar) should call ScalTask
+    void scal(const Scalar<ENTRY_T> &alpha);
 
     void axpy(const Scalar<ENTRY_T> &alpha, const PartitionedVector &x);
 

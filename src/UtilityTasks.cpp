@@ -1,6 +1,7 @@
 #include "UtilityTasks.hpp"
 
 #include <array>    // for std::array
+#include <cmath>    // for std::sqrt
 #include <cstddef>  // for std::size_t
 #include <iostream> // for std::cout, std::endl
 #include <random>   // for std::random_device, std::mt19937, std::seed_seq
@@ -10,11 +11,14 @@
 
 using LegionSolvers::AddScalarTask;
 using LegionSolvers::DivideScalarTask;
+using LegionSolvers::DummyTask;
 using LegionSolvers::MultiplyScalarTask;
 using LegionSolvers::NegateScalarTask;
 using LegionSolvers::PrintIndexTask;
 using LegionSolvers::PrintScalarTask;
 using LegionSolvers::RandomFillTask;
+using LegionSolvers::RSqrtScalarTask;
+using LegionSolvers::SqrtScalarTask;
 using LegionSolvers::SubtractScalarTask;
 
 
@@ -68,6 +72,30 @@ T DivideScalarTask<T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
     Legion::Future x = task->futures[0];
     Legion::Future y = task->futures[1];
     return x.get_result<T>() / y.get_result<T>();
+}
+
+
+template <typename T>
+T SqrtScalarTask<T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+    using std::sqrt;
+    assert(task->futures.size() == 1);
+    Legion::Future x = task->futures[0];
+    return sqrt(x.get_result<T>());
+}
+
+
+template <typename T>
+T RSqrtScalarTask<T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+    using std::sqrt;
+    assert(task->futures.size() == 1);
+    Legion::Future x = task->futures[0];
+    return static_cast<T>(1) / sqrt(x.get_result<T>());
+}
+
+
+template <typename T>
+T DummyTask<T>::task_body(LEGION_SOLVERS_TASK_ARGS) {
+    return static_cast<T>(1);
 }
 
 
@@ -146,6 +174,9 @@ void RandomFillTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS
     template float SubtractScalarTask<float>::task_body(LEGION_SOLVERS_TASK_ARGS);
     template float MultiplyScalarTask<float>::task_body(LEGION_SOLVERS_TASK_ARGS);
     template float DivideScalarTask<float>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    template float SqrtScalarTask<float>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    template float RSqrtScalarTask<float>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    template float DummyTask<float>::task_body(LEGION_SOLVERS_TASK_ARGS);
 #endif // LEGION_SOLVERS_USE_F32
 #ifdef LEGION_SOLVERS_USE_F64
     template int PrintScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
@@ -154,6 +185,9 @@ void RandomFillTask<ENTRY_T, DIM, COORD_T>::task_body(LEGION_SOLVERS_TASK_ARGS
     template double SubtractScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
     template double MultiplyScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
     template double DivideScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    template double SqrtScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    template double RSqrtScalarTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
+    template double DummyTask<double>::task_body(LEGION_SOLVERS_TASK_ARGS);
 #endif // LEGION_SOLVERS_USE_F64
 #ifdef LEGION_SOLVERS_USE_S32_INDICES
     #if LEGION_SOLVERS_MAX_DIM >= 1
