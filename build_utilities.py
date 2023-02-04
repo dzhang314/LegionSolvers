@@ -43,24 +43,24 @@ KOKKOS_TYPES: _List[_Tuple[str, bool]] = [
 ################################################################################
 
 
-def underscore_join(*args: _Any):
+def underscore_join(*args: _Any) -> str:
     return '_'.join(str(arg) for arg in args if arg)
 
 
-def _quiet_print(quiet: bool, *msg: _Any):
+def _quiet_print(quiet: bool, *msg: _Any) -> None:
     if quiet:
         pass
     else:
         print(*msg)
 
 
-def create_directory(path: str, quiet: bool = False):
+def create_directory(path: str, quiet: bool = False) -> None:
     _quiet_print(quiet, "[LegionSolversBuild] Creating directory", path)
     assert not _os.path.exists(path)
     _os.mkdir(path)
 
 
-def remove_file(path: str, quiet: bool = False):
+def remove_file(path: str, quiet: bool = False) -> None:
     if _os.path.exists(path):
         _quiet_print(quiet, "[LegionSolversBuild] Removing file", path)
         assert _os.path.isfile(path)
@@ -70,7 +70,7 @@ def remove_file(path: str, quiet: bool = False):
                      path, "does not exist")
 
 
-def remove_directory(path: str, quiet: bool = False):
+def remove_directory(path: str, quiet: bool = False) -> None:
     if _os.path.exists(path):
         _quiet_print(quiet, "[LegionSolversBuild] Removing directory", path)
         assert _os.path.isdir(path)
@@ -94,7 +94,7 @@ def change_directory(path: str, quiet: bool = False):
         _os.chdir(prev_path)
 
 
-def run(*command: str, check: bool = True, quiet: bool = False):
+def run(*command: str, check: bool = True, quiet: bool = False) -> None:
     _quiet_print(
         quiet, "[LegionSolversBuild] Running command", ' '.join(command)
     )
@@ -104,12 +104,13 @@ def run(*command: str, check: bool = True, quiet: bool = False):
 ################################################################################
 
 
-def download(url: str, quiet: bool = False):
+def download(url: str, quiet: bool = False) -> None:
     _quiet_print(quiet, "[LegionSolversBuild] Downloading file", url)
     run("wget", url)
 
 
-def clone(url: str, branch: str = "", path: str = "", quiet: bool = False):
+def clone(url: str, branch: str = "", path: str = "",
+          quiet: bool = False) -> None:
     if branch:
         if path:
             _quiet_print(quiet, "[LegionSolversBuild] Cloning branch",
@@ -132,7 +133,7 @@ def clone(url: str, branch: str = "", path: str = "", quiet: bool = False):
 def cmake(build_path: str = "build",
           defines: _Dict[str, _Union[bool, int, str]] = {},
           build: bool = True, test: bool = False, install: bool = True,
-          cmake_cmd: _Tuple[str, ...] = ("cmake", "..")):
+          cmake_cmd: _Tuple[str, ...] = ("cmake", "..")) -> None:
     create_directory(build_path)
     print("[LegionSolversBuild] Running CMake in directory", build_path)
     with change_directory(build_path):
@@ -164,23 +165,26 @@ class Machines(_Enum):
     SUMMIT = 4
 
 
-_env_machine = _os.getenv("LEGION_SOLVERS_MACHINE")
-assert _env_machine is not None
-MACHINE = {
+def _getenv(name: str) -> str:
+    result = _os.getenv(name)
+    if result is None:
+        raise RuntimeError("Environment variable " + name " does not exist")
+    return result
+
+
+MACHINE: Machines = {
     "SAPLING": Machines.SAPLING,
     "PIZDAINT": Machines.PIZDAINT,
     "LASSEN": Machines.LASSEN,
     "SUMMIT": Machines.SUMMIT,
-}.get(_env_machine.upper(), Machines.UNKNOWN)
+}.get(_getenv("LEGION_SOLVERS_MACHINE"), Machines.UNKNOWN)
 
 
 if MACHINE == Machines.UNKNOWN:
     print("[LegionSolversBuild] WARNING: Unknown machine")
 
 
-SCRATCH_DIR = _os.getenv("LEGION_SOLVERS_SCRATCH_DIR")
-LIB_PREFIX = _os.getenv("LEGION_SOLVERS_LIB_PREFIX")
-assert SCRATCH_DIR is not None
-assert LIB_PREFIX is not None
+SCRATCH_DIR: str = _getenv("LEGION_SOLVERS_SCRATCH_DIR")
+LIB_PREFIX: str = _getenv("LEGION_SOLVERS_LIB_PREFIX")
 assert _os.path.isdir(SCRATCH_DIR)
 assert _os.path.isdir(LIB_PREFIX)
