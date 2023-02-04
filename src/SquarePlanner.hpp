@@ -265,6 +265,13 @@ public:
         }
     }
 
+    void scal(std::size_t dst_index, Scalar<ENTRY_T> alpha) {
+        const std::size_t num_spaces = get_num_spaces();
+        for (std::size_t i = 0; i < num_spaces; ++i) {
+            get_vector(dst_index, i).scal(alpha);
+        }
+    }
+
     void
     axpy(std::size_t dst_index, Scalar<ENTRY_T> alpha, std::size_t src_index) {
         const std::size_t num_spaces = get_num_spaces();

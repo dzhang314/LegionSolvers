@@ -84,6 +84,9 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
         SubtractScalarTask<float>::preregister(verbose);
         MultiplyScalarTask<float>::preregister(verbose);
         DivideScalarTask<float>::preregister(verbose);
+        SqrtScalarTask<float>::preregister(verbose);
+        RSqrtScalarTask<float>::preregister(verbose);
+        DummyTask<float>::preregister(verbose);
     #endif // LEGION_SOLVERS_USE_F32
     #ifdef LEGION_SOLVERS_USE_F64
         PrintScalarTask<double>::preregister(verbose);
@@ -92,6 +95,9 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
         SubtractScalarTask<double>::preregister(verbose);
         MultiplyScalarTask<double>::preregister(verbose);
         DivideScalarTask<double>::preregister(verbose);
+        SqrtScalarTask<double>::preregister(verbose);
+        RSqrtScalarTask<double>::preregister(verbose);
+        DummyTask<double>::preregister(verbose);
     #endif // LEGION_SOLVERS_USE_F64
     #ifdef LEGION_SOLVERS_USE_S32_INDICES
         #if LEGION_SOLVERS_MAX_DIM >= 1
