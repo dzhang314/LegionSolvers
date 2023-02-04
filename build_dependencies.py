@@ -4,99 +4,49 @@ from build_utilities import *
 import os
 
 
-def main():
+GASNET_GIT_URL: str = "https://github.com/StanfordLegion/gasnet.git"
+KOKKOS_GIT_URL: str = "https://github.com/kokkos/kokkos.git"
 
-    assert MACHINE != Machines.PIZDAINT  # rebuilding dependencies on Piz Daint
-    # requires manual modification of some CMake files; don't do it here
+
+def main():
 
     with change_directory(LIB_PREFIX):
         remove_directory("gasnet")
         clone(GASNET_GIT_URL)
         with change_directory("gasnet"):
-            run("make", "CONDUIT=ibv")
+            run("make", "CONDUIT=ibv")  # TODO: machine-to-conduit mapping
 
     os.chdir(SCRATCH_DIR)
 
-    remove_file("3.7.01.zip")
-    download(KOKKOS_3_7_URL)
-    remove_directory("kokkos-3.7.01")
-    run("unzip", "3.7.01.zip")
-    kokkos_compiler = os.path.join(
-        SCRATCH_DIR, "kokkos-3.7.01", "bin", "nvcc_wrapper"
-    )
-    with change_directory("kokkos-3.7.01"):
-        cmake("build-cuda", {
+    clone(KOKKOS_GIT_URL, "release-candidate-4.0.0", "kokkos-4.0.0-rc")
+
+    with change_directory("kokkos-4.0.0-rc"):
+        defines_cuda: CMakeDefines = {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
-            "CMAKE_C_COMPILER": kokkos_compiler,
-            "CMAKE_CXX_COMPILER": kokkos_compiler,
-            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.7.01-cuda"),
+            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-4.0.0-rc-cuda"),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_CUDA": True,
             "Kokkos_ENABLE_CUDA_LAMBDA": True,
+            "Kokkos_ENABLE_CUDA_CONSTEXPR": True,
+            "Kokkos_ENABLE_CUDA_LDG_INTRINSIC": True,
             "Kokkos_ENABLE_TESTS": True,
-        }, test=True, install=True)
-        cmake("build-nocuda", {
+        }
+        defines_nocuda: CMakeDefines = {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
-            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.7.01-nocuda"),
-            "Kokkos_ENABLE_SERIAL": True,
-            "Kokkos_ENABLE_OPENMP": True,
-            "Kokkos_ENABLE_TESTS": True,
-        }, test=True, install=True)
-
-    remove_file("3.0.00.zip")
-    download(KOKKOS_3_0_URL)
-    remove_directory("kokkos-3.0.00")
-    run("unzip", "3.0.00.zip")
-    kokkos_compiler = os.path.join(
-        SCRATCH_DIR, "kokkos-3.0.00", "bin", "nvcc_wrapper"
-    )
-    with change_directory("kokkos-3.0.00"):
-        defines = {
-            "CMAKE_CXX_STANDARD": 14,
-            "CMAKE_BUILD_TYPE": "Release",
-            "CMAKE_C_COMPILER": kokkos_compiler,
-            "CMAKE_CXX_COMPILER": kokkos_compiler,
-            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.0.00-cuda"),
-            "Kokkos_ENABLE_SERIAL": True,
-            "Kokkos_ENABLE_OPENMP": True,
-            "Kokkos_ENABLE_CUDA": True,
-            "Kokkos_ENABLE_CUDA_LAMBDA": True,
-            "Kokkos_ENABLE_TESTS": True,
-        }
-        # Kokkos 3.0.00 does not auto-detect compute capability
-        if MACHINE in [Machines.SAPLING, Machines.PIZDAINT]:
-            defines["Kokkos_ARCH_PASCAL60"] = True
-        elif MACHINE in [Machines.LASSEN, Machines.SUMMIT]:
-            defines["Kokkos_ARCH_VOLTA70"] = True
-            defines["Kokkos_ARCH_POWER9"] = True
-        cmake("build-cuda", defines, test=True, install=True)
-
-        defines = {
-            "CMAKE_CXX_STANDARD": 14,
-            "CMAKE_BUILD_TYPE": "Release",
-            "CMAKE_C_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_CXX_FLAGS": "-DKOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK",
-            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-3.0.00-nocuda"),
+            "CMAKE_INSTALL_PREFIX": os.path.join(LIB_PREFIX, "kokkos-4.0.0-rc-nocuda"),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_TESTS": True,
         }
-        # Kokkos 3.0.00 does not auto-detect compute capability
         if MACHINE in [Machines.LASSEN, Machines.SUMMIT]:
-            defines["Kokkos_ARCH_POWER9"] = True
-        cmake("build-nocuda", defines, test=True, install=True)
-
-
-################################################################################
+            defines_nocuda["Kokkos_ARCH_POWER9"] = True
+            defines_cuda["Kokkos_ARCH_POWER9"] = True
+            defines_cuda["Kokkos_ARCH_VOLTA70"] = True
+        cmake("build-cuda", defines_cuda, test=True, install=True)
+        cmake("build-nocuda", defines_nocuda, test=True, install=True)
 
 
 if __name__ == "__main__":

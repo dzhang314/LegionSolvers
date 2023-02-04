@@ -130,8 +130,11 @@ def clone(url: str, branch: str = "", path: str = "",
             run("git", "clone", url)
 
 
+CMakeDefines = _Dict[str, _Union[bool, int, str]]
+
+
 def cmake(build_path: str = "build",
-          defines: _Dict[str, _Union[bool, int, str]] = {},
+          defines: CMakeDefines = {},
           build: bool = True, test: bool = False, install: bool = True,
           cmake_cmd: _Tuple[str, ...] = ("cmake", "..")) -> None:
     create_directory(build_path)
