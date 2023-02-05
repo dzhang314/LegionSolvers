@@ -13,9 +13,6 @@ import subprocess as _subprocess
 ################################################################################
 
 
-LEGION_GIT_URL: str = "https://gitlab.com/StanfordLegion/legion.git"
-
-
 LEGION_BRANCHES: _List[_Tuple[str, str]] = [
     ("master", "master"),
     ("cr", "control_replication"),
@@ -25,18 +22,6 @@ LEGION_BRANCHES: _List[_Tuple[str, str]] = [
 BUILD_TYPES: _List[_Tuple[str, str]] = [
     ("debug", "Debug"),
     ("release", "RelWithDebInfo"),
-]
-
-
-CUDA_TYPES: _List[_Tuple[str, bool]] = [
-    ("cuda", True),
-    ("nocuda", False),
-]
-
-
-KOKKOS_TYPES: _List[_Tuple[str, bool]] = [
-    ("kokkos", True),
-    ("nokokkos", False),
 ]
 
 
@@ -152,7 +137,7 @@ def cmake(build_path: str = "build",
         if build:
             run("cmake", "--build", ".", "--parallel", check=True)
         if test:
-            run("make", "test", check=False)
+            run("ctest", check=False)
         if install:
             run("make", "install", check=True)
 
