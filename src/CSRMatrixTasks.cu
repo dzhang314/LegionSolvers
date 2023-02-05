@@ -126,7 +126,7 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
         &beta,
         cusparse_output,
         CUDA_DATA_TYPE<ENTRY_T>,
-        CUSPARSE_MV_ALG_DEFAULT,
+        CUSPARSE_SPMV_ALG_DEFAULT,
         &bufSize
     ));
     void *workspace = nullptr;
@@ -145,7 +145,7 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
         &beta,
         cusparse_output,
         CUDA_DATA_TYPE<ENTRY_T>,
-        CUSPARSE_MV_ALG_DEFAULT,
+        CUSPARSE_SPMV_ALG_DEFAULT,
         workspace
     ));
 
