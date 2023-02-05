@@ -3,51 +3,25 @@
 import os
 
 from build_utilities import *
-
-
-################################################################################
-
-
-DESIRED_VARIANTS = [
-    # "master_gex_nocuda_nokokkos_debug",
-    # "master_gex_nocuda_nokokkos_release",
-    # "master_gex_cuda_nokokkos_debug",
-    # "master_gex_cuda_nokokkos_release",
-    # "master_gex_cuda_kokkos_debug",
-    # "master_gex_cuda_kokkos_release",
-    # "cr_gex_nocuda_nokokkos_debug",
-    # "cr_gex_nocuda_nokokkos_release",
-    "cr_gex_cuda_nokokkos_debug",
-    "cr_gex_cuda_nokokkos_release",
-    # "cr_gex_cuda_kokkos_debug",
-    # "cr_gex_cuda_kokkos_release",
-]
+from build_legion import *
 
 
 def main():
     for branch_tag, _ in LEGION_BRANCHES:
         for build_tag, _ in BUILD_TYPES:
-            for network_tag, _ in NETWORK_TYPES:
-                for cuda_tag, use_cuda in CUDA_TYPES:
-                    for kokkos_tag, use_kokkos in KOKKOS_TYPES:
-                        build_name = underscore_join(
-                            branch_tag, network_tag,
-                            cuda_tag, kokkos_tag, build_tag
-                        )
-                        if use_kokkos and not use_cuda:
-                            continue
-                        if build_name not in DESIRED_VARIANTS:
-                            continue
-                        build_dir = os.path.join(
-                            SCRATCH_DIR,
-                            "LegionSolversBuild",
-                            build_name
-                        )
-                        with change_directory(build_dir):
-                            run("cmake", "--build", ".", "--parallel", "20")
-
-
-################################################################################
+            for use_cuda in [False, True]:
+                for use_kokkos in [False, True]:
+                    build_name = underscore_join(
+                        branch_tag,
+                        cuda_tag(use_cuda), kokkos_tag(use_kokkos), build_tag
+                    )
+                    build_dir = os.path.join(
+                        SCRATCH_DIR,
+                        "LegionSolversBuild",
+                        build_name
+                    )
+                    with change_directory(build_dir):
+                        run("cmake", "--build", ".", "--parallel")
 
 
 if __name__ == "__main__":

@@ -46,18 +46,15 @@ def cmake_legion(branch_tag: str, use_cuda: bool, use_kokkos: bool,
     }
     if use_kokkos:
         defines["Legion_USE_Kokkos"] = True
-        defines["Kokkos_DIR"] = _os.path.join(
-            LIB_PREFIX,
-            KOKKOS_CUDA_LIB_NAME if use_cuda else KOKKOS_NOCUDA_LIB_NAME,
-            "lib" if MACHINE == Machines.SAPLING else "lib64",
-            "cmake", "Kokkos"
-        )
         if use_cuda:
+            defines["Kokkos_DIR"] = KOKKOS_CUDA_CMAKE_PATH
             defines["KOKKOS_CXX_COMPILER"] = _os.path.join(
                 LIB_PREFIX,
                 KOKKOS_CUDA_LIB_NAME if use_cuda else KOKKOS_NOCUDA_LIB_NAME,
                 "bin", "nvcc_wrapper"
             )
+        else:
+            defines["Kokkos_DIR"] = KOKKOS_NOCUDA_CMAKE_PATH
     cmake(underscore_join(
         "build", branch_tag,
         cuda_tag(use_cuda), kokkos_tag(use_kokkos), build_tag

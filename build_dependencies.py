@@ -8,6 +8,16 @@ GASNET_GIT_URL: str = "https://github.com/StanfordLegion/gasnet.git"
 KOKKOS_GIT_URL: str = "https://github.com/kokkos/kokkos.git"
 KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.0.0-rc-cuda"
 KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.0.0-rc-nocuda"
+KOKKOS_CUDA_CMAKE_PATH: str = _os.path.join(
+    LIB_PREFIX, KOKKOS_CUDA_LIB_NAME,
+    "lib" if MACHINE == Machines.SAPLING else "lib64",
+    "cmake", "Kokkos"
+)
+KOKKOS_NOCUDA_CMAKE_PATH: str = _os.path.join(
+    LIB_PREFIX, KOKKOS_NOCUDA_LIB_NAME,
+    "lib" if MACHINE == Machines.SAPLING else "lib64",
+    "cmake", "Kokkos"
+)
 
 
 def main():
