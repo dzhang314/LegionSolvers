@@ -135,7 +135,8 @@ CSRMatrix<ENTRY_T>::create_domain_partition_from_kernel_partition(
 template <typename ENTRY_T>
 Legion::IndexPartition
 CSRMatrix<ENTRY_T>::create_range_partition_from_kernel_partition(
-    Legion::IndexSpace range_space, Legion::IndexPartition kernel_partition
+    [[maybe_unused]] Legion::IndexSpace range_space,
+    Legion::IndexPartition kernel_partition
 ) const {
     assert(range_space == rowptr_region.get_index_space());
     const Legion::IndexSpace kernel_color_space =

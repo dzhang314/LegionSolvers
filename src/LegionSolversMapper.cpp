@@ -53,9 +53,9 @@ const char *LegionSolversMapper::get_mapper_name() const {
 
 
 void LegionSolversMapper::memoize_operation(
-    const Legion::Mapping::MapperContext ctx,
-    const Legion::Mappable &mappable,
-    const MemoizeInput &input,
+    const Legion::Mapping::MapperContext,
+    const Legion::Mappable &,
+    const MemoizeInput &,
     MemoizeOutput &output
 ) {
     output.memoize = true;
@@ -74,9 +74,9 @@ void LegionSolversMapper::slice_task(
 
 #ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
 void LegionSolversMapper::select_sharding_functor(
-    const Legion::Mapping::MapperContext ctx,
-    const Legion::Task &task,
-    const SelectShardingFunctorInput &input,
+    const Legion::Mapping::MapperContext,
+    const Legion::Task &,
+    const SelectShardingFunctorInput &,
     SelectShardingFunctorOutput &output
 ) {
     output.chosen_functor = LEGION_SOLVERS_SHARDING_FUNCTOR_ID;
