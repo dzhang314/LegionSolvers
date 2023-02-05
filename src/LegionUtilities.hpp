@@ -57,9 +57,9 @@ constexpr bool operator&(TaskFlags lhs, TaskFlags rhs) noexcept {
 // clang-format off
 
 #define LEGION_SOLVERS_TASK_ARGS \
-    const Legion::Task *task, \
-    const std::vector<Legion::PhysicalRegion> &regions, \
-    Legion::Context ctx, Legion::Runtime *rt
+    [[maybe_unused]] const Legion::Task *task, \
+    [[maybe_unused]] const std::vector<Legion::PhysicalRegion> &regions, \
+    [[maybe_unused]] Legion::Context ctx, [[maybe_unused]] Legion::Runtime *rt
 
 #define LEGION_SOLVERS_DECLARE_TASK(RETURN_TYPE) \
     using return_type = RETURN_TYPE; \
