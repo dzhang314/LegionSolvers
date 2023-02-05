@@ -70,7 +70,8 @@ def main():
         legion_dir = clone_legion(branch_tag, branch_name)
         with change_directory(legion_dir):
             for build_tag, build_type in BUILD_TYPES:
-                for use_cuda, use_kokkos in [(True, True)]:
+                for use_cuda, use_kokkos in [(False, False), (False, True),
+                                             (True, False), (True, True)]:
                     cmake_legion(branch_tag, use_cuda, use_kokkos,
                                  build_tag, build_type)
 
