@@ -67,11 +67,13 @@ void top_level_task(
         ctx, rt, "domain_partition", domain_partition
     );
 
+#ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, domain_partition);
     rt->destroy_index_partition(ctx, matrix_partition);
     rt->destroy_index_partition(ctx, range_partition);
     rt->destroy_index_space(ctx, color_space);
     rt->destroy_index_space(ctx, domain_space);
+#endif // LEGION_SOLVERS_DISABLE_CLEANUP
 }
 
 
