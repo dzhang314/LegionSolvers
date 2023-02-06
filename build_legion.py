@@ -1,12 +1,32 @@
 #!/usr/bin/env python3
 
 import os as _os
+from typing import List as _List
+from typing import Tuple as _Tuple
 
-from build_utilities import *
-from build_dependencies import *
+from build_utilities import (
+    underscore_join, change_directory, remove_directory,
+    clone, CMakeDefines, cmake, LIB_PREFIX, SCRATCH_DIR
+)
+
+from build_dependencies import (
+    KOKKOS_CUDA_CMAKE_PATH, KOKKOS_NOCUDA_CMAKE_PATH, KOKKOS_NVCC_WRAPPER_PATH
+)
 
 
 LEGION_GIT_URL: str = "https://gitlab.com/StanfordLegion/legion.git"
+
+
+LEGION_BRANCHES: _List[_Tuple[str, str]] = [
+    ("master", "master"),
+    ("cr", "control_replication"),
+]
+
+
+BUILD_TYPES: _List[_Tuple[str, str]] = [
+    ("debug", "Debug"),
+    ("release", "RelWithDebInfo"),
+]
 
 
 def cuda_tag(use_cuda: bool) -> str:
@@ -24,14 +44,19 @@ def clone_legion(branch_tag: str, branch_name: str) -> str:
     return output_dir
 
 
-def cmake_legion(branch_tag: str, use_cuda: bool, use_kokkos: bool,
-                 build_tag: str, build_type: str):
-    lib_path = _os.path.join(LIB_PREFIX, underscore_join(
+def legion_library_path(branch_tag: str, use_cuda: bool,
+                        use_kokkos: bool, build_tag: str) -> str:
+    return _os.path.join(LIB_PREFIX, underscore_join(
         "legion", branch_tag,
         cuda_tag(use_cuda), kokkos_tag(use_kokkos), build_tag
     ))
+
+
+def cmake_legion(branch_tag: str, use_cuda: bool, use_kokkos: bool,
+                 build_tag: str, build_type: str):
+    lib_path = legion_library_path(branch_tag, use_cuda, use_kokkos, build_tag)
     remove_directory(lib_path)
-    defines = {
+    defines: CMakeDefines = {
         "CMAKE_CXX_STANDARD": 17,
         "CMAKE_BUILD_TYPE": build_type,
         "CMAKE_INSTALL_PREFIX": lib_path,
@@ -48,11 +73,7 @@ def cmake_legion(branch_tag: str, use_cuda: bool, use_kokkos: bool,
         defines["Legion_USE_Kokkos"] = True
         if use_cuda:
             defines["Kokkos_DIR"] = KOKKOS_CUDA_CMAKE_PATH
-            defines["KOKKOS_CXX_COMPILER"] = _os.path.join(
-                LIB_PREFIX,
-                KOKKOS_CUDA_LIB_NAME if use_cuda else KOKKOS_NOCUDA_LIB_NAME,
-                "bin", "nvcc_wrapper"
-            )
+            defines["KOKKOS_CXX_COMPILER"] = KOKKOS_NVCC_WRAPPER_PATH
         else:
             defines["Kokkos_DIR"] = KOKKOS_NOCUDA_CMAKE_PATH
     cmake(underscore_join(

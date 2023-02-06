@@ -10,24 +10,6 @@ import shutil as _shutil
 import subprocess as _subprocess
 
 
-################################################################################
-
-
-LEGION_BRANCHES: _List[_Tuple[str, str]] = [
-    ("master", "master"),
-    ("cr", "control_replication"),
-]
-
-
-BUILD_TYPES: _List[_Tuple[str, str]] = [
-    ("debug", "Debug"),
-    ("release", "RelWithDebInfo"),
-]
-
-
-################################################################################
-
-
 def underscore_join(*args: _Any) -> str:
     return '_'.join(str(arg) for arg in args if arg)
 
@@ -84,9 +66,6 @@ def run(*command: str, check: bool = True, quiet: bool = False) -> None:
         quiet, "[LegionSolversBuild] Running command", ' '.join(command)
     )
     _subprocess.run(command, check=check)
-
-
-################################################################################
 
 
 def download(url: str, quiet: bool = False) -> None:

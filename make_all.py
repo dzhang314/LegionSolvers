@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import os
-
-from build_utilities import *
-from build_legion import *
+from build_utilities import change_directory, run
+from build_legion import LEGION_BRANCHES, BUILD_TYPES
+from refresh_cmake import legion_solvers_build_path
 
 
 def main():
@@ -11,16 +10,9 @@ def main():
         for build_tag, _ in BUILD_TYPES:
             for use_cuda in [False, True]:
                 for use_kokkos in [False, True]:
-                    build_name = underscore_join(
-                        branch_tag,
-                        cuda_tag(use_cuda), kokkos_tag(use_kokkos), build_tag
-                    )
-                    build_dir = os.path.join(
-                        SCRATCH_DIR,
-                        "LegionSolversBuild",
-                        build_name
-                    )
-                    with change_directory(build_dir):
+                    with change_directory(legion_solvers_build_path(
+                        branch_tag, use_cuda, use_kokkos, build_tag
+                    )):
                         run("cmake", "--build", ".", "--parallel")
 
 

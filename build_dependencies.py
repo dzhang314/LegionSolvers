@@ -1,27 +1,40 @@
 #!/usr/bin/env python3
 
-from build_utilities import *
 import os as _os
+
+from build_utilities import (
+    change_directory, remove_directory, clone, run,
+    CMakeDefines, cmake, LIB_PREFIX, SCRATCH_DIR, Machines, MACHINE
+)
 
 
 GASNET_GIT_URL: str = "https://github.com/StanfordLegion/gasnet.git"
 KOKKOS_GIT_URL: str = "https://github.com/kokkos/kokkos.git"
-KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.0.0-rc-cuda"
-KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.0.0-rc-nocuda"
+
+
+_KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.0.0-rc-cuda"
+_KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.0.0-rc-nocuda"
+
+
 KOKKOS_CUDA_CMAKE_PATH: str = _os.path.join(
-    LIB_PREFIX, KOKKOS_CUDA_LIB_NAME,
+    LIB_PREFIX, _KOKKOS_CUDA_LIB_NAME,
     "lib" if MACHINE == Machines.SAPLING else "lib64",
     "cmake", "Kokkos"
 )
+
 KOKKOS_NOCUDA_CMAKE_PATH: str = _os.path.join(
-    LIB_PREFIX, KOKKOS_NOCUDA_LIB_NAME,
+    LIB_PREFIX, _KOKKOS_NOCUDA_LIB_NAME,
     "lib" if MACHINE == Machines.SAPLING else "lib64",
     "cmake", "Kokkos"
+)
+
+
+KOKKOS_NVCC_WRAPPER_PATH = _os.path.join(
+    LIB_PREFIX, _KOKKOS_CUDA_LIB_NAME, "bin", "nvcc_wrapper"
 )
 
 
 def main():
-
     with change_directory(LIB_PREFIX):
         remove_directory("gasnet")
         clone(GASNET_GIT_URL, path="gasnet")
@@ -29,7 +42,6 @@ def main():
             run("make", "CONDUIT=ibv")  # TODO: machine-to-conduit mapping
 
     _os.chdir(SCRATCH_DIR)
-
     remove_directory("kokkos-4.0.0-rc")
     clone(KOKKOS_GIT_URL, branch="release-candidate-4.0.0",
           path="kokkos-4.0.0-rc")
@@ -39,7 +51,7 @@ def main():
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_INSTALL_PREFIX": _os.path.join(
-                LIB_PREFIX, KOKKOS_CUDA_LIB_NAME
+                LIB_PREFIX, _KOKKOS_CUDA_LIB_NAME
             ),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
@@ -53,7 +65,7 @@ def main():
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_INSTALL_PREFIX": _os.path.join(
-                LIB_PREFIX, KOKKOS_NOCUDA_LIB_NAME
+                LIB_PREFIX, _KOKKOS_NOCUDA_LIB_NAME
             ),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
