@@ -73,30 +73,42 @@ set_target_properties(LegionSolvers
 # needs to be done once LegionSolvers is a library that other people are
 # expected to import, as right now it's just us writing applications in it.
 
-add_executable(Test00Build src/Test00Build.cpp)
+add_executable(Test00Build test/Test00Build.cpp)
 target_link_libraries(Test00Build LegionSolvers)
+target_include_directories(Test00Build PRIVATE src)
 set_target_properties(Test00Build PROPERTIES CXX_STANDARD 17)
 
-add_executable(Test01ScalarOperations src/Test01ScalarOperations.cpp)
+add_executable(Test01ScalarOperations test/Test01ScalarOperations.cpp)
 target_link_libraries(Test01ScalarOperations LegionSolvers)
+target_include_directories(Test01ScalarOperations PRIVATE src)
 set_target_properties(Test01ScalarOperations PROPERTIES CXX_STANDARD 17)
 
-add_executable(Test02VectorOperations src/Test02VectorOperations.cpp)
+add_executable(Test02VectorOperations test/Test02VectorOperations.cpp)
 target_link_libraries(Test02VectorOperations LegionSolvers)
+target_include_directories(Test02VectorOperations PRIVATE src)
 set_target_properties(Test02VectorOperations PROPERTIES CXX_STANDARD 17)
 
-add_executable(Test03COOPartitioning src/Test03COOPartitioning.cpp)
+add_executable(Test03COOPartitioning test/Test03COOPartitioning.cpp)
 target_link_libraries(Test03COOPartitioning LegionSolvers)
+target_include_directories(Test03COOPartitioning PRIVATE src)
 set_target_properties(Test03COOPartitioning PROPERTIES CXX_STANDARD 17)
 
-add_executable(Test04CSRPartitioning src/Test04CSRPartitioning.cpp)
+add_executable(Test04CSRPartitioning test/Test04CSRPartitioning.cpp)
 target_link_libraries(Test04CSRPartitioning LegionSolvers)
+target_include_directories(Test04CSRPartitioning PRIVATE src)
 set_target_properties(Test04CSRPartitioning PROPERTIES CXX_STANDARD 17)
 
-add_executable(Test05COOSolveCG src/Test05COOSolveCG.cpp)
+add_executable(Test05COOSolveCG test/Test05COOSolveCG.cpp)
 target_link_libraries(Test05COOSolveCG LegionSolvers)
+target_include_directories(Test05COOSolveCG PRIVATE src)
 set_target_properties(Test05COOSolveCG PROPERTIES CXX_STANDARD 17)
 
-add_executable(Test06CSRSolveCG src/Test06CSRSolveCG.cpp)
+add_executable(Test06CSRSolveCG test/Test06CSRSolveCG.cpp)
 target_link_libraries(Test06CSRSolveCG LegionSolvers)
+target_include_directories(Test06CSRSolveCG PRIVATE src)
 set_target_properties(Test06CSRSolveCG PROPERTIES CXX_STANDARD 17)
+
+add_executable(BenchmarkStencil test/BenchmarkStencil.cpp)
+target_link_libraries(BenchmarkStencil LegionSolvers)
+target_include_directories(BenchmarkStencil PRIVATE src)
+set_target_properties(BenchmarkStencil PROPERTIES CXX_STANDARD 17)
