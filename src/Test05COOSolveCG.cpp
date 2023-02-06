@@ -78,13 +78,7 @@ void top_level_task(
 
     LegionSolvers::CGSolver<ENTRY_T> solver{planner};
 
-    const Legion::TraceID trace_id = rt->generate_dynamic_trace_id();
-
-    for (std::size_t i = 0; i < num_iterations; ++i) {
-        rt->begin_trace(ctx, trace_id);
-        solver.step();
-        rt->end_trace(ctx, trace_id);
-    }
+    for (std::size_t i = 0; i < num_iterations; ++i) { solver.step(); }
 
     if (!no_print_results) {
         Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
