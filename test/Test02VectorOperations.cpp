@@ -158,11 +158,59 @@ void top_level_task(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
+    // launch_task(ctx, rt, TEST_FLOAT__1_SI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__1_UI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__1_LL_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_SI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_UI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_LL_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_SI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_UI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_LL_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_SI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_UI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_LL_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_SI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_UI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_LL_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_SI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_UI_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_LL_1_SI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__1_SI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__1_UI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__1_LL_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_SI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_UI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_LL_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_SI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_UI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_LL_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_SI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_UI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_LL_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_SI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_UI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_LL_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_SI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_UI_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_LL_1_UI_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__1_SI_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__1_UI_1_LL_TASK_ID);
     launch_task(ctx, rt, TEST_FLOAT__1_LL_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_SI_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__2_UI_1_LL_TASK_ID);
     launch_task(ctx, rt, TEST_FLOAT__2_LL_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_SI_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_FLOAT__3_UI_1_LL_TASK_ID);
     launch_task(ctx, rt, TEST_FLOAT__3_LL_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_SI_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_1_UI_1_LL_TASK_ID);
     launch_task(ctx, rt, TEST_DOUBLE_1_LL_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_SI_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_2_UI_1_LL_TASK_ID);
     launch_task(ctx, rt, TEST_DOUBLE_2_LL_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_SI_1_LL_TASK_ID);
+    // launch_task(ctx, rt, TEST_DOUBLE_3_UI_1_LL_TASK_ID);
     launch_task(ctx, rt, TEST_DOUBLE_3_LL_1_LL_TASK_ID);
 }
 
