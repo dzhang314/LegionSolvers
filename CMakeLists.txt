@@ -24,6 +24,7 @@ list(APPEND LegionSolvers_SOURCES
     src/LinearAlgebraTasks.cpp
     src/PartitionedVector.cpp
     src/Scalar.cpp
+    src/StencilGenerator.cpp
     src/UtilityTasks.cpp
 )
 
