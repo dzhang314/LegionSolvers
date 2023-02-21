@@ -5,7 +5,7 @@ from typing import List as _List
 from typing import Tuple as _Tuple
 
 from build_utilities import (
-    underscore_join, change_directory, remove_directory,
+    underscore_join, change_directory, remove_directory, run,
     clone, CMakeDefines, cmake, LIB_PREFIX, SCRATCH_DIR
 )
 
@@ -41,6 +41,9 @@ def clone_legion(branch_tag: str, branch_name: str) -> str:
     output_dir = underscore_join("legion", branch_tag)
     remove_directory(output_dir)
     clone(LEGION_GIT_URL, branch=branch_name, path=output_dir)
+    if branch_name == "control_replication":
+        with change_directory(output_dir):
+            run("git", "checkout", "28db23b4")
     return output_dir
 
 
@@ -60,8 +63,8 @@ def cmake_legion(branch_tag: str, use_cuda: bool, use_kokkos: bool,
         "CMAKE_CXX_STANDARD": 17,
         "CMAKE_BUILD_TYPE": build_type,
         "CMAKE_INSTALL_PREFIX": lib_path,
-        "Legion_BUILD_TESTS": True,
-        "Legion_ENABLE_TESTING": True,
+        # "Legion_BUILD_TESTS": True,
+        # "Legion_ENABLE_TESTING": True,
         "Legion_USE_OpenMP": True,
         "Legion_USE_CUDA": use_cuda,
         "Legion_NETWORKS": "gasnetex",
@@ -79,7 +82,7 @@ def cmake_legion(branch_tag: str, use_cuda: bool, use_kokkos: bool,
     cmake(underscore_join(
         "build", branch_tag,
         cuda_tag(use_cuda), kokkos_tag(use_kokkos), build_tag
-    ), defines, build=True, test=True, install=True)
+    ), defines, build=True, test=False, install=True)
 
 
 def main():
