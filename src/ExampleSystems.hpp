@@ -5,7 +5,7 @@
 
 #include "COOMatrix.hpp"       // for COOMatrix
 #include "CSRMatrix.hpp"       // for CSRMatrix
-#include "LegionUtilities.hpp" // for TaskFlags
+#include "LegionUtilities.hpp" // for TaskFlags, LEGION_SOLVERS_DECLARE_TASK
 #include "TaskBaseClasses.hpp" // for TaskTDDDIII
 #include "TaskIDs.hpp"         // for *_TASK_BLOCK_ID
 
@@ -74,14 +74,7 @@ struct FillCOONegativeLaplacianTask
         KERNEL_COORD_T grid_shape[KERNEL_DIM];
     };
 
-    using return_type = void;
-
-    static return_type task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    );
+    LEGION_SOLVERS_DECLARE_TASK(void);
 
 }; // struct FillCOONegativeLaplacianTask
 
@@ -117,14 +110,7 @@ struct FillCSRNegativeLaplacianTask
         KERNEL_COORD_T grid_shape[KERNEL_DIM];
     };
 
-    using return_type = void;
-
-    static return_type task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    );
+    LEGION_SOLVERS_DECLARE_TASK(void);
 
 }; // struct FillCSRNegativeLaplacianTask
 
@@ -160,14 +146,7 @@ struct FillCSRNegativeLaplacianRowptrTask
         KERNEL_COORD_T grid_shape[KERNEL_DIM];
     };
 
-    using return_type = void;
-
-    static return_type task_body(
-        const Legion::Task *task,
-        const std::vector<Legion::PhysicalRegion> &regions,
-        Legion::Context ctx,
-        Legion::Runtime *rt
-    );
+    LEGION_SOLVERS_DECLARE_TASK(void);
 
 }; // struct FillCSRNegativeLaplacianRowptrTask
 
