@@ -3,17 +3,18 @@
 import os as _os
 
 from build_utilities import (
-    change_directory, remove_directory, clone, run,
+    change_directory, remove_directory, clone, download, run,
     CMakeDefines, cmake, LIB_PREFIX, SCRATCH_DIR, Machines, MACHINE
 )
 
 
 GASNET_GIT_URL: str = "https://github.com/StanfordLegion/gasnet.git"
 KOKKOS_GIT_URL: str = "https://github.com/kokkos/kokkos.git"
+KOKKOS_4_0_URL: str = "https://github.com/kokkos/kokkos/archive/refs/tags/4.0.00.zip"
 
 
-_KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.0.0-rc-cuda"
-_KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.0.0-rc-nocuda"
+_KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.0.00-cuda"
+_KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.0.00-nocuda"
 
 
 KOKKOS_CUDA_CMAKE_PATH: str = _os.path.join(
@@ -42,11 +43,11 @@ def main():
             run("make", "CONDUIT=ibv")  # TODO: machine-to-conduit mapping
 
     _os.chdir(SCRATCH_DIR)
-    remove_directory("kokkos-4.0.0-rc")
-    clone(KOKKOS_GIT_URL, branch="release-candidate-4.0.0",
-          path="kokkos-4.0.0-rc")
+    remove_directory("kokkos-4.0.00")
+    download(KOKKOS_4_0_URL)
+    run("unzip", "4.0.00.zip")
 
-    with change_directory("kokkos-4.0.0-rc"):
+    with change_directory("kokkos-4.0.00"):
         defines_cuda: CMakeDefines = {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
