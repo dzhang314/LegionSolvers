@@ -36,13 +36,15 @@ void top_level_task(
     offsets.emplace_back(Legion::Point<DIM, COORD_T>{0, 0, -1}, -1.0);
     offsets.emplace_back(Legion::Point<DIM, COORD_T>{0, 0, +1}, -1.0);
 
-    LegionSolvers::create_csr_stencil_matrix(ctx, rt, bounds, offsets, 4);
+    const LegionSolvers::COOMatrix<ENTRY_T> matrix =
+        LegionSolvers::create_coo_stencil_matrix(ctx, rt, bounds, offsets, 4);
+    matrix.print(rt->create_index_space(ctx, bounds));
 }
 
 
 int main(int argc, char **argv) {
     using LegionSolvers::TaskFlags;
-    LegionSolvers::initialize(false, false);
+    LegionSolvers::initialize(true, true);
     LegionSolvers::preregister_task<top_level_task>(
         TOP_LEVEL_TASK_ID,
         "top_level",

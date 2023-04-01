@@ -42,6 +42,21 @@ struct CSRRmatvecTask : public TaskTDDDIII<
 };
 
 
+LEGION_SOLVERS_KDR_TEMPLATE
+struct CSRPrintTask : public TaskTDDDIII<
+                          CSR_PRINT_TASK_BLOCK_ID,
+                          CSRPrintTask,
+                          LEGION_SOLVERS_KDR_TEMPLATE_ARGS> {
+    static constexpr const char *task_base_name = "csr_print";
+    static constexpr const TaskFlags flags = TaskFlags::LEAF;
+    struct Args {
+        Legion::FieldID fid_entry;
+        Legion::FieldID fid_col;
+    };
+    LEGION_SOLVERS_DECLARE_TASK(void);
+};
+
+
 } // namespace LegionSolvers
 
 #endif // LEGION_SOLVERS_CSR_MATRIX_TASKS_HPP_INCLUDED

@@ -1,6 +1,9 @@
 #include "COOMatrixTasks.hpp"
 
+#include <iostream> // for std::cout
+
 using LegionSolvers::COOMatvecTask;
+using LegionSolvers::COOPrintTask;
 using LegionSolvers::COORmatvecTask;
 
 
@@ -80,9 +83,59 @@ void COORmatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
 }
 
 
+LEGION_SOLVERS_KDR_TEMPLATE
+void COOPrintTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
+    LEGION_SOLVERS_TASK_ARGS
+) {
+    assert(regions.size() == 1);
+    const auto &coo_matrix = regions[0];
+
+    assert(task->regions.size() == 1);
+    [[maybe_unused]] const auto &matrix_req = task->regions[0];
+
+    assert(matrix_req.privilege_fields.size() == 3);
+
+    assert(task->arglen == sizeof(Args));
+    const Args args = *reinterpret_cast<const Args *>(task->args);
+
+    const AffineReader<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T> entry_reader(
+        coo_matrix, args.fid_entry
+    );
+
+    const AffineReader<
+        Legion::Point<RANGE_DIM, RANGE_COORD_T>,
+        KERNEL_DIM,
+        KERNEL_COORD_T>
+        row_reader(coo_matrix, args.fid_row);
+
+    const AffineReader<
+        Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
+        KERNEL_DIM,
+        KERNEL_COORD_T>
+        col_reader(coo_matrix, args.fid_col);
+
+    using KPointIter =
+        Legion::PointInDomainIterator<KERNEL_DIM, KERNEL_COORD_T>;
+
+    for (KPointIter k_it(coo_matrix); k_it(); ++k_it) {
+        const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> kp = *k_it;
+        const Legion::Point<RANGE_DIM, RANGE_COORD_T> row = row_reader[kp];
+        const Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T> col = col_reader[kp];
+        std::cout << kp << ": entry " << entry_reader[kp] << " at (" << row
+                  << ", " << col << ")" << std::endl;
+    }
+}
+
+
 // clang-format off
 template void COOMatvecTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 template void COORmatvecTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOPrintTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOPrintTask<float, 1, 2, 2, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOPrintTask<float, 1, 3, 3, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 template void COOMatvecTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 template void COORmatvecTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOPrintTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOPrintTask<double, 1, 2, 2, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void COOPrintTask<double, 1, 3, 3, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 // clang-format on

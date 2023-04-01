@@ -427,10 +427,26 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
     FillCSRNegativeLaplacianTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
     FillCSRNegativeLaplacianRowptrTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
     FillCSRNegativeLaplacianRowptrTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    COOMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    COOMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    CSRMatvecTask<float, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
-    CSRMatvecTask<double, 1, 1, 1, Legion::coord_t, Legion::coord_t, Legion::coord_t>::preregister(verbose);
+    COOMatvecTask<float, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    COORmatvecTask<float, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    COOPrintTask<float, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    COOPrintTask<float, 1, 2, 2, long long, long long, long long>::preregister(verbose);
+    COOPrintTask<float, 1, 3, 3, long long, long long, long long>::preregister(verbose);
+    COOMatvecTask<double, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    COORmatvecTask<double, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    COOPrintTask<double, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    COOPrintTask<double, 1, 2, 2, long long, long long, long long>::preregister(verbose);
+    COOPrintTask<double, 1, 3, 3, long long, long long, long long>::preregister(verbose);
+    CSRMatvecTask<float, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    CSRRmatvecTask<float, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    CSRPrintTask<float, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    CSRPrintTask<float, 1, 2, 2, long long, long long, long long>::preregister(verbose);
+    CSRPrintTask<float, 1, 3, 3, long long, long long, long long>::preregister(verbose);
+    CSRMatvecTask<double, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    CSRRmatvecTask<double, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    CSRPrintTask<double, 1, 1, 1, long long, long long, long long>::preregister(verbose);
+    CSRPrintTask<double, 1, 2, 2, long long, long long, long long>::preregister(verbose);
+    CSRPrintTask<double, 1, 3, 3, long long, long long, long long>::preregister(verbose);
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     LoadCUDALibsTask::preregister(verbose);

@@ -1,6 +1,9 @@
 #include "CSRMatrixTasks.hpp"
 
+#include <iostream> // for std::cout
+
 using LegionSolvers::CSRMatvecTask;
+using LegionSolvers::CSRPrintTask;
 using LegionSolvers::CSRRmatvecTask;
 
 
@@ -65,15 +68,13 @@ void LegionSolvers::CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
 
     using KPointIter =
         Legion::PointInDomainIterator<KERNEL_DIM, KERNEL_COORD_T>;
-    using DPointIter = Legion::PointInDomainIterator<RANGE_DIM, RANGE_COORD_T>;
+    using RPointIter = Legion::PointInDomainIterator<RANGE_DIM, RANGE_COORD_T>;
 
     for (KPointIter k_it(csr_matrix); k_it(); ++k_it) {
-
         const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> kp = *k_it;
-
         Legion::Point<RANGE_DIM, RANGE_COORD_T> row;
         [[maybe_unused]] bool row_found = false;
-        for (DPointIter rowptr_it(rowptr_region); rowptr_it(); ++rowptr_it) {
+        for (RPointIter rowptr_it(rowptr_region); rowptr_it(); ++rowptr_it) {
             const Legion::Point<RANGE_DIM, RANGE_COORD_T> cur_row = *rowptr_it;
             const Legion::Rect<KERNEL_DIM, KERNEL_COORD_T> rect =
                 rowptr_reader[cur_row];
@@ -83,7 +84,6 @@ void LegionSolvers::CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
             }
         }
         assert(row_found);
-
         const Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T> col = col_reader[kp];
         if (input_domain.contains(col) && output_domain.contains(row)) {
             output_writer[row] <<= entry_reader[kp] * input_reader[col];
@@ -100,9 +100,75 @@ void CSRRmatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
 }
 
 
+LEGION_SOLVERS_KDR_TEMPLATE
+void CSRPrintTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::task_body(
+    LEGION_SOLVERS_TASK_ARGS
+) {
+    assert(regions.size() == 2);
+    const auto &csr_matrix = regions[0];
+    const auto &rowptr_region = regions[1];
+
+    assert(task->regions.size() == 2);
+    [[maybe_unused]] const auto &matrix_req = task->regions[0];
+    [[maybe_unused]] const auto &rowptr_req = task->regions[1];
+
+    assert(matrix_req.privilege_fields.size() == 2);
+    assert(rowptr_req.privilege_fields.size() == 1);
+    const Legion::FieldID fid_rowptr = *rowptr_req.privilege_fields.begin();
+
+    assert(task->arglen == sizeof(Args));
+    const Args args = *reinterpret_cast<const Args *>(task->args);
+
+    const AffineReader<ENTRY_T, KERNEL_DIM, KERNEL_COORD_T> entry_reader(
+        csr_matrix, args.fid_entry
+    );
+
+    const AffineReader<
+        Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T>,
+        KERNEL_DIM,
+        KERNEL_COORD_T>
+        col_reader(csr_matrix, args.fid_col);
+
+    const AffineReader<
+        Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>,
+        RANGE_DIM,
+        RANGE_COORD_T>
+        rowptr_reader(rowptr_region, fid_rowptr);
+
+    using KPointIter =
+        Legion::PointInDomainIterator<KERNEL_DIM, KERNEL_COORD_T>;
+    using RPointIter = Legion::PointInDomainIterator<RANGE_DIM, RANGE_COORD_T>;
+
+    for (KPointIter k_it(csr_matrix); k_it(); ++k_it) {
+        const Legion::Point<KERNEL_DIM, KERNEL_COORD_T> kp = *k_it;
+        Legion::Point<RANGE_DIM, RANGE_COORD_T> row;
+        [[maybe_unused]] bool row_found = false;
+        for (RPointIter rowptr_it(rowptr_region); rowptr_it(); ++rowptr_it) {
+            const Legion::Point<RANGE_DIM, RANGE_COORD_T> cur_row = *rowptr_it;
+            const Legion::Rect<KERNEL_DIM, KERNEL_COORD_T> rect =
+                rowptr_reader[cur_row];
+            if (rect.contains(kp)) {
+                row_found = true;
+                row = cur_row;
+            }
+        }
+        assert(row_found);
+        const Legion::Point<DOMAIN_DIM, DOMAIN_COORD_T> col = col_reader[kp];
+        std::cout << kp << ": entry " << entry_reader[kp] << " at (" << row
+                  << ", " << col << ")" << std::endl;
+    }
+}
+
+
 // clang-format off
 template void CSRMatvecTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 template void CSRRmatvecTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void CSRPrintTask<float, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void CSRPrintTask<float, 1, 2, 2, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void CSRPrintTask<float, 1, 3, 3, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 template void CSRMatvecTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 template void CSRRmatvecTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void CSRPrintTask<double, 1, 1, 1, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void CSRPrintTask<double, 1, 2, 2, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
+template void CSRPrintTask<double, 1, 3, 3, long long, long long, long long>::task_body(LEGION_SOLVERS_TASK_ARGS);
 // clang-format on

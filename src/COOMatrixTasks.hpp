@@ -44,6 +44,22 @@ struct COORmatvecTask : public TaskTDDDIII<
 };
 
 
+LEGION_SOLVERS_KDR_TEMPLATE
+struct COOPrintTask : public TaskTDDDIII<
+                          COO_PRINT_TASK_BLOCK_ID,
+                          COOPrintTask,
+                          LEGION_SOLVERS_KDR_TEMPLATE_ARGS> {
+    static constexpr const char *task_base_name = "coo_print";
+    static constexpr const TaskFlags flags = TaskFlags::LEAF;
+    struct Args {
+        Legion::FieldID fid_entry;
+        Legion::FieldID fid_row;
+        Legion::FieldID fid_col;
+    };
+    LEGION_SOLVERS_DECLARE_TASK(void);
+};
+
+
 } // namespace LegionSolvers
 
 #endif // LEGION_SOLVERS_COO_MATRIX_TASKS_HPP_INCLUDED

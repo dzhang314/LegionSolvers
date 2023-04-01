@@ -83,6 +83,8 @@ public:
         Legion::IndexPartition ghost_partition
     ) const override;
 
+    virtual void print(Legion::IndexSpace index_space) const;
+
 }; // class COOMatrix
 
 

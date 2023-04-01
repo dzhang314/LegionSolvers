@@ -191,6 +191,32 @@ void COOMatrix<ENTRY_T>::matvec(
 }
 
 
+template <typename ENTRY_T>
+void COOMatrix<ENTRY_T>::print(Legion::IndexSpace index_space) const {
+
+    typename COOPrintTask<ENTRY_T, 0, 0, 0, void, void, void>::Args args;
+    args.fid_entry = fid_entry;
+    args.fid_row = fid_row;
+    args.fid_col = fid_col;
+
+    Legion::TaskLauncher launcher(
+        COOPrintTask<ENTRY_T, 0, 0, 0, void, void, void>::task_id(
+            kernel_region.get_index_space(), index_space, index_space
+        ),
+        Legion::TaskArgument(&args, sizeof(decltype(args)))
+    );
+    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+    launcher.add_region_requirement(Legion::RegionRequirement(
+        kernel_region, LEGION_READ_ONLY, LEGION_EXCLUSIVE, kernel_region
+    ));
+    launcher.add_field(0, fid_entry);
+    launcher.add_field(0, fid_row);
+    launcher.add_field(0, fid_col);
+
+    rt->execute_task(ctx, launcher);
+}
+
+
 // clang-format off
 #ifdef LEGION_SOLVERS_USE_F32
     template COOMatrix<float>::COOMatrix(Legion::Context, Legion::Runtime *, Legion::LogicalRegion, Legion::FieldID, Legion::FieldID, Legion::FieldID);
@@ -201,6 +227,7 @@ void COOMatrix<ENTRY_T>::matvec(
     template Legion::IndexPartition COOMatrix<float>::create_domain_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;
     template Legion::IndexPartition COOMatrix<float>::create_range_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;
     template void COOMatrix<float>::matvec(PartitionedVector<float> &, const PartitionedVector<float> &, Legion::LogicalPartition, Legion::IndexPartition) const;
+    template void COOMatrix<float>::print(Legion::IndexSpace) const;
 #endif // LEGION_SOLVERS_USE_F32
 #ifdef LEGION_SOLVERS_USE_F64
     template COOMatrix<double>::COOMatrix(Legion::Context, Legion::Runtime *, Legion::LogicalRegion, Legion::FieldID, Legion::FieldID, Legion::FieldID);
@@ -211,5 +238,6 @@ void COOMatrix<ENTRY_T>::matvec(
     template Legion::IndexPartition COOMatrix<double>::create_domain_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;
     template Legion::IndexPartition COOMatrix<double>::create_range_partition_from_kernel_partition(Legion::IndexSpace, Legion::IndexPartition) const;
     template void COOMatrix<double>::matvec(PartitionedVector<double> &, const PartitionedVector<double> &, Legion::LogicalPartition, Legion::IndexPartition) const;
+    template void COOMatrix<double>::print(Legion::IndexSpace) const;
 #endif // LEGION_SOLVERS_USE_F64
 // clang-format on
