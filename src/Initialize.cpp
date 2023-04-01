@@ -8,6 +8,7 @@
 #include "LegionSolversMapper.hpp" // for mapper_registration_callback
 #include "LibraryOptions.hpp"      // for LEGION_SOLVERS_USE_*
 #include "LinearAlgebraTasks.hpp"  // for ScalTask, AxpyTask, XpayTask, DotTask
+#include "StencilGenerator.hpp"    // for FillCOOStencilTask, FillCSRStencilTask
 #include "UtilityTasks.hpp"        // for *ScalarTask
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
@@ -325,6 +326,96 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
                 AxpyTask<double, 3, long long>::preregister(verbose);
                 XpayTask<double, 3, long long>::preregister(verbose);
                 DotTask<double, 3, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S64_INDICES
+    #endif // LEGION_SOLVERS_USE_F64
+
+    // StencilGenerator.hpp
+    #ifdef LEGION_SOLVERS_USE_F32
+        #ifdef LEGION_SOLVERS_USE_S32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                FillCOOStencilTask<float, 1, int>::preregister(verbose);
+                FillCSRStencilTask<float, 1, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                FillCOOStencilTask<float, 2, int>::preregister(verbose);
+                FillCSRStencilTask<float, 2, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                FillCOOStencilTask<float, 3, int>::preregister(verbose);
+                FillCSRStencilTask<float, 3, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S32_INDICES
+        #ifdef LEGION_SOLVERS_USE_U32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                FillCOOStencilTask<float, 1, unsigned>::preregister(verbose);
+                FillCSRStencilTask<float, 1, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                FillCOOStencilTask<float, 2, unsigned>::preregister(verbose);
+                FillCSRStencilTask<float, 2, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                FillCOOStencilTask<float, 3, unsigned>::preregister(verbose);
+                FillCSRStencilTask<float, 3, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_U32_INDICES
+        #ifdef LEGION_SOLVERS_USE_S64_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                FillCOOStencilTask<float, 1, long long>::preregister(verbose);
+                FillCSRStencilTask<float, 1, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                FillCOOStencilTask<float, 2, long long>::preregister(verbose);
+                FillCSRStencilTask<float, 2, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                FillCOOStencilTask<float, 3, long long>::preregister(verbose);
+                FillCSRStencilTask<float, 3, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S64_INDICES
+    #endif // LEGION_SOLVERS_USE_F32
+    #ifdef LEGION_SOLVERS_USE_F64
+        #ifdef LEGION_SOLVERS_USE_S32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                FillCOOStencilTask<double, 1, int>::preregister(verbose);
+                FillCSRStencilTask<double, 1, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                FillCOOStencilTask<double, 2, int>::preregister(verbose);
+                FillCSRStencilTask<double, 2, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                FillCOOStencilTask<double, 3, int>::preregister(verbose);
+                FillCSRStencilTask<double, 3, int>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_S32_INDICES
+        #ifdef LEGION_SOLVERS_USE_U32_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                FillCOOStencilTask<double, 1, unsigned>::preregister(verbose);
+                FillCSRStencilTask<double, 1, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                FillCOOStencilTask<double, 2, unsigned>::preregister(verbose);
+                FillCSRStencilTask<double, 2, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                FillCOOStencilTask<double, 3, unsigned>::preregister(verbose);
+                FillCSRStencilTask<double, 3, unsigned>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 3
+        #endif // LEGION_SOLVERS_USE_U32_INDICES
+        #ifdef LEGION_SOLVERS_USE_S64_INDICES
+            #if LEGION_SOLVERS_MAX_DIM >= 1
+                FillCOOStencilTask<double, 1, long long>::preregister(verbose);
+                FillCSRStencilTask<double, 1, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 1
+            #if LEGION_SOLVERS_MAX_DIM >= 2
+                FillCOOStencilTask<double, 2, long long>::preregister(verbose);
+                FillCSRStencilTask<double, 2, long long>::preregister(verbose);
+            #endif // LEGION_SOLVERS_MAX_DIM >= 2
+            #if LEGION_SOLVERS_MAX_DIM >= 3
+                FillCOOStencilTask<double, 3, long long>::preregister(verbose);
+                FillCSRStencilTask<double, 3, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_F64

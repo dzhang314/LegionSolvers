@@ -1,16 +1,15 @@
+#include <algorithm>
 #include <cassert>
 
 #include <legion.h>
 #include <realm/cmdline.h>
 
 #include "CGSolver.hpp"
-#include "CSRMatrix.hpp"
-#include "ExampleSystems.hpp"
 #include "Initialize.hpp"
 #include "LegionUtilities.hpp"
-#include "LibraryOptions.hpp"
 #include "PartitionedVector.hpp"
 #include "SquarePlanner.hpp"
+#include "StencilGenerator.hpp"
 
 
 enum TaskIDs : Legion::TaskID { TOP_LEVEL_TASK_ID };
@@ -21,7 +20,24 @@ void top_level_task(
     const std::vector<Legion::PhysicalRegion> &,
     Legion::Context ctx,
     Legion::Runtime *rt
-) {}
+) {
+    constexpr int DIM = 3;
+    using COORD_T = Legion::coord_t;
+    using ENTRY_T = double;
+
+    Legion::Rect<DIM, COORD_T> bounds = {{-1, -2, -3}, {+2, +1, +3}};
+
+    std::vector<std::pair<Legion::Point<DIM, COORD_T>, ENTRY_T>> offsets;
+    offsets.emplace_back(Legion::Point<DIM, COORD_T>{0, 0, 0}, +6.0);
+    offsets.emplace_back(Legion::Point<DIM, COORD_T>{-1, 0, 0}, -1.0);
+    offsets.emplace_back(Legion::Point<DIM, COORD_T>{+1, 0, 0}, -1.0);
+    offsets.emplace_back(Legion::Point<DIM, COORD_T>{0, -1, 0}, -1.0);
+    offsets.emplace_back(Legion::Point<DIM, COORD_T>{0, +1, 0}, -1.0);
+    offsets.emplace_back(Legion::Point<DIM, COORD_T>{0, 0, -1}, -1.0);
+    offsets.emplace_back(Legion::Point<DIM, COORD_T>{0, 0, +1}, -1.0);
+
+    LegionSolvers::create_csr_stencil_matrix(ctx, rt, bounds, offsets, 4);
+}
 
 
 int main(int argc, char **argv) {
@@ -37,5 +53,5 @@ int main(int argc, char **argv) {
     Legion::Runtime::set_top_level_task_mapper_id(
         LegionSolvers::LEGION_SOLVERS_MAPPER_ID
     );
-    return Legion::Runtime::start(argc, argv);
+    return Legion::Runtime::start(argc, argv, false, false);
 }
