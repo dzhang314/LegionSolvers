@@ -336,42 +336,60 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 FillCOOStencilTask<float, 1, int>::preregister(verbose);
                 FillCSRStencilTask<float, 1, int>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 1, int>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 1, int>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 FillCOOStencilTask<float, 2, int>::preregister(verbose);
                 FillCSRStencilTask<float, 2, int>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 2, int>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 2, int>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 FillCOOStencilTask<float, 3, int>::preregister(verbose);
                 FillCSRStencilTask<float, 3, int>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 3, int>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 3, int>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S32_INDICES
         #ifdef LEGION_SOLVERS_USE_U32_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 FillCOOStencilTask<float, 1, unsigned>::preregister(verbose);
                 FillCSRStencilTask<float, 1, unsigned>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 1, unsigned>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 1, unsigned>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 FillCOOStencilTask<float, 2, unsigned>::preregister(verbose);
                 FillCSRStencilTask<float, 2, unsigned>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 2, unsigned>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 2, unsigned>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 FillCOOStencilTask<float, 3, unsigned>::preregister(verbose);
                 FillCSRStencilTask<float, 3, unsigned>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 3, unsigned>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 3, unsigned>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_U32_INDICES
         #ifdef LEGION_SOLVERS_USE_S64_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 FillCOOStencilTask<float, 1, long long>::preregister(verbose);
                 FillCSRStencilTask<float, 1, long long>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 1, long long>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 1, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 FillCOOStencilTask<float, 2, long long>::preregister(verbose);
                 FillCSRStencilTask<float, 2, long long>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 2, long long>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 2, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 FillCOOStencilTask<float, 3, long long>::preregister(verbose);
                 FillCSRStencilTask<float, 3, long long>::preregister(verbose);
+                FillLinearizedCOOStencilTask<float, 3, long long>::preregister(verbose);
+                FillLinearizedCSRStencilTask<float, 3, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_F32
@@ -380,42 +398,60 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 FillCOOStencilTask<double, 1, int>::preregister(verbose);
                 FillCSRStencilTask<double, 1, int>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 1, int>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 1, int>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 FillCOOStencilTask<double, 2, int>::preregister(verbose);
                 FillCSRStencilTask<double, 2, int>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 2, int>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 2, int>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 FillCOOStencilTask<double, 3, int>::preregister(verbose);
                 FillCSRStencilTask<double, 3, int>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 3, int>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 3, int>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S32_INDICES
         #ifdef LEGION_SOLVERS_USE_U32_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 FillCOOStencilTask<double, 1, unsigned>::preregister(verbose);
                 FillCSRStencilTask<double, 1, unsigned>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 1, unsigned>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 1, unsigned>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 FillCOOStencilTask<double, 2, unsigned>::preregister(verbose);
                 FillCSRStencilTask<double, 2, unsigned>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 2, unsigned>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 2, unsigned>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 FillCOOStencilTask<double, 3, unsigned>::preregister(verbose);
                 FillCSRStencilTask<double, 3, unsigned>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 3, unsigned>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 3, unsigned>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_U32_INDICES
         #ifdef LEGION_SOLVERS_USE_S64_INDICES
             #if LEGION_SOLVERS_MAX_DIM >= 1
                 FillCOOStencilTask<double, 1, long long>::preregister(verbose);
                 FillCSRStencilTask<double, 1, long long>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 1, long long>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 1, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 FillCOOStencilTask<double, 2, long long>::preregister(verbose);
                 FillCSRStencilTask<double, 2, long long>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 2, long long>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 2, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 FillCOOStencilTask<double, 3, long long>::preregister(verbose);
                 FillCSRStencilTask<double, 3, long long>::preregister(verbose);
+                FillLinearizedCOOStencilTask<double, 3, long long>::preregister(verbose);
+                FillLinearizedCSRStencilTask<double, 3, long long>::preregister(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_F64

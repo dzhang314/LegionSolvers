@@ -54,6 +54,34 @@ struct FillCOOStencilTask : public TaskTDI<
 
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
+struct FillLinearizedCOOStencilTask
+    : public TaskTDI<
+          FILL_LINEARIZED_COO_STENCIL_TASK_BLOCK_ID,
+          FillLinearizedCOOStencilTask,
+          ENTRY_T,
+          DIM,
+          COORD_T> {
+
+    static constexpr const char *task_base_name = "fill_linearized_coo_stencil";
+
+    static constexpr const TaskFlags flags =
+        TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
+
+    struct Args {
+        Legion::FieldID fid_entry;
+        Legion::FieldID fid_row;
+        Legion::FieldID fid_col;
+        Legion::Rect<DIM, COORD_T> bounds;
+        IndexOrder order;
+        bool verbose;
+    };
+
+    LEGION_SOLVERS_DECLARE_TASK(void);
+
+}; // struct FillLinearizedCOOStencilTask
+
+
+template <typename ENTRY_T, int DIM, typename COORD_T>
 struct FillCSRStencilTask : public TaskTDI<
                                 FILL_CSR_STENCIL_TASK_BLOCK_ID,
                                 FillCSRStencilTask,
@@ -78,6 +106,34 @@ struct FillCSRStencilTask : public TaskTDI<
     LEGION_SOLVERS_DECLARE_TASK(void);
 
 }; // struct FillCSRStencilTask
+
+
+template <typename ENTRY_T, int DIM, typename COORD_T>
+struct FillLinearizedCSRStencilTask
+    : public TaskTDI<
+          FILL_LINEARIZED_CSR_STENCIL_TASK_BLOCK_ID,
+          FillLinearizedCSRStencilTask,
+          ENTRY_T,
+          DIM,
+          COORD_T> {
+
+    static constexpr const char *task_base_name = "fill_linearized_csr_stencil";
+
+    static constexpr const TaskFlags flags =
+        TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
+
+    struct Args {
+        Legion::FieldID fid_entry;
+        Legion::FieldID fid_col;
+        Legion::FieldID fid_rowptr;
+        Legion::Rect<DIM, COORD_T> bounds;
+        IndexOrder order;
+        bool verbose;
+    };
+
+    LEGION_SOLVERS_DECLARE_TASK(void);
+
+}; // struct FillLinearizedCSRStencilTask
 
 
 template <int DIM, typename COORD_T>
@@ -121,7 +177,7 @@ constexpr bool increment_row_major(
 
 
 template <int DIM, typename COORD_T>
-bool increment_column_major(
+constexpr bool increment_column_major(
     Legion::Point<DIM, COORD_T> &point, const Legion::Rect<DIM, COORD_T> &bounds
 ) {
     for (int i = 0; i < DIM; ++i) {
@@ -133,6 +189,38 @@ bool increment_column_major(
         }
     }
     return false;
+}
+
+
+template <int DIM, typename COORD_T>
+constexpr COORD_T linearize_row_major(
+    const Legion::Point<DIM, COORD_T> &point,
+    const Legion::Rect<DIM, COORD_T> &bounds
+) {
+    constexpr COORD_T ONE = static_cast<COORD_T>(1);
+    COORD_T result = static_cast<COORD_T>(0);
+    COORD_T acc = ONE;
+    for (int i = DIM - 1; i >= 0; --i) {
+        result += acc * (point[i] - bounds.lo[i]);
+        acc *= bounds.hi[i] - bounds.lo[i] + ONE;
+    }
+    return result;
+}
+
+
+template <int DIM, typename COORD_T>
+constexpr COORD_T linearize_column_major(
+    const Legion::Point<DIM, COORD_T> &point,
+    const Legion::Rect<DIM, COORD_T> &bounds
+) {
+    constexpr COORD_T ONE = static_cast<COORD_T>(1);
+    COORD_T result = static_cast<COORD_T>(0);
+    COORD_T acc = ONE;
+    for (int i = 0; i < DIM; ++i) {
+        result += acc * (point[i] - bounds.lo[i]);
+        acc *= bounds.hi[i] - bounds.lo[i] + ONE;
+    }
+    return result;
 }
 
 
@@ -373,6 +461,119 @@ CSRMatrix<ENTRY_T> create_csr_stencil_matrix(
     // launch stencil fill task
     Legion::IndexTaskLauncher launcher(
         FillCSRStencilTask<ENTRY_T, DIM, COORD_T>::task_id,
+        color_space,
+        Legion::UntypedBuffer(
+            arg_buffer.data(), sizeof(args) + offsets_byte_size
+        ),
+        Legion::ArgumentMap()
+    );
+    launcher.add_region_requirement(Legion::RegionRequirement(
+        kernel_logical_partition,
+        0,
+        LEGION_WRITE_DISCARD,
+        LEGION_EXCLUSIVE,
+        kernel_region
+    ));
+    launcher.add_field(0, FID_ENTRY);
+    launcher.add_field(0, FID_COL);
+    launcher.add_region_requirement(Legion::RegionRequirement(
+        rowptr_logical_partition,
+        0,
+        LEGION_WRITE_DISCARD,
+        LEGION_EXCLUSIVE,
+        rowptr_region
+    ));
+    launcher.add_field(1, FID_ROWPTR);
+    launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
+
+    rt->execute_index_space(ctx, launcher);
+
+    // return a CSRMatrix object
+    return CSRMatrix<ENTRY_T>(
+        ctx, rt, kernel_region, FID_ENTRY, FID_COL, rowptr_region, FID_ROWPTR
+    );
+}
+
+
+template <typename ENTRY_T, int DIM, typename COORD_T>
+CSRMatrix<ENTRY_T> create_linearized_csr_stencil_matrix(
+    Legion::Context ctx,
+    Legion::Runtime *rt,
+    const Legion::Rect<DIM, COORD_T> &bounds,
+    const std::vector<std::pair<Legion::Point<DIM, COORD_T>, ENTRY_T>> &offsets,
+    std::size_t num_pieces,
+    IndexOrder index_order = IndexOrder::ROW_MAJOR,
+    bool verbose = false
+) {
+    // create index spaces
+    constexpr int KERNEL_DIM = 1;
+    using KERNEL_COORD_T = Legion::coord_t;
+    const std::size_t stencil_size = calculate_stencil_size(bounds, offsets);
+    const auto kernel_space = rt->create_index_space(
+        ctx, Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>(0, stencil_size - 1)
+    );
+    const auto range_space = rt->create_index_space(
+        ctx, Legion::Rect<1, COORD_T>{0, bounds.volume() - 1}
+    );
+
+    // create field spaces
+    constexpr Legion::FieldID FID_ENTRY = 0;
+    constexpr Legion::FieldID FID_COL = 1;
+    const auto kernel_field_space = create_field_space(
+        ctx, rt, {sizeof(ENTRY_T), sizeof(COORD_T)}, {FID_ENTRY, FID_COL}
+    );
+
+    constexpr Legion::FieldID FID_ROWPTR = 0;
+    const auto rowptr_field_space = create_field_space(
+        ctx,
+        rt,
+        {sizeof(Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>)},
+        {FID_ROWPTR}
+    );
+
+    // create logical region
+    const auto kernel_region =
+        rt->create_logical_region(ctx, kernel_space, kernel_field_space);
+    const auto rowptr_region =
+        rt->create_logical_region(ctx, range_space, rowptr_field_space);
+
+    // create equal partitions into `num_pieces` pieces
+    constexpr int COLOR_DIM = 1;
+    using COLOR_COORD_T = Legion::coord_t;
+    const auto color_space = rt->create_index_space(
+        ctx, Legion::Rect<COLOR_DIM, COLOR_COORD_T>(0, num_pieces - 1)
+    );
+
+    const auto kernel_index_partition =
+        rt->create_equal_partition(ctx, kernel_space, color_space);
+    const auto kernel_logical_partition =
+        rt->get_logical_partition(kernel_region, kernel_index_partition);
+
+    const auto rowptr_index_partition =
+        rt->create_equal_partition(ctx, range_space, color_space);
+    const auto rowptr_logical_partition =
+        rt->get_logical_partition(rowptr_region, rowptr_index_partition);
+
+    // construct arguments for stencil fill task
+    typename FillLinearizedCSRStencilTask<ENTRY_T, DIM, COORD_T>::Args args;
+    args.fid_entry = FID_ENTRY;
+    args.fid_col = FID_COL;
+    args.fid_rowptr = FID_ROWPTR;
+    args.bounds = bounds;
+    args.order = index_order;
+    args.verbose = verbose;
+    const std::size_t offsets_byte_size =
+        offsets.size() *
+        sizeof(std::pair<Legion::Point<DIM, COORD_T>, ENTRY_T>);
+    std::vector<char> arg_buffer(sizeof(args) + offsets_byte_size);
+    std::memcpy(arg_buffer.data(), &args, sizeof(args));
+    std::memcpy(
+        arg_buffer.data() + sizeof(args), offsets.data(), offsets_byte_size
+    );
+
+    // launch stencil fill task
+    Legion::IndexTaskLauncher launcher(
+        FillLinearizedCSRStencilTask<ENTRY_T, DIM, COORD_T>::task_id,
         color_space,
         Legion::UntypedBuffer(
             arg_buffer.data(), sizeof(args) + offsets_byte_size
