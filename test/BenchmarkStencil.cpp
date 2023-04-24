@@ -93,8 +93,9 @@ void top_level_task(
     COORD_T ny = 16;
     COORD_T nz = 16;
     std::size_t num_pieces = 4;
-    std::size_t num_iterations = 10;
-    bool no_print_results = false;
+    std::size_t num_iterations = 20;
+    std::size_t iters_per_trace = 1;
+    std::size_t num_warmup_traces = 5;
 
     const Legion::InputArgs &args = Legion::Runtime::get_input_args();
     [[maybe_unused]] bool ok =
@@ -105,7 +106,7 @@ void top_level_task(
             .add_option_int("-nz", nz)
             .add_option_int("-vp", num_pieces)
             .add_option_int("-it", num_iterations)
-            .add_option_bool("-np", no_print_results)
+            .add_option_int("-pt", iters_per_trace)
             .parse_command_line(args.argc, (const char **) args.argv);
     assert(ok);
 
@@ -137,14 +138,57 @@ void top_level_task(
 
     LegionSolvers::CGSolver<ENTRY_T> solver{planner};
 
-    for (std::size_t i = 0; i < num_iterations; ++i) { solver.step(); }
+    const std::size_t num_traces =
+        (num_iterations + iters_per_trace - 1) / iters_per_trace;
+    const Legion::TraceID trace_id = 51;
 
-    if (!no_print_results) {
-        Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
-        for (std::size_t i = 0; i <= num_iterations; ++i) {
-            dummy = solver.residual_norm_squared[i].print(dummy);
-        }
+    rt->issue_execution_fence(ctx);
+    rt->issue_mapping_fence(ctx);
+
+    for (std::size_t i = 0; i < num_warmup_traces; ++i) {
+        rt->begin_trace(ctx, trace_id);
+        for (std::size_t j = 0; j < iters_per_trace; ++j) { solver.step(); }
+        rt->end_trace(ctx, trace_id);
     }
+
+    rt->issue_execution_fence(ctx);
+    rt->issue_mapping_fence(ctx);
+
+    const Legion::Future begin = rt->get_current_time_in_nanoseconds(ctx);
+    if (rt->get_shard_id(ctx, true) == 0) {
+        std::cout << "Performed " << num_warmup_traces << " warmup traces."
+                  << std::endl;
+    }
+
+    rt->issue_execution_fence(ctx);
+    rt->issue_mapping_fence(ctx);
+
+    for (std::size_t i = num_warmup_traces; i < num_traces; ++i) {
+        rt->begin_trace(ctx, trace_id);
+        for (std::size_t j = 0; j < iters_per_trace; ++j) { solver.step(); }
+        rt->end_trace(ctx, trace_id);
+    }
+
+    rt->issue_execution_fence(ctx);
+    rt->issue_mapping_fence(ctx);
+
+    const Legion::Future end = rt->get_current_time_in_nanoseconds(ctx);
+    if (rt->get_shard_id(ctx, true) == 0) {
+        std::cout << "Performed " << (num_traces - num_warmup_traces)
+                  << " timed traces." << std::endl;
+    }
+
+    rt->issue_execution_fence(ctx);
+    rt->issue_mapping_fence(ctx);
+
+    const long long begin_time = begin.get_result<long long>();
+    const long long end_time = end.get_result<long long>();
+    const double ns_per_iter =
+        static_cast<double>(end_time - begin_time) /
+        (iters_per_trace * (num_traces - num_warmup_traces));
+
+    std::cout << "Achieved " << ns_per_iter / 1.0e6 << "ms per iteration."
+              << std::endl;
 
 #ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, equal_partition);
