@@ -1,5 +1,6 @@
-__pycache__/
-.vscode/
-build/
-include/
-prof_*/
+/__pycache__/
+/.vscode/
+/benchmarks/petsc/main.o
+/benchmarks/petsc/PETScSolverBenchmark
+/benchmarks/trilinos/build/
+/include/
