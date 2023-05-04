@@ -137,6 +137,41 @@ struct FillLinearizedCSRStencilTask
 
 
 template <int DIM, typename COORD_T>
+constexpr Legion::Point<DIM, COORD_T>
+increment_head(const Legion::Point<DIM, COORD_T> &p) {
+    Legion::Point<DIM, COORD_T> result = p;
+    ++result[0];
+    return result;
+}
+
+
+template <int DIM, typename COORD_T>
+constexpr bool tail_equal(
+    const Legion::Point<DIM, COORD_T> &p, const Legion::Point<DIM, COORD_T> &q
+) {
+    for (int i = 1; i < DIM; ++i) {
+        if (p[i] != q[i]) { return false; }
+    }
+    return true;
+}
+
+
+template <typename ENTRY_T, int DIM, typename COORD_T>
+constexpr std::pair<COORD_T, COORD_T> leading_dimension_bounds(
+    const std::vector<std::pair<Legion::Point<DIM, COORD_T>, ENTRY_T>> &offsets
+) {
+    COORD_T lower_bound = static_cast<COORD_T>(0);
+    COORD_T upper_bound = static_cast<COORD_T>(0);
+    for (const auto &[point, entry] : offsets) {
+        const COORD_T leading_entry = point[0];
+        if (leading_entry < lower_bound) { lower_bound = leading_entry; }
+        if (leading_entry > upper_bound) { upper_bound = leading_entry; }
+    }
+    return {lower_bound, upper_bound};
+}
+
+
+template <int DIM, typename COORD_T>
 constexpr bool compare_row_major(
     const Legion::Point<DIM, COORD_T> &p, const Legion::Point<DIM, COORD_T> &q
 ) {

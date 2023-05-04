@@ -459,11 +459,37 @@ void FillLinearizedCSRStencilTask<ENTRY_T, DIM, COORD_T>::task_body(
     const Legion::Domain rowptr_domain =
         rt->get_index_space_domain(ctx, rowptr_req.region.get_index_space());
 
+    const auto [lower_bound, upper_bound] = leading_dimension_bounds(offsets);
+
     Legion::coord_t kernel_index = 0;
+    Legion::coord_t bulk_slice_origin = 0;
+    bool found_bulk_slice = false;
     Legion::Point<DIM, COORD_T> point = args.bounds.lo;
     switch (args.order) {
     case IndexOrder::ROW_MAJOR:
         do {
+            if (tail_equal(point, args.bounds.lo)) {
+                if (found_bulk_slice) {
+                    const Legion::coord_t bulk_slice_size =
+                        kernel_index - bulk_slice_origin;
+                    while ((point[0] + lower_bound >= args.bounds.lo[0]) &&
+                           (point[0] + upper_bound <= args.bounds.hi[0]) &&
+                           (kernel_index + bulk_slice_size <
+                            matrix_domain.lo()[0]) &&
+                           (linearize_row_major(
+                                increment_head(point), args.bounds
+                            ) < rowptr_domain.lo()[0])) {
+                        ++point[0];
+                        kernel_index += bulk_slice_size;
+                    }
+                }
+                if ((!found_bulk_slice) &&
+                    (point[0] + lower_bound >= args.bounds.lo[0]) &&
+                    (point[0] + upper_bound <= args.bounds.hi[0])) {
+                    found_bulk_slice = true;
+                    bulk_slice_origin = kernel_index;
+                }
+            }
             const COORD_T point_lin = linearize_row_major(point, args.bounds);
             const Legion::coord_t row_begin = kernel_index;
             for (const auto [offset, entry] : offsets) {
@@ -482,6 +508,10 @@ void FillLinearizedCSRStencilTask<ENTRY_T, DIM, COORD_T>::task_body(
                 rowptr_writer[point_lin] =
                     Legion::Rect<KERNEL_DIM, KERNEL_COORD_T>{
                         row_begin, row_end};
+            }
+            if ((kernel_index > matrix_domain.hi()[0]) &&
+                (point_lin > rowptr_domain.hi()[0])) {
+                break;
             }
         } while (increment_row_major(point, args.bounds));
         break;
