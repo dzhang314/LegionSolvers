@@ -3,30 +3,43 @@
 import os as _os
 
 from build_utilities import (
-    change_directory, remove_directory, clone, download, run,
-    CMakeDefines, cmake, LIB_PREFIX, SCRATCH_DIR, Machines, MACHINE
+    change_directory,
+    remove_directory,
+    clone,
+    download,
+    run,
+    CMakeDefines,
+    cmake,
+    LIB_PREFIX,
+    SCRATCH_DIR,
+    Machines,
+    MACHINE,
 )
 
 
 GASNET_GIT_URL: str = "https://github.com/StanfordLegion/gasnet.git"
 KOKKOS_GIT_URL: str = "https://github.com/kokkos/kokkos.git"
-KOKKOS_4_0_URL: str = "https://github.com/kokkos/kokkos/archive/refs/tags/4.0.00.zip"
+KOKKOS_4_1_URL: str = "https://github.com/kokkos/kokkos/archive/refs/tags/4.1.00.zip"
 
 
-_KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.0.00-cuda"
-_KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.0.00-nocuda"
+_KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.1.00-cuda"
+_KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.1.00-nocuda"
 
 
 KOKKOS_CUDA_CMAKE_PATH: str = _os.path.join(
-    LIB_PREFIX, _KOKKOS_CUDA_LIB_NAME,
+    LIB_PREFIX,
+    _KOKKOS_CUDA_LIB_NAME,
     "lib" if MACHINE == Machines.SAPLING else "lib64",
-    "cmake", "Kokkos"
+    "cmake",
+    "Kokkos",
 )
 
 KOKKOS_NOCUDA_CMAKE_PATH: str = _os.path.join(
-    LIB_PREFIX, _KOKKOS_NOCUDA_LIB_NAME,
+    LIB_PREFIX,
+    _KOKKOS_NOCUDA_LIB_NAME,
     "lib" if MACHINE == Machines.SAPLING else "lib64",
-    "cmake", "Kokkos"
+    "cmake",
+    "Kokkos",
 )
 
 
@@ -43,17 +56,15 @@ def main():
             run("make", "CONDUIT=ibv")  # TODO: machine-to-conduit mapping
 
     _os.chdir(SCRATCH_DIR)
-    remove_directory("kokkos-4.0.00")
-    download(KOKKOS_4_0_URL)
-    run("unzip", "4.0.00.zip")
+    remove_directory("kokkos-4.1.00")
+    download(KOKKOS_4_1_URL)
+    run("unzip", "4.1.00.zip")
 
-    with change_directory("kokkos-4.0.00"):
+    with change_directory("kokkos-4.1.00"):
         defines_cuda: CMakeDefines = {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
-            "CMAKE_INSTALL_PREFIX": _os.path.join(
-                LIB_PREFIX, _KOKKOS_CUDA_LIB_NAME
-            ),
+            "CMAKE_INSTALL_PREFIX": _os.path.join(LIB_PREFIX, _KOKKOS_CUDA_LIB_NAME),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_CUDA": True,
@@ -65,9 +76,7 @@ def main():
         defines_nocuda: CMakeDefines = {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
-            "CMAKE_INSTALL_PREFIX": _os.path.join(
-                LIB_PREFIX, _KOKKOS_NOCUDA_LIB_NAME
-            ),
+            "CMAKE_INSTALL_PREFIX": _os.path.join(LIB_PREFIX, _KOKKOS_NOCUDA_LIB_NAME),
             "Kokkos_ENABLE_SERIAL": True,
             "Kokkos_ENABLE_OPENMP": True,
             "Kokkos_ENABLE_TESTS": True,
