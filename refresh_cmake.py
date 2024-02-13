@@ -44,11 +44,7 @@ def main():
                     remove_directory(build_path)
                     defines: CMakeDefines = {
                         "CMAKE_CXX_STANDARD": 17,
-                        "CMAKE_CXX_FLAGS": (
-                            "-Wall -Wextra -pedantic"
-                            + " -Wfatal-errors"
-                            + " -Wno-deprecated-declarations"
-                        ),
+                        "CMAKE_CXX_FLAGS": "-Wall -Wextra -pedantic -Wfatal-errors",
                         "CMAKE_BUILD_TYPE": build_type,
                         "Legion_DIR": _os.path.join(
                             legion_library_path(
@@ -70,8 +66,6 @@ def main():
                         defines["CMAKE_CXX_FLAGS"] = (
                             flags + " -DLEGION_SOLVERS_USE_CONTROL_REPLICATION"
                         )
-                    # if MACHINE == Machines.LASSEN:
-                    #     defines["CMAKE_CXX_FLAGS"] += " -maltivec -mabi=altivec"
                     cmake(
                         build_path,
                         defines,

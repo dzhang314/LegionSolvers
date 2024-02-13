@@ -13,6 +13,8 @@ from build_utilities import (
     cmake,
     LIB_PREFIX,
     SCRATCH_DIR,
+    Machines,
+    MACHINE,
 )
 
 from build_dependencies import (
@@ -86,9 +88,10 @@ def cmake_legion(
         "Legion_USE_CUDA": use_cuda,
         "Legion_NETWORKS": "gasnetex",
         "GASNet_INCLUDE_DIR": _os.path.join(LIB_PREFIX, "gasnet", "release", "include"),
-        "CMAKE_CXX_FLAGS": "-DREALM_TIMERS_USE_RDTSC=0",
-        "CMAKE_CUDA_FLAGS": "-DREALM_TIMERS_USE_RDTSC=0",
     }
+    if MACHINE in [Machines.LASSEN, Machines.SUMMIT]:
+        defines["CMAKE_CXX_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
+        defines["CMAKE_CUDA_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
     if use_kokkos:
         defines["Legion_USE_Kokkos"] = True
         if use_cuda:
