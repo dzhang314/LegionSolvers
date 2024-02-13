@@ -69,7 +69,9 @@ def jsrun_command(
 
 def count_nodes() -> int:
     count_proc = subprocess.run(
-        jsrun_command("echo", ["hello"], rank_per="node", use_gpu_aware_mpi=False),
+        jsrun_command(
+            "echo", ["hello"], rank_per="node", use_gpu_aware_mpi=False
+        ),
         check=True,
         capture_output=True,
     )
@@ -199,7 +201,7 @@ def legion_solvers_args(
             "-ny",
             str(problem_size[1]),
             "-nz",
-            str(problem_size[1]),
+            str(problem_size[2]),
         ]
     else:
         assert False
@@ -228,7 +230,9 @@ def benchmark_petsc(
                 capture_output=True,
             )
             if b"out of memory" in proc.stderr:
-                print(">>> OUT OF MEMORY, FOUND MAX PROBLEM SIZE <<<", flush=True)
+                print(
+                    ">>> OUT OF MEMORY, FOUND MAX PROBLEM SIZE <<<", flush=True
+                )
                 return problem_size
             elif proc.returncode == 0:
                 print(proc.stdout.decode("utf-8"), flush=True)
@@ -316,193 +320,217 @@ def benchmark_legion_solvers(
                 print(">>> ERROR OCCURRED, TRYING AGAIN <<<", flush=True)
 
 
-MAX_PROBLEM_SIZE_1D_CG = benchmark_petsc("1D", "cg", problem_size_iterator_1d())
-MAX_PROBLEM_SIZE_2D_CG = benchmark_petsc("2D", "cg", problem_size_iterator_2d())
-MAX_PROBLEM_SIZE_3D_CG = benchmark_petsc("3D", "cg", problem_size_iterator_3d())
-MAX_PROBLEM_SIZE_3D27_CG = benchmark_petsc("3D27", "cg", problem_size_iterator_3d())
-MAX_PROBLEM_SIZE_1D_BICGSTAB = benchmark_petsc("1D", "bcgs", problem_size_iterator_1d())
-MAX_PROBLEM_SIZE_2D_BICGSTAB = benchmark_petsc("2D", "bcgs", problem_size_iterator_2d())
-MAX_PROBLEM_SIZE_3D_BICGSTAB = benchmark_petsc("3D", "bcgs", problem_size_iterator_3d())
-MAX_PROBLEM_SIZE_3D27_BICGSTAB = benchmark_petsc(
-    "3D27", "bcgs", problem_size_iterator_3d()
+# MAX_PROBLEM_SIZE_1D_CG = benchmark_petsc("1D", "cg", problem_size_iterator_1d())
+# MAX_PROBLEM_SIZE_2D_CG = benchmark_petsc("2D", "cg", problem_size_iterator_2d())
+# MAX_PROBLEM_SIZE_3D_CG = benchmark_petsc("3D", "cg", problem_size_iterator_3d())
+# MAX_PROBLEM_SIZE_3D27_CG = benchmark_petsc("3D27", "cg", problem_size_iterator_3d())
+# MAX_PROBLEM_SIZE_1D_BICGSTAB = benchmark_petsc("1D", "bcgs", problem_size_iterator_1d())
+# MAX_PROBLEM_SIZE_2D_BICGSTAB = benchmark_petsc("2D", "bcgs", problem_size_iterator_2d())
+# MAX_PROBLEM_SIZE_3D_BICGSTAB = benchmark_petsc("3D", "bcgs", problem_size_iterator_3d())
+# MAX_PROBLEM_SIZE_3D27_BICGSTAB = benchmark_petsc(
+#     "3D27", "bcgs", problem_size_iterator_3d()
+# )
+# MAX_PROBLEM_SIZE_1D_GMRES = benchmark_petsc("1D", "gmres", problem_size_iterator_1d())
+# MAX_PROBLEM_SIZE_2D_GMRES = benchmark_petsc("2D", "gmres", problem_size_iterator_2d())
+# MAX_PROBLEM_SIZE_3D_GMRES = benchmark_petsc("3D", "gmres", problem_size_iterator_3d())
+# MAX_PROBLEM_SIZE_3D27_GMRES = benchmark_petsc(
+#     "3D27", "gmres", problem_size_iterator_3d()
+# )
+
+
+# benchmark_trilinos("1D", "CG", problem_size_iterator_1d(), MAX_PROBLEM_SIZE_1D_CG)
+# benchmark_trilinos("2D", "CG", problem_size_iterator_2d(), MAX_PROBLEM_SIZE_2D_CG)
+# benchmark_trilinos("3D", "CG", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D_CG)
+# benchmark_trilinos("3D27", "CG", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D27_CG)
+# benchmark_trilinos(
+#     "1D", "BiCGStab", problem_size_iterator_1d(), MAX_PROBLEM_SIZE_1D_BICGSTAB
+# )
+# benchmark_trilinos(
+#     "2D", "BiCGStab", problem_size_iterator_2d(), MAX_PROBLEM_SIZE_2D_BICGSTAB
+# )
+# benchmark_trilinos(
+#     "3D", "BiCGStab", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D_BICGSTAB
+# )
+# benchmark_trilinos(
+#     "3D27", "BiCGStab", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D27_BICGSTAB
+# )
+# benchmark_trilinos("1D", "GMRES", problem_size_iterator_1d(), MAX_PROBLEM_SIZE_1D_GMRES)
+# benchmark_trilinos("2D", "GMRES", problem_size_iterator_2d(), MAX_PROBLEM_SIZE_2D_GMRES)
+# benchmark_trilinos("3D", "GMRES", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D_GMRES)
+# benchmark_trilinos(
+#     "3D27", "GMRES", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D27_GMRES
+# )
+
+
+MAX_PROBLEM_SIZE_DICT: Dict[int, List[ProblemSize]] = {
+    1: [
+        1073741824,
+        (32768, 32768),
+        (1024, 1024, 512),
+        (1024, 512, 512),
+        1073741824,
+        (32768, 16384),
+        (1024, 1024, 512),
+        (1024, 512, 512),
+        536870912,
+        (32768, 16384),
+        (1024, 1024, 512),
+        (1024, 512, 512),
+    ],
+    2: [
+        2147483648,
+        (65536, 32768),
+        (1024, 1024, 1024),
+        (1024, 1024, 512),
+        2147483648,
+        (32768, 32768),
+        (1024, 1024, 1024),
+        (1024, 1024, 512),
+        1073741824,
+        (32768, 32768),
+        (1024, 1024, 1024),
+        (1024, 1024, 512),
+    ],
+    4: [
+        4294967296,
+        (65536, 65536),
+        (2048, 1024, 1024),
+        (1024, 1024, 1024),
+        4294967296,
+        (65536, 32768),
+        (2048, 1024, 1024),
+        (1024, 1024, 1024),
+        2147483648,
+        (65536, 32768),
+        (2048, 1024, 1024),
+        (1024, 1024, 1024),
+    ],
+    8: [
+        8589934592,
+        (131072, 65536),
+        (2048, 2048, 1024),
+        (2048, 1024, 1024),
+        8589934592,
+        (65536, 65536),
+        (2048, 2048, 1024),
+        (2048, 1024, 1024),
+        4294967296,
+        (65536, 65536),
+        (2048, 2048, 1024),
+        (2048, 1024, 1024),
+    ],
+    16: [
+        17179869184,
+        (131072, 131072),
+        (2048, 2048, 2048),
+        (2048, 2048, 1024),
+        17179869184,
+        (131072, 65536),
+        (2048, 2048, 2048),
+        (2048, 2048, 1024),
+        8589934592,
+        (131072, 65536),
+        (2048, 2048, 2048),
+        (2048, 2048, 1024),
+    ],
+    32: [
+        34359738368,
+        (262144, 131072),
+        (4096, 2048, 2048),
+        (2048, 2048, 2048),
+        34359738368,
+        (131072, 131072),
+        (4096, 2048, 2048),
+        (2048, 2048, 2048),
+        17179869184,
+        (131072, 131072),
+        (4096, 2048, 2048),
+        (2048, 2048, 2048),
+    ],
+    64: [
+        34359738368,
+        (262144, 131072),
+        (4096, 4096, 2048),
+        (2048, 2048, 2048),
+        34359738368,
+        (262144, 131072),
+        (4096, 4096, 2048),
+        (2048, 2048, 2048),
+        34359738368,
+        (131072, 131072),
+        (4096, 2048, 2048),
+        (2048, 2048, 2048),
+    ],
+    128: [
+        137438953472,
+        (262144, 262144),
+        (4096, 4096, 4096),
+        (4096, 2048, 2048),
+        68719476736,
+        (262144, 262144),
+        (4096, 4096, 4096),
+        (4096, 2048, 2048),
+        68719476736,
+        (262144, 262144),
+        (4096, 4096, 2048),
+        (4096, 2048, 2048),
+    ],
+    256: [
+        68719476736,
+        (262144, 262144),
+        (4096, 4096, 4096),
+        (4096, 2048, 2048),
+        68719476736,
+        (262144, 262144),
+        (4096, 4096, 4096),
+        (4096, 2048, 2048),
+        68719476736,
+        (262144, 262144),
+        (4096, 4096, 2048),
+        (4096, 2048, 2048),
+    ],
+}
+
+
+MAX_PROBLEM_SIZES = MAX_PROBLEM_SIZE_DICT[NUM_NODES]
+
+
+benchmark_legion_solvers(
+    "1", "1", problem_size_iterator_1d(), MAX_PROBLEM_SIZES[0]
 )
-MAX_PROBLEM_SIZE_1D_GMRES = benchmark_petsc("1D", "gmres", problem_size_iterator_1d())
-MAX_PROBLEM_SIZE_2D_GMRES = benchmark_petsc("2D", "gmres", problem_size_iterator_2d())
-MAX_PROBLEM_SIZE_3D_GMRES = benchmark_petsc("3D", "gmres", problem_size_iterator_3d())
-MAX_PROBLEM_SIZE_3D27_GMRES = benchmark_petsc(
-    "3D27", "gmres", problem_size_iterator_3d()
+benchmark_legion_solvers(
+    "2", "1", problem_size_iterator_2d(), MAX_PROBLEM_SIZES[1]
 )
-
-
-benchmark_trilinos("1D", "CG", problem_size_iterator_1d(), MAX_PROBLEM_SIZE_1D_CG)
-benchmark_trilinos("2D", "CG", problem_size_iterator_2d(), MAX_PROBLEM_SIZE_2D_CG)
-benchmark_trilinos("3D", "CG", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D_CG)
-benchmark_trilinos("3D27", "CG", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D27_CG)
-benchmark_trilinos(
-    "1D", "BiCGStab", problem_size_iterator_1d(), MAX_PROBLEM_SIZE_1D_BICGSTAB
+benchmark_legion_solvers(
+    "3", "1", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[2]
 )
-benchmark_trilinos(
-    "2D", "BiCGStab", problem_size_iterator_2d(), MAX_PROBLEM_SIZE_2D_BICGSTAB
+benchmark_legion_solvers(
+    "4", "1", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[3]
 )
-benchmark_trilinos(
-    "3D", "BiCGStab", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D_BICGSTAB
+benchmark_legion_solvers(
+    "1", "2", problem_size_iterator_1d(), MAX_PROBLEM_SIZES[4]
 )
-benchmark_trilinos(
-    "3D27", "BiCGStab", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D27_BICGSTAB
+benchmark_legion_solvers(
+    "2", "2", problem_size_iterator_2d(), MAX_PROBLEM_SIZES[5]
 )
-benchmark_trilinos("1D", "GMRES", problem_size_iterator_1d(), MAX_PROBLEM_SIZE_1D_GMRES)
-benchmark_trilinos("2D", "GMRES", problem_size_iterator_2d(), MAX_PROBLEM_SIZE_2D_GMRES)
-benchmark_trilinos("3D", "GMRES", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D_GMRES)
-benchmark_trilinos(
-    "3D27", "GMRES", problem_size_iterator_3d(), MAX_PROBLEM_SIZE_3D27_GMRES
+benchmark_legion_solvers(
+    "3", "2", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[6]
 )
-
-
-# MAX_PROBLEM_SIZE_DICT: Dict[int, List[ProblemSize]] = {
-#     1: [
-#         1073741824,
-#         (32768, 32768),
-#         (1024, 1024, 512),
-#         (1024, 512, 512),
-#         1073741824,
-#         (32768, 16384),
-#         (1024, 1024, 512),
-#         (1024, 512, 512),
-#         536870912,
-#         (32768, 16384),
-#         (1024, 1024, 512),
-#         (1024, 512, 512),
-#     ],
-#     2: [
-#         2147483648,
-#         (65536, 32768),
-#         (1024, 1024, 1024),
-#         (1024, 1024, 512),
-#         2147483648,
-#         (32768, 32768),
-#         (1024, 1024, 1024),
-#         (1024, 1024, 512),
-#         1073741824,
-#         (32768, 32768),
-#         (1024, 1024, 1024),
-#         (1024, 1024, 512),
-#     ],
-#     4: [
-#         4294967296,
-#         (65536, 65536),
-#         (2048, 1024, 1024),
-#         (1024, 1024, 1024),
-#         4294967296,
-#         (65536, 32768),
-#         (2048, 1024, 1024),
-#         (1024, 1024, 1024),
-#         2147483648,
-#         (65536, 32768),
-#         (2048, 1024, 1024),
-#         (1024, 1024, 1024),
-#     ],
-#     8: [
-# 8589934592 ,
-# ( 131072 , 65536 ),
-# ( 2048 , 2048 , 1024 ),
-# ( 2048 , 1024 , 1024 ),
-# 8589934592 ,
-# ( 65536 , 65536 ),
-# ( 2048 , 2048 , 1024 ),
-# ( 2048 , 1024 , 1024 ),
-# 4294967296 ,
-# ( 65536 , 65536 ),
-# ( 2048 , 2048 , 1024 ),
-# ( 2048 , 1024 , 1024 ),
-# ],
-#     16: [
-#         17179869184,
-#         (131072, 131072),
-#         (2048, 2048, 2048),
-#         (2048, 2048, 1024),
-#         17179869184,
-#         (131072, 65536),
-#         (2048, 2048, 2048),
-#         (2048, 2048, 1024),
-#         8589934592,
-#         (131072, 65536),
-#         (2048, 2048, 2048),
-#         (2048, 2048, 1024),
-#     ],
-#     32: [
-# 34359738368 ,
-# ( 262144 , 131072 ),
-# ( 4096 , 2048 , 2048 ),
-# ( 2048 , 2048 , 2048 ),
-# 34359738368 ,
-# ( 131072 , 131072 ),
-# ( 4096 , 2048 , 2048 ),
-# ( 2048 , 2048 , 2048 ),
-# 17179869184 ,
-# ( 131072 , 131072 ),
-# ( 4096 , 2048 , 2048 ),
-# ( 2048 , 2048 , 2048 ),
-# ],
-#     64: [
-#         34359738368,
-#         (262144, 131072),
-#         (4096, 4096, 2048),
-#         (2048, 2048, 2048),
-#         34359738368,
-#         (262144, 131072),
-#         (4096, 4096, 2048),
-#         (2048, 2048, 2048),
-#         34359738368,
-#         (131072, 131072),
-#         (4096, 2048, 2048),
-#         (2048, 2048, 2048),
-#     ],
-#     128: [
-# 137438953472 ,
-# ( 262144 , 262144 ),
-# ( 4096 , 4096 , 4096 ),
-# ( 4096 , 2048 , 2048 ),
-# 68719476736 ,
-# ( 262144 , 262144 ),
-# ( 4096 , 4096 , 4096 ),
-# ( 4096 , 2048 , 2048 ),
-# 68719476736 ,
-# ( 262144 , 262144 ),
-# ( 4096 , 4096 , 2048 ),
-# ( 4096 , 2048 , 2048 ),
-# ],
-#     256: [
-#         68719476736,
-#         (262144, 262144),
-#         (4096, 4096, 4096),
-#         (4096, 2048, 2048),
-#         68719476736,
-#         (262144, 262144),
-#         (4096, 4096, 4096),
-#         (4096, 2048, 2048),
-#         68719476736,
-#         (262144, 262144),
-#         (4096, 4096, 2048),
-#         (4096, 2048, 2048),
-#     ],
-# }
-
-
-# MAX_PROBLEM_SIZES = MAX_PROBLEM_SIZE_DICT[NUM_NODES]
-
-
-# benchmark_legion_solvers("1", "1", problem_size_iterator_1d(), MAX_PROBLEM_SIZES[0])
-# benchmark_legion_solvers("2", "1", problem_size_iterator_2d(), MAX_PROBLEM_SIZES[1])
-# benchmark_legion_solvers("3", "1", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[2])
-# benchmark_legion_solvers("4", "1", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[3])
-# benchmark_legion_solvers("1", "2", problem_size_iterator_1d(), MAX_PROBLEM_SIZES[4])
-# benchmark_legion_solvers("2", "2", problem_size_iterator_2d(), MAX_PROBLEM_SIZES[5])
-# benchmark_legion_solvers("3", "2", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[6])
-# benchmark_legion_solvers("4", "2", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[7])
-# benchmark_legion_solvers("1", "3", problem_size_iterator_1d(), MAX_PROBLEM_SIZES[8])
-# benchmark_legion_solvers("2", "3", problem_size_iterator_2d(), MAX_PROBLEM_SIZES[9])
-# benchmark_legion_solvers("3", "3", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[10])
-# benchmark_legion_solvers("4", "3", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[11])
+benchmark_legion_solvers(
+    "4", "2", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[7]
+)
+benchmark_legion_solvers(
+    "1", "3", problem_size_iterator_1d(), MAX_PROBLEM_SIZES[8]
+)
+benchmark_legion_solvers(
+    "2", "3", problem_size_iterator_2d(), MAX_PROBLEM_SIZES[9]
+)
+benchmark_legion_solvers(
+    "3", "3", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[10]
+)
+benchmark_legion_solvers(
+    "4", "3", problem_size_iterator_3d(), MAX_PROBLEM_SIZES[11]
+)
 
 
 # IGNORED_STDERR_LINES = [
