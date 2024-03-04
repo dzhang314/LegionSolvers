@@ -19,11 +19,11 @@ from build_utilities import (
 
 GASNET_GIT_URL: str = "https://github.com/StanfordLegion/gasnet.git"
 KOKKOS_GIT_URL: str = "https://github.com/kokkos/kokkos.git"
-KOKKOS_4_2_URL: str = "https://github.com/kokkos/kokkos/archive/refs/tags/4.2.00.zip"
+KOKKOS_4_2_URL: str = "https://github.com/kokkos/kokkos/archive/refs/tags/4.2.01.zip"
 
 
-_KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.2.00-cuda"
-_KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.2.00-nocuda"
+_KOKKOS_CUDA_LIB_NAME: str = "kokkos-4.2.01-cuda"
+_KOKKOS_NOCUDA_LIB_NAME: str = "kokkos-4.2.01-nocuda"
 
 
 KOKKOS_CUDA_CMAKE_PATH: str = _os.path.join(
@@ -56,11 +56,11 @@ def main():
             run("make", "CONDUIT=ibv")  # TODO: machine-to-conduit mapping
 
     _os.chdir(SCRATCH_DIR)
-    remove_directory("kokkos-4.2.00")
+    remove_directory("kokkos-4.2.01")
     download(KOKKOS_4_2_URL)
-    run("unzip", "4.2.00.zip")
+    run("unzip", "4.2.01.zip")
 
-    with change_directory("kokkos-4.2.00"):
+    with change_directory("kokkos-4.2.01"):
         defines_cuda: CMakeDefines = {
             "CMAKE_CXX_STANDARD": 17,
             "CMAKE_BUILD_TYPE": "Release",
