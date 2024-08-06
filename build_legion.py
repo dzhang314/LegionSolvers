@@ -29,7 +29,7 @@ LEGION_GIT_URL: str = "https://gitlab.com/StanfordLegion/legion.git"
 
 LEGION_BRANCHES: _List[_Tuple[str, str]] = [
     ("master", "master"),
-    ("release", "legion-24.03.0"),
+    ("release", "legion-24.06.0"),
 ]
 
 
