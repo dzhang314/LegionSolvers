@@ -179,7 +179,7 @@ void CSRMatrix<ENTRY_T>::matvec(
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
 
-    launcher.add_region_requirement(dst_vector.get_requirement(LEGION_READ_WRITE
+    launcher.add_region_requirement(dst_vector.get_requirement(LEGION_WRITE_ONLY
     ));
 
     launcher.add_region_requirement(Legion::RegionRequirement(
