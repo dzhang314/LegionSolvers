@@ -4,6 +4,7 @@
 #include <cstdio>  // for std::fprintf, stderr
 
 #include <legion.h> // for Legion::*
+#include <realm/cuda/cuda_module.h> // for Realm::Cuda::*
 
 using LegionSolvers::CUDALibraryContext;
 using LegionSolvers::CUDAStreamView;
@@ -63,12 +64,14 @@ void LegionSolvers::check_cusparse(
 
 
 cudaStream_t CUDALibraryContext::get_cuda_stream() {
-    if (cuda_stream == nullptr) {
-        CHECK_CUDA(
-            cudaStreamCreateWithFlags(&cuda_stream, cudaStreamNonBlocking)
-        );
-    }
-    return cuda_stream;
+    // Always use the Realm stream. Since we are putting
+    // work only onto the Realm stream, we don't need the
+    // context synchronizer either.
+    Realm::Runtime runtime = Realm::Runtime::get_runtime();
+    Realm::Cuda::CudaModule *module = runtime.get_module<Realm::Cuda::CudaModule>("cuda");
+    assert(module);
+    module->set_task_ctxsync_required(false);
+    return module->get_task_cuda_stream();
 }
 
 

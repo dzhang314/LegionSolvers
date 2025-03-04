@@ -229,6 +229,11 @@ ENTRY_T DotTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS
         &result
     );
 
+    // It appears that cublas might be synchronizing the stream for us
+    // since it sees result is a host pointer, but it's clearer to do
+    // this directly in the task itself.
+    CHECK_CUDA(cudaStreamSynchronize(stream));
+
     return result;
 }
 
