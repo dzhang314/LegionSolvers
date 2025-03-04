@@ -71,6 +71,20 @@ void LegionSolversMapper::slice_task(
     Legion::Mapping::DefaultMapper::slice_task(ctx, task, input, output);
 }
 
+void LegionSolversMapper::default_policy_select_constraints(
+	  Legion::Mapping::MapperContext ctx,
+          Legion::LayoutConstraintSet &constraints,
+          Legion::Memory target_memory,
+          const Legion::RegionRequirement &req) {
+    // GPUs require allocations to be 16-byte aligned.
+    std::vector<Legion::FieldID> fields;
+    default_policy_select_constraint_fields(ctx, req, fields);
+    for (auto field : fields) {
+      constraints.add_constraint(Legion::AlignmentConstraint(field, LEGION_GE_EK, 16));
+    }
+    DefaultMapper::default_policy_select_constraints(ctx, constraints, target_memory, req);
+}
+
 
 #ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
 void LegionSolversMapper::select_sharding_functor(

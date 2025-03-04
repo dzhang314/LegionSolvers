@@ -132,7 +132,7 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
     void *workspace = nullptr;
     if (bufSize > 0) {
         Legion::DeferredBuffer<char, 1> buf(
-            {0, bufSize - 1}, Legion::Memory::GPU_FB_MEM
+            {0, bufSize - 1}, Legion::Memory::GPU_FB_MEM, nullptr /* initial value */, 16 /* alignment */
         );
         workspace = buf.ptr(0);
     }

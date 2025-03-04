@@ -41,6 +41,13 @@ public:
         SliceTaskOutput &output
     ) override;
 
+    virtual void default_policy_select_constraints(
+        Legion::Mapping::MapperContext ctx,
+        Legion::LayoutConstraintSet &constraints,
+        Legion::Memory target_memory,
+        const Legion::RegionRequirement &req
+    ) override;
+
 #ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
     virtual void select_sharding_functor(
         const Legion::Mapping::MapperContext ctx,

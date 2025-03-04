@@ -71,7 +71,7 @@ cusparseSpMatDescr_t makeCuSparseCSR(
     // First, we need to convert the Legion::Rect based rowptr
     // region into a standard indptr array that cuSPARSE understands.
     Legion::DeferredBuffer<KERNEL_COORD_T, KERNEL_DIM> indptr(
-        {0, num_rows}, Legion::Memory::GPU_FB_MEM
+        {0, num_rows}, Legion::Memory::GPU_FB_MEM, nullptr /* initial value */, 16 /* alignment */
     );
     auto blocks = get_num_blocks_1d(num_rows);
     convertGlobalRowptrToLocalIndPtr<KERNEL_COORD_T, RANGE_COORD_T>
