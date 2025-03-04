@@ -209,6 +209,7 @@ void CSRMatrix<ENTRY_T>::matvec(
         src_vector.get_logical_region()
     ));
     launcher.add_field(3, src_vector.get_fid());
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -237,6 +238,7 @@ void CSRMatrix<ENTRY_T>::print(Legion::IndexSpace index_space) const {
         rowptr_region, LEGION_READ_ONLY, LEGION_EXCLUSIVE, rowptr_region
     ));
     launcher.add_field(1, fid_rowptr);
+    launcher.elide_future_return = true;
 
     rt->execute_task(ctx, launcher);
 }
