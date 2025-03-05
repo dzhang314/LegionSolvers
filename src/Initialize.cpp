@@ -212,18 +212,21 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
                 AxpyTask<float, 1, int>::preregister(verbose);
                 XpayTask<float, 1, int>::preregister(verbose);
                 DotTask<float, 1, int>::preregister(verbose);
+                DotTask<float, 1, int>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 ScalTask<float, 2, int>::preregister(verbose);
                 AxpyTask<float, 2, int>::preregister(verbose);
                 XpayTask<float, 2, int>::preregister(verbose);
                 DotTask<float, 2, int>::preregister(verbose);
+                DotTask<float, 2, int>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 ScalTask<float, 3, int>::preregister(verbose);
                 AxpyTask<float, 3, int>::preregister(verbose);
                 XpayTask<float, 3, int>::preregister(verbose);
                 DotTask<float, 3, int>::preregister(verbose);
+                DotTask<float, 3, int>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S32_INDICES
         #ifdef LEGION_SOLVERS_USE_U32_INDICES
@@ -232,18 +235,21 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
                 AxpyTask<float, 1, unsigned>::preregister(verbose);
                 XpayTask<float, 1, unsigned>::preregister(verbose);
                 DotTask<float, 1, unsigned>::preregister(verbose);
+                DotTask<float, 1, unsigned>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 ScalTask<float, 2, unsigned>::preregister(verbose);
                 AxpyTask<float, 2, unsigned>::preregister(verbose);
                 XpayTask<float, 2, unsigned>::preregister(verbose);
                 DotTask<float, 2, unsigned>::preregister(verbose);
+                DotTask<float, 2, unsigned>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 ScalTask<float, 3, unsigned>::preregister(verbose);
                 AxpyTask<float, 3, unsigned>::preregister(verbose);
                 XpayTask<float, 3, unsigned>::preregister(verbose);
                 DotTask<float, 3, unsigned>::preregister(verbose);
+                DotTask<float, 3, unsigned>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_U32_INDICES
         #ifdef LEGION_SOLVERS_USE_S64_INDICES
@@ -252,18 +258,21 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
                 AxpyTask<float, 1, long long>::preregister(verbose);
                 XpayTask<float, 1, long long>::preregister(verbose);
                 DotTask<float, 1, long long>::preregister(verbose);
+                DotTask<float, 1, long long>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 ScalTask<float, 2, long long>::preregister(verbose);
                 AxpyTask<float, 2, long long>::preregister(verbose);
                 XpayTask<float, 2, long long>::preregister(verbose);
                 DotTask<float, 2, long long>::preregister(verbose);
+                DotTask<float, 2, long long>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 ScalTask<float, 3, long long>::preregister(verbose);
                 AxpyTask<float, 3, long long>::preregister(verbose);
                 XpayTask<float, 3, long long>::preregister(verbose);
                 DotTask<float, 3, long long>::preregister(verbose);
+                DotTask<float, 3, long long>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_F32
@@ -274,18 +283,21 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
                 AxpyTask<double, 1, int>::preregister(verbose);
                 XpayTask<double, 1, int>::preregister(verbose);
                 DotTask<double, 1, int>::preregister(verbose);
+                DotTask<double, 1, int>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 ScalTask<double, 2, int>::preregister(verbose);
                 AxpyTask<double, 2, int>::preregister(verbose);
                 XpayTask<double, 2, int>::preregister(verbose);
                 DotTask<double, 2, int>::preregister(verbose);
+                DotTask<double, 2, int>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 ScalTask<double, 3, int>::preregister(verbose);
                 AxpyTask<double, 3, int>::preregister(verbose);
                 XpayTask<double, 3, int>::preregister(verbose);
                 DotTask<double, 3, int>::preregister(verbose);
+                DotTask<double, 3, int>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S32_INDICES
         #ifdef LEGION_SOLVERS_USE_U32_INDICES
@@ -294,18 +306,21 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
                 AxpyTask<double, 1, unsigned>::preregister(verbose);
                 XpayTask<double, 1, unsigned>::preregister(verbose);
                 DotTask<double, 1, unsigned>::preregister(verbose);
+                DotTask<double, 1, unsigned>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 ScalTask<double, 2, unsigned>::preregister(verbose);
                 AxpyTask<double, 2, unsigned>::preregister(verbose);
                 XpayTask<double, 2, unsigned>::preregister(verbose);
                 DotTask<double, 2, unsigned>::preregister(verbose);
+                DotTask<double, 2, unsigned>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 ScalTask<double, 3, unsigned>::preregister(verbose);
                 AxpyTask<double, 3, unsigned>::preregister(verbose);
                 XpayTask<double, 3, unsigned>::preregister(verbose);
                 DotTask<double, 3, unsigned>::preregister(verbose);
+                DotTask<double, 3, unsigned>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_U32_INDICES
         #ifdef LEGION_SOLVERS_USE_S64_INDICES
@@ -314,18 +329,21 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
                 AxpyTask<double, 1, long long>::preregister(verbose);
                 XpayTask<double, 1, long long>::preregister(verbose);
                 DotTask<double, 1, long long>::preregister(verbose);
+                DotTask<double, 1, long long>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 1
             #if LEGION_SOLVERS_MAX_DIM >= 2
                 ScalTask<double, 2, long long>::preregister(verbose);
                 AxpyTask<double, 2, long long>::preregister(verbose);
                 XpayTask<double, 2, long long>::preregister(verbose);
                 DotTask<double, 2, long long>::preregister(verbose);
+                DotTask<double, 2, long long>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 2
             #if LEGION_SOLVERS_MAX_DIM >= 3
                 ScalTask<double, 3, long long>::preregister(verbose);
                 AxpyTask<double, 3, long long>::preregister(verbose);
                 XpayTask<double, 3, long long>::preregister(verbose);
                 DotTask<double, 3, long long>::preregister(verbose);
+                DotTask<double, 3, long long>::preregister_fb_future_dot(verbose);
             #endif // LEGION_SOLVERS_MAX_DIM >= 3
         #endif // LEGION_SOLVERS_USE_S64_INDICES
     #endif // LEGION_SOLVERS_USE_F64

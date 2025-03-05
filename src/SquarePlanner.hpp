@@ -338,7 +338,11 @@ public:
     }
 
     void matvec(std::size_t dst_idx, std::size_t src_idx) {
-        zero_fill(dst_idx);
+        // TODO (rohany): We don't support non-task operations in subgraphs
+	//  yet (implementation is behind). However, zero filling isn't
+	//  even necessary because the task itself is already zero
+	//  initializing the output vector.
+        // zero_fill(dst_idx);
         // TODO: count range index; request reduction privileges if > 1
         for (const auto
                  &[matrix,

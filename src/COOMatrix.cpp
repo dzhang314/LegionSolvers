@@ -186,6 +186,7 @@ void COOMatrix<ENTRY_T>::matvec(
         src_vector.get_logical_region()
     ));
     launcher.add_field(2, src_vector.get_fid());
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -212,6 +213,7 @@ void COOMatrix<ENTRY_T>::print(Legion::IndexSpace index_space) const {
     launcher.add_field(0, fid_entry);
     launcher.add_field(0, fid_row);
     launcher.add_field(0, fid_col);
+    launcher.elide_future_return = true;
 
     rt->execute_task(ctx, launcher);
 }

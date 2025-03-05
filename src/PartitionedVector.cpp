@@ -202,6 +202,7 @@ void PartitionedVector<ENTRY_T>::scal(const Scalar<ENTRY_T> &alpha) {
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     launcher.add_future(alpha.get_future());
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -225,6 +226,7 @@ void PartitionedVector<ENTRY_T>::axpy(
     launcher.add_future(alpha.get_future());
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -251,6 +253,7 @@ void PartitionedVector<ENTRY_T>::axpy(
     launcher.add_future(denom.get_future());
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -279,6 +282,7 @@ void PartitionedVector<ENTRY_T>::axpy(
     launcher.add_future(denom.get_future());
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -302,6 +306,7 @@ void PartitionedVector<ENTRY_T>::xpay(
     launcher.add_future(alpha.get_future());
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -328,6 +333,7 @@ void PartitionedVector<ENTRY_T>::xpay(
     launcher.add_future(denom.get_future());
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
+    launcher.elide_future_return = true;
 
     rt->execute_index_space(ctx, launcher);
 }
