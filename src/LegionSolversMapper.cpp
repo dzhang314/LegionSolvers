@@ -71,6 +71,20 @@ void LegionSolversMapper::slice_task(
     Legion::Mapping::DefaultMapper::slice_task(ctx, task, input, output);
 }
 
+void LegionSolversMapper::map_task(
+    const Legion::Mapping::MapperContext ctx,
+    const Legion::Task& task,
+    const MapTaskInput& input,
+          MapTaskOutput& output
+) {
+    Legion::Mapping::DefaultMapper::map_task(ctx, task, input, output);
+    if (output.target_procs[0].kind() == Legion::Processor::TOC_PROC) {
+	// auto fb = Legion::Machine::MemoryQuery(machine).only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(output.target_procs[0]).first();
+	auto fb = Legion::Machine::MemoryQuery(machine).only_kind(Legion::Memory::Z_COPY_MEM).local_address_space().first();
+        output.future_locations.assign(task.futures.size(), fb);
+    }
+}
+
 void LegionSolversMapper::default_policy_select_constraints(
 	  Legion::Mapping::MapperContext ctx,
           Legion::LayoutConstraintSet &constraints,
