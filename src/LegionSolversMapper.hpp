@@ -41,6 +41,13 @@ public:
         SliceTaskOutput &output
     ) override;
 
+    void premap_task(
+        const Legion::Mapping::MapperContext ctx,
+        const Legion::Task& task,
+        const PremapTaskInput& input,
+        PremapTaskOutput& output
+    ) override;
+
     void map_task(
         const Legion::Mapping::MapperContext ctx,
         const Legion::Task& task,

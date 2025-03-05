@@ -37,37 +37,45 @@ __global__ void alpha_kern(const ENTRY_T* f0, const ENTRY_T* f1, const ENTRY_T* 
 
 template <typename ENTRY_T>
 const ENTRY_T* get_alpha_gpu(const std::vector<Legion::Future>& futures, cudaStream_t stream) {
-    // cudaStreamSynchronize(stream);
     if (futures.size() == 0) {
-	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
-	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
+	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
+	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
         fill1<ENTRY_T><<<1, 32, 0, stream>>>(res.ptr(0));
 	return res.ptr(0);
     } else if (futures.size() == 1) {
-	// return (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
-	return (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
+	return (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
+	// return (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
     } else if (futures.size() == 2) {
-	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
-	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
-        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
+	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
+	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
+        // const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
+        // const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
+        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::GPU_FB_MEM);
 	alpha_kern<ENTRY_T><<<1, 32, 0, stream>>>(f0, f1, res.ptr(0));
 	return res.ptr(0);
     } else if (futures.size() == 3) {
-	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
-	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
-        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::Z_COPY_MEM);
+	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
+	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
+        // const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
+        // const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
+        // const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::Z_COPY_MEM);
+        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::GPU_FB_MEM);
 	alpha_kern<ENTRY_T><<<1, 32, 0, stream>>>(f0, f1, f2, res.ptr(0));
 	return res.ptr(0);
     } else if (futures.size() == 4) {
-	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
-	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
-        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f3 = (const ENTRY_T*)futures[3].get_buffer(Legion::Memory::Z_COPY_MEM);
+	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
+	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
+        // const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
+        // const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
+        // const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::Z_COPY_MEM);
+        // const ENTRY_T* f3 = (const ENTRY_T*)futures[3].get_buffer(Legion::Memory::Z_COPY_MEM);
+        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f3 = (const ENTRY_T*)futures[3].get_buffer(Legion::Memory::GPU_FB_MEM);
 	alpha_kern<ENTRY_T><<<1, 32, 0, stream>>>(f0, f1, f2, f3, res.ptr(0));
 	return res.ptr(0);
     } else {
@@ -76,14 +84,28 @@ const ENTRY_T* get_alpha_gpu(const std::vector<Legion::Future>& futures, cudaStr
     }
 }
 
+template <typename ENTRY_T, int DIM, typename COORD_T>
+__global__ void scal_kernel(
+    size_t volume,
+    const ENTRY_T* alpha,
+    Pitches<DIM - 1, COORD_T> pitches,
+    const Legion::Point<DIM, COORD_T> lo,
+    AffineReaderWriter<ENTRY_T, DIM, COORD_T> x
+) {
+    const auto idx = global_tid_1d();
+    if (idx >= volume) return;
+    auto point = pitches.unflatten(idx, lo);
+    x[point] = *alpha * x[point];
+}
+
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
 void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
 
     // Grab our stream and cuBLAS handle.
     auto stream = get_cuda_stream();
-    auto handle = get_cublas_handle();
-    CHECK_CUBLAS(cublasSetStream(handle, stream));
+    // auto handle = get_cublas_handle();
+    // CHECK_CUBLAS(cublasSetStream(handle, stream));
 
     assert(regions.size() == 1);
     const auto &x = regions[0];
@@ -93,8 +115,6 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
 
     assert(x_req.privilege_fields.size() == 1);
     const Legion::FieldID x_fid = *x_req.privilege_fields.begin();
-
-    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>(task->futures, stream);
 
     AffineReaderWriter<ENTRY_T, DIM, COORD_T> x_reader_writer(x, x_fid);
 
@@ -106,19 +126,29 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
     // If there are no points to process, exit.
     if (x_domain.empty()) return;
 
+    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>(task->futures, stream);
+
     // TODO (rohany): I'm not sure about what the right value for incx and
     //  incy are. It depends on what layouts we're getting the input
     //  vectors in. If we're getting exact layouts than this should be fine.
     //  If we're getting some subslice of a larger region then this probably
     //  won't work.
     // Finally make the cuBLAS call.
-    cublas_scal<ENTRY_T>(
-        handle,
-        x_domain.get_volume(),
-        alpha,
-        x_reader_writer.ptr(x_domain.lo()),
-        1
-    );
+    // cublas_scal<ENTRY_T>(
+    //     handle,
+    //     x_domain.get_volume(),
+    //     alpha,
+    //     x_reader_writer.ptr(x_domain.lo()),
+    //     1
+    // );
+
+    Pitches<DIM - 1, COORD_T> pitches;
+    auto volume = pitches.flatten(x_domain.bounds<DIM, COORD_T>());
+    auto blocks = get_num_blocks_1d(volume);
+    scal_kernel<ENTRY_T, DIM, COORD_T>
+        <<<blocks, THREADS_PER_BLOCK, 0, stream>>>(
+            volume, alpha, pitches, x_domain.lo(), x_reader_writer
+        );
 }
 
 template <typename ENTRY_T, int DIM, typename COORD_T>
@@ -184,6 +214,8 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
             volume, alpha, pitches, y_domain.lo(), y_reader_writer, x_reader
         );
 
+    // It's unbelievable, but cublas axpy does not respect stream ordering
+    // for the alpha variable!!!!
     // TODO (rohany): I'm not sure about what the right value for incx and
     //  incy are. It depends on what layouts we're getting the input
     //  vectors in. If we're getting exact layouts than this should be fine.
