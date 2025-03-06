@@ -67,7 +67,13 @@ def download(url: str, quiet: bool = False) -> None:
     run("wget", url)
 
 
-def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> None:
+def clone(
+    url: str,
+    branch: str = "",
+    path: str = "",
+    commit: str = "",
+    quiet: bool = False,
+) -> None:
     if branch:
         if path:
             _quiet_print(
@@ -80,6 +86,16 @@ def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> No
                 path,
             )
             run("git", "clone", "--branch", branch, url, path)
+            if commit:
+                with change_directory(path):
+                    _quiet_print(
+                        quiet,
+                        "[LegionSolversBuild] Checking out commit",
+                        commit,
+                        "in directory",
+                        path,
+                    )
+                    run("git", "checkout", commit)
         else:
             _quiet_print(
                 quiet,
@@ -89,6 +105,7 @@ def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> No
                 url,
             )
             run("git", "clone", "--branch", branch, url)
+            assert not commit
     else:
         if path:
             _quiet_print(
@@ -99,9 +116,20 @@ def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> No
                 path,
             )
             run("git", "clone", url, path)
+            if commit:
+                with change_directory(path):
+                    _quiet_print(
+                        quiet,
+                        "[LegionSolversBuild] Checking out commit",
+                        commit,
+                        "in directory",
+                        path,
+                    )
+                    run("git", "checkout", commit)
         else:
             _quiet_print(quiet, "[LegionSolversBuild] Cloning repository", url)
             run("git", "clone", url)
+            assert not commit
 
 
 CMakeDefines = _Dict[str, _Union[bool, int, str]]
@@ -170,6 +198,15 @@ MACHINE: Machines = {
 
 if MACHINE == Machines.UNKNOWN:
     print("[LegionSolversBuild] WARNING: Unknown machine")
+
+
+GASNET_CONDUITS: _Dict[Machines, str] = {
+    Machines.UNKNOWN: "mpi",
+    Machines.SAPLING: "ibv",
+    Machines.PIZDAINT: "mpi", # TODO: don't remember which network Piz Daint uses
+    Machines.LASSEN: "ibv",
+    Machines.SUMMIT: "ibv",
+}
 
 
 SCRATCH_DIR: str = _getenv("LEGION_SOLVERS_SCRATCH_DIR")

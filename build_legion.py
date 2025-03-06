@@ -16,6 +16,7 @@ from build_utilities import (
     SCRATCH_DIR,
     Machines,
     MACHINE,
+    GASNET_CONDUITS,
 )
 
 from build_dependencies import (
@@ -28,9 +29,12 @@ from build_dependencies import (
 LEGION_GIT_URL: str = "https://gitlab.com/StanfordLegion/legion.git"
 
 
-LEGION_BRANCHES: _List[_Tuple[str, str]] = [
-    ("master", "master"),
-    ("release", "legion-24.12.0"),
+LEGION_BRANCHES: _List[_Tuple[str, str, str]] = [
+    # ("aug22-3", "master", "ef074af5298f2259f1958918e1d9ba0e14bd7876"), # works
+    # ("aug22-4", "master", "4b7981f53b800e409f3753878c37fe75e4ed7449"), # /usr/bin/ld: cannot find -lrealm_gex_wrapper_objs
+    # ("sep12", "master", "c032dab254f423ccab36d05c47fed42b94f0b3f5"), # /usr/bin/ld: cannot find -lrealm_gex_wrapper_objs
+    ("master", "master", "master"),
+    ("r2412", "legion-24.12.0", "legion-24.12.0"),
 ]
 
 
@@ -48,10 +52,10 @@ def kokkos_tag(use_kokkos: bool) -> str:
     return "kokkos" if use_kokkos else "nokokkos"
 
 
-def clone_legion(branch_tag: str, branch_name: str) -> str:
-    output_dir = underscore_join("legion", branch_tag)
+def clone_legion(branch_tag: str, branch_name: str, commit: str) -> str:
+    output_dir: str = underscore_join("legion", branch_tag)
     remove_directory(output_dir)
-    clone(LEGION_GIT_URL, branch=branch_name, path=output_dir)
+    clone(LEGION_GIT_URL, branch=branch_name, path=output_dir, commit=commit)
     return output_dir
 
 
@@ -77,7 +81,7 @@ def cmake_legion(
     build_tag: str,
     build_type: str,
 ) -> None:
-    lib_path = legion_library_path(branch_tag, use_cuda, use_kokkos, build_tag)
+    lib_path: str = legion_library_path(branch_tag, use_cuda, use_kokkos, build_tag)
     remove_directory(lib_path)
     defines: CMakeDefines = {
         "CMAKE_CXX_STANDARD": 17,
@@ -88,9 +92,11 @@ def cmake_legion(
         "Legion_USE_OpenMP": True,
         "Legion_USE_CUDA": use_cuda,
         "Legion_NETWORKS": "gasnetex",
-        "GASNet_INCLUDE_DIR": _os.path.join(LIB_PREFIX, "gasnet", "release", "include"),
+        "Legion_EMBED_GASNet": True,
+        "GASNet_CONDUIT": GASNET_CONDUITS[MACHINE],
     }
     if MACHINE in [Machines.LASSEN, Machines.SUMMIT]:
+        # Disable rdtsc instruction on non-x86 machines.
         defines["CMAKE_CXX_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
         defines["CMAKE_CUDA_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
     if use_kokkos:
@@ -128,8 +134,8 @@ def main() -> None:
     if "--skip-kokkos" in _sys.argv:
         cuda_kokkos_configs = [c for c in cuda_kokkos_configs if not c[1]]
     _os.chdir(SCRATCH_DIR)
-    for branch_tag, branch_name in LEGION_BRANCHES:
-        legion_dir = clone_legion(branch_tag, branch_name)
+    for branch_tag, branch_name, commit in LEGION_BRANCHES:
+        legion_dir: str = clone_legion(branch_tag, branch_name, commit)
         with change_directory(legion_dir):
             for build_tag, build_type in BUILD_TYPES:
                 for use_cuda, use_kokkos in cuda_kokkos_configs:

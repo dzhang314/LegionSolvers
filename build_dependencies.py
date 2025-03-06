@@ -2,13 +2,10 @@
 
 import os as _os
 import sys as _sys
-from typing import Dict as _Dict
-from typing import List as _List
 
 from build_utilities import (
     change_directory,
     remove_directory,
-    clone,
     download,
     run,
     CMakeDefines,
@@ -20,7 +17,6 @@ from build_utilities import (
 )
 
 
-GASNET_GIT_URL: str = "https://github.com/StanfordLegion/gasnet.git"
 KOKKOS_GIT_URL: str = "https://github.com/kokkos/kokkos.git"
 KOKKOS_4_5_URL: str = "https://github.com/kokkos/kokkos/archive/refs/tags/4.5.01.zip"
 
@@ -51,22 +47,7 @@ KOKKOS_NVCC_WRAPPER_PATH: str = _os.path.join(
 )
 
 
-GASNET_BUILD_OPTIONS: _Dict[Machines, _List[str]] = {
-    Machines.UNKNOWN: ["CONDUIT=mpi"],
-    Machines.SAPLING: ["CONDUIT=ibv", "USE_CUDA=1"],
-    # TODO: don't remember which network Piz Daint uses
-    Machines.PIZDAINT: ["CONDUIT=mpi"],
-    Machines.LASSEN: ["CONDUIT=ibv", "USE_CUDA=1"],
-    Machines.SUMMIT: ["CONDUIT=ibv", "USE_CUDA=1"],
-}
-
-
 def main() -> None:
-    with change_directory(LIB_PREFIX):
-        remove_directory("gasnet")
-        clone(GASNET_GIT_URL, path="gasnet")
-        with change_directory("gasnet"):
-            run("make", *GASNET_BUILD_OPTIONS[MACHINE])
 
     if "--skip-kokkos" not in _sys.argv:
 
