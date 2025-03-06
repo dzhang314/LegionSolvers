@@ -503,6 +503,7 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
     CSRPrintTask<double, 1, 3, 3, long long, long long, long long>::preregister(verbose);
 
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
+    InitNCCLUniqueIDTask::preregister(verbose);
     LoadCUDALibsTask::preregister(verbose);
 #endif
 }

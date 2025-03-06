@@ -11,7 +11,7 @@
 #include "LibraryOptions.hpp"
 #include "PartitionedVector.hpp"
 #include "SquarePlanner.hpp"
-
+#include "CudaLibs.hpp"
 
 using ENTRY_T = double;
 constexpr int VECTOR_DIM = 1;
@@ -44,6 +44,8 @@ void top_level_task(
             .add_option_bool("-np", no_print_results)
             .parse_command_line(args.argc, (const char **) args.argv);
     assert(ok);
+
+    LegionSolvers::loadCUDALibs(ctx, rt);
 
     const auto vector_color_space =
         rt->create_index_space(ctx, VectorColorRect{0, num_vector_pieces - 1});

@@ -36,7 +36,7 @@ __global__ void alpha_kern(const ENTRY_T* f0, const ENTRY_T* f1, const ENTRY_T* 
 }
 
 template <typename ENTRY_T>
-const ENTRY_T* get_alpha_gpu(const std::vector<Legion::Future>& futures, cudaStream_t stream) {
+const ENTRY_T* get_alpha_gpu(const int32_t* args, const std::vector<Legion::Future>& futures, cudaStream_t stream) {
     if (futures.size() == 0) {
 	Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM, nullptr, 16);
 	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
@@ -50,8 +50,8 @@ const ENTRY_T* get_alpha_gpu(const std::vector<Legion::Future>& futures, cudaStr
 	// Legion::DeferredBuffer<ENTRY_T, 1> res(Legion::Rect<1>(0, 0), Legion::Memory::Z_COPY_MEM, nullptr, 16);
         // const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
         // const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
-        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f0 = (const ENTRY_T*)futures[args[0]].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f1 = (const ENTRY_T*)futures[args[1]].get_buffer(Legion::Memory::GPU_FB_MEM);
 	alpha_kern<ENTRY_T><<<1, 32, 0, stream>>>(f0, f1, res.ptr(0));
 	return res.ptr(0);
     } else if (futures.size() == 3) {
@@ -60,9 +60,9 @@ const ENTRY_T* get_alpha_gpu(const std::vector<Legion::Future>& futures, cudaStr
         // const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::Z_COPY_MEM);
         // const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
         // const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
-        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::GPU_FB_MEM);
-        const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f0 = (const ENTRY_T*)futures[args[0]].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f1 = (const ENTRY_T*)futures[args[1]].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f2 = (const ENTRY_T*)futures[args[2]].get_buffer(Legion::Memory::GPU_FB_MEM);
 	alpha_kern<ENTRY_T><<<1, 32, 0, stream>>>(f0, f1, f2, res.ptr(0));
 	return res.ptr(0);
     } else if (futures.size() == 4) {
@@ -72,10 +72,10 @@ const ENTRY_T* get_alpha_gpu(const std::vector<Legion::Future>& futures, cudaStr
         // const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::Z_COPY_MEM);
         // const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::Z_COPY_MEM);
         // const ENTRY_T* f3 = (const ENTRY_T*)futures[3].get_buffer(Legion::Memory::Z_COPY_MEM);
-        const ENTRY_T* f0 = (const ENTRY_T*)futures[0].get_buffer(Legion::Memory::GPU_FB_MEM);
-        const ENTRY_T* f1 = (const ENTRY_T*)futures[1].get_buffer(Legion::Memory::GPU_FB_MEM);
-        const ENTRY_T* f2 = (const ENTRY_T*)futures[2].get_buffer(Legion::Memory::GPU_FB_MEM);
-        const ENTRY_T* f3 = (const ENTRY_T*)futures[3].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f0 = (const ENTRY_T*)futures[args[0]].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f1 = (const ENTRY_T*)futures[args[1]].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f2 = (const ENTRY_T*)futures[args[2]].get_buffer(Legion::Memory::GPU_FB_MEM);
+        const ENTRY_T* f3 = (const ENTRY_T*)futures[args[3]].get_buffer(Legion::Memory::GPU_FB_MEM);
 	alpha_kern<ENTRY_T><<<1, 32, 0, stream>>>(f0, f1, f2, f3, res.ptr(0));
 	return res.ptr(0);
     } else {
@@ -126,7 +126,7 @@ void ScalTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
     // If there are no points to process, exit.
     if (x_domain.empty()) return;
 
-    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>(task->futures, stream);
+    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>((const int32_t*)task->args, task->futures, stream);
 
     // TODO (rohany): I'm not sure about what the right value for incx and
     //  incy are. It depends on what layouts we're getting the input
@@ -204,7 +204,7 @@ void AxpyTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
     // If there are no points to process, exit.
     if (y_domain.empty()) return;
 
-    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>(task->futures, stream);
+    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>((const int32_t*)task->args, task->futures, stream);
 
     Pitches<DIM - 1, COORD_T> pitches;
     auto volume = pitches.flatten(y_domain.bounds<DIM, COORD_T>());
@@ -286,7 +286,7 @@ void XpayTask<ENTRY_T, DIM, COORD_T>::cuda_task_body(LEGION_SOLVERS_TASK_ARGS) {
     // If there are no points to process, exit.
     if (y_domain.empty()) return;
 
-    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>(task->futures, stream);
+    const ENTRY_T* alpha = get_alpha_gpu<ENTRY_T>((const int32_t*)task->args, task->futures, stream);
     Pitches<DIM - 1, COORD_T> pitches;
     auto volume = pitches.flatten(y_domain.bounds<DIM, COORD_T>());
     auto blocks = get_num_blocks_1d(volume);
@@ -374,11 +374,6 @@ void DotTask<ENTRY_T, DIM, COORD_T>::cuda_task(const void* args, size_t arglen, 
     Legion::UntypedDeferredValue resultu(sizeof(ENTRY_T), Legion::Memory::GPU_FB_MEM);
     Legion::DeferredValue<ENTRY_T> result = resultu;
     CHECK_CUDA(cudaMemsetAsync(result.ptr(), 0, sizeof(ENTRY_T), stream));
-    if (v_domain.empty()) {
-      // Fill the result with 0 and return.
-      result.finalize(ctx);
-      return;
-    }
 
     // TODO (rohany): I'm not sure about what the right value for incx and
     //  incy are. It depends on what layouts we're getting the input
@@ -396,9 +391,22 @@ void DotTask<ENTRY_T, DIM, COORD_T>::cuda_task(const void* args, size_t arglen, 
     //     result.ptr()
     // );
 
-    int64_t blockSize = THREADS_PER_BLOCK;
-    int64_t numBlocks = (v_domain.get_volume() + blockSize - 1) / blockSize;
-    dotProductKernel<ENTRY_T><<<numBlocks, blockSize, 0, stream>>>(v_reader.ptr(v_domain.lo()), w_reader.ptr(w_domain.lo()), result.ptr(), v_domain.get_volume());
+    if (!v_domain.empty()) {
+      int64_t blockSize = THREADS_PER_BLOCK;
+      int64_t numBlocks = (v_domain.get_volume() + blockSize - 1) / blockSize;
+      dotProductKernel<ENTRY_T><<<numBlocks, blockSize, 0, stream>>>(v_reader.ptr(v_domain.lo()), w_reader.ptr(w_domain.lo()), result.ptr(), v_domain.get_volume());
+    }
+
+    // Also do NCCL.
+    if (task->index_domain.get_volume() > 1) {
+      auto comm = get_nccl_comm();
+      if (sizeof(ENTRY_T) == 4) {
+        CHECK_NCCL(ncclAllReduce(result.ptr(), result.ptr(), 1, ncclFloat32, ncclSum, comm, stream));
+      } else {
+        CHECK_NCCL(ncclAllReduce(result.ptr(), result.ptr(), 1, ncclFloat64, ncclSum, comm, stream));
+      }
+    }
+
     result.finalize(ctx);
 }
 

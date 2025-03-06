@@ -9,6 +9,7 @@ namespace LegionSolvers {
 enum MetaTaskID : Legion::TaskID {
 
     LOAD_CUDA_LIBS_META_TASK_ID,
+    INIT_NCCL_UNIQUE_ID_META_TASK_ID,
     NUM_META_TASK_IDS, // must be last
 
 };

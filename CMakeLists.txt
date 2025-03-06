@@ -57,6 +57,9 @@ if(Legion_USE_CUDA)
             CUDA::cudart CUDA::cublas CUDA::cusparse
         )
     endif()
+    set_target_properties(LegionSolvers PROPERTIES CUDA_ARCHITECTURES "60")
+    target_link_libraries(LegionSolvers $ENV{NCCL_LIB_DIR}/libnccl.so)
+    target_include_directories(LegionSolvers PRIVATE $ENV{NCCL_INCLUDE_DIR})
 endif()
 
 # TODO (rohany): Add a debug configuration and debug defines for LegionSolvers.
@@ -108,6 +111,8 @@ add_executable(Test06CSRSolveCG test/Test06CSRSolveCG.cpp)
 target_link_libraries(Test06CSRSolveCG LegionSolvers)
 target_include_directories(Test06CSRSolveCG PRIVATE src)
 set_target_properties(Test06CSRSolveCG PROPERTIES CXX_STANDARD 17)
+target_link_libraries(Test06CSRSolveCG $ENV{NCCL_LIB_DIR}/libnccl.so)
+target_include_directories(Test06CSRSolveCG PRIVATE $ENV{NCCL_INCLUDE_DIR})
 
 add_executable(BenchmarkStencil test/BenchmarkStencil.cpp)
 target_link_libraries(BenchmarkStencil LegionSolvers)

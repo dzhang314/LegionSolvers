@@ -175,7 +175,6 @@ void PartitionedVector<ENTRY_T>::constant_fill(const Scalar<ENTRY_T> &value) {
 template <typename ENTRY_T>
 const PartitionedVector<ENTRY_T> &
 PartitionedVector<ENTRY_T>::operator=(const PartitionedVector &x) {
-
     assert(index_space == x.get_index_space());
     assert(color_space == x.get_color_space());
     assert(index_partition == x.get_index_partition());
@@ -193,6 +192,7 @@ PartitionedVector<ENTRY_T>::operator=(const PartitionedVector &x) {
 
 template <typename ENTRY_T>
 void PartitionedVector<ENTRY_T>::scal(const Scalar<ENTRY_T> &alpha) {
+    assert(false);
     Legion::IndexTaskLauncher launcher(
         ScalTask<ENTRY_T, 0, void>::task_id(index_space),
         color_space,
@@ -223,7 +223,9 @@ void PartitionedVector<ENTRY_T>::axpy(
         Legion::ArgumentMap()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-    launcher.add_future(alpha.get_future());
+    // Don't need the argument buffer if just one future.
+    std::array<ScalarPackInfo, 1> infos;
+    alpha.add_to_launcher(launcher, infos[0], 0);
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
     launcher.elide_future_return = true;
@@ -249,11 +251,15 @@ void PartitionedVector<ENTRY_T>::axpy(
         Legion::ArgumentMap()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-    launcher.add_future(numer.get_future());
-    launcher.add_future(denom.get_future());
+    std::array<ScalarPackInfo, 2> infos;
+    std::array<int32_t, 2> perm;
+    numer.add_to_launcher(launcher, infos[0], 0);
+    denom.add_to_launcher(launcher, infos[1], 1);
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
     launcher.elide_future_return = true;
+    Scalar<ENTRY_T>::construct_argument_permutation(launcher, infos.data(), perm.data(), 2);
+    launcher.global_arg = Legion::UntypedBuffer(perm.data(), 2 * sizeof(int32_t));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -277,12 +283,16 @@ void PartitionedVector<ENTRY_T>::axpy(
         Legion::ArgumentMap()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-    launcher.add_future(numer1.get_future());
-    launcher.add_future(numer2.get_future());
-    launcher.add_future(denom.get_future());
+    std::array<ScalarPackInfo, 3> infos;
+    std::array<int32_t, 3> perm;
+    numer1.add_to_launcher(launcher, infos[0], 0);
+    numer2.add_to_launcher(launcher, infos[1], 1);
+    denom.add_to_launcher(launcher, infos[2], 2);
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
     launcher.elide_future_return = true;
+    Scalar<ENTRY_T>::construct_argument_permutation(launcher, infos.data(), perm.data(), 3);
+    launcher.global_arg = Legion::UntypedBuffer(perm.data(), 3 * sizeof(int32_t));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -303,7 +313,9 @@ void PartitionedVector<ENTRY_T>::xpay(
         Legion::ArgumentMap()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-    launcher.add_future(alpha.get_future());
+    // Don't need the argument buffer if just one future.
+    std::array<ScalarPackInfo, 1> infos;
+    alpha.add_to_launcher(launcher, infos[0], 0);
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
     launcher.elide_future_return = true;
@@ -329,11 +341,15 @@ void PartitionedVector<ENTRY_T>::xpay(
         Legion::ArgumentMap()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-    launcher.add_future(numer.get_future());
-    launcher.add_future(denom.get_future());
+    std::array<ScalarPackInfo, 2> infos;
+    std::array<int32_t, 2> perm;
+    numer.add_to_launcher(launcher, infos[0], 0);
+    denom.add_to_launcher(launcher, infos[1], 1);
     launcher.add_region_requirement(get_requirement(LEGION_READ_WRITE));
     launcher.add_region_requirement(x.get_requirement(LEGION_READ_ONLY));
     launcher.elide_future_return = true;
+    Scalar<ENTRY_T>::construct_argument_permutation(launcher, infos.data(), perm.data(), 2);
+    launcher.global_arg = Legion::UntypedBuffer(perm.data(), 2 * sizeof(int32_t));
 
     rt->execute_index_space(ctx, launcher);
 }
@@ -359,7 +375,7 @@ Scalar<ENTRY_T> PartitionedVector<ENTRY_T>::dot(const PartitionedVector &x
     return Scalar<ENTRY_T>{
         ctx,
         rt,
-        rt->execute_index_space(ctx, launcher, LEGION_REDOP_SUM<ENTRY_T>),
+        rt->execute_index_space(ctx, launcher),
     };
 }
 
