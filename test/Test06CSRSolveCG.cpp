@@ -76,7 +76,7 @@ void top_level_task(
     planner.add_rhs_vector(rhs);
     planner.add_row_partitioned_matrix(csr_matrix, 0, 0);
 
-    LegionSolvers::CGSolver<ENTRY_T> solver{planner};
+    LegionSolvers::CGSolver<ENTRY_T> solver{planner, !no_print_results};
 
     for (std::size_t i = 0; i < num_iterations; ++i) { solver.step(); }
 
@@ -85,6 +85,8 @@ void top_level_task(
         for (std::size_t i = 0; i <= num_iterations; ++i) {
             dummy = solver.residual_norm_squared[i].print(dummy);
         }
+    } else {
+        solver.last_res_norm.print();
     }
 
 #ifndef LEGION_SOLVERS_DISABLE_CLEANUP
