@@ -47,7 +47,7 @@ def remove_directory(path: str, quiet: bool = False) -> None:
 
 @_contextmanager
 def change_directory(path: str, quiet: bool = False):
-    prev_path = _os.getcwd()
+    prev_path: str = _os.getcwd()
     _quiet_print(quiet, "[LegionSolversBuild] Changing directory to", path)
     _os.chdir(path)
     try:
@@ -126,7 +126,16 @@ def cmake(
                 cmd.append("-D{0}={1}".format(key, value))
         run(*cmd)
         if build:
-            run("cmake", "--build", ".", "--parallel", check=True)
+            # CMake's automatic CPU core count detection is unreliable on
+            # some HPC clusters, launching an unreasonably large number of
+            # parallel build jobs. We use Python's os.cpu_count() instead.
+            cores = _os.cpu_count()
+            if cores is None:
+                print("[LegionSolversBuild] WARNING:",
+                      "Could not automatically determine CPU core count.")
+                cores = 8 # reasonably conservative guess
+            print("[LegionSolversBuild] Building with", cores, "cores.")
+            run("cmake", "--build", ".", "--parallel", str(cores), check=True)
         if test:
             run("ctest", check=False)
         if install:
@@ -156,7 +165,7 @@ MACHINE: Machines = {
     "PIZDAINT": Machines.PIZDAINT,
     "LASSEN": Machines.LASSEN,
     "SUMMIT": Machines.SUMMIT,
-}.get(_getenv("LEGION_SOLVERS_MACHINE"), Machines.UNKNOWN)
+}.get(_getenv("LEGION_SOLVERS_MACHINE").upper(), Machines.UNKNOWN)
 
 
 if MACHINE == Machines.UNKNOWN:
