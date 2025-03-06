@@ -62,6 +62,19 @@ void LegionSolvers::check_cusparse(
     }
 }
 
+void LegionSolvers::check_nccl(
+    ncclResult_t result, const char* file, int line
+) {
+  if (result != ncclSuccess) {
+    static_cast<void>(fprintf(stderr,
+                              "Internal NCCL failure with error %d (%s) in file %s at line %d\n",
+                              result,
+                              ncclGetErrorString(result),
+                              file,
+                              line));
+    std::exit(result);
+  }
+}
 
 cudaStream_t CUDALibraryContext::get_cuda_stream() {
     // Always use the Realm stream. Since we are putting
@@ -90,6 +103,15 @@ cusparseHandle_t CUDALibraryContext::get_cusparse_handle() {
     return cusparse_handle;
 }
 
+ncclComm_t CUDALibraryContext::get_nccl_comm() {
+    assert(nccl_comm != nullptr);
+    return nccl_comm;
+}
+
+void CUDALibraryContext::set_nccl_comm(ncclComm_t comm) {
+    nccl_comm = comm;
+}
+
 
 constexpr CUDAStreamView::CUDAStreamView(CUDAStreamView &&v) noexcept
     : cuda_stream(v.cuda_stream)
@@ -112,7 +134,7 @@ CUDAStreamView::~CUDAStreamView() {
     //                at the end of each task
     if (valid) {
 #ifndef NDEBUG
-        CHECK_CUDA_STREAM(cuda_stream);
+        // CHECK_CUDA_STREAM(cuda_stream);
 // LegionSolvers does not currently use the Realm CUDA hijack,
 // so we can let Realm handle synchronization of the stream.
 // #else
@@ -142,4 +164,12 @@ cublasHandle_t LegionSolvers::get_cublas_handle() {
 
 cusparseHandle_t LegionSolvers::get_cusparse_handle() {
     return get_cuda_library_context().get_cusparse_handle();
+}
+
+ncclComm_t LegionSolvers::get_nccl_comm() {
+    return get_cuda_library_context().get_nccl_comm();
+}
+
+void LegionSolvers::set_nccl_comm(ncclComm_t comm) {
+    get_cuda_library_context().set_nccl_comm(comm);
 }

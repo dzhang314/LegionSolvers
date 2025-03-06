@@ -14,6 +14,7 @@ Scalar<T> Scalar<T>::operator+() const {
 
 template <typename T>
 Scalar<T> Scalar<T>::operator-() const {
+    assert(!futuremap.exists());
     Legion::TaskLauncher launcher(
         NegateScalarTask<T>::task_id, Legion::TaskArgument()
     );
@@ -25,6 +26,7 @@ Scalar<T> Scalar<T>::operator-() const {
 
 template <typename T>
 Scalar<T> Scalar<T>::operator+(const Scalar<T> &rhs) const {
+    assert(!futuremap.exists());
     Legion::TaskLauncher launcher(
         AddScalarTask<T>::task_id, Legion::TaskArgument()
     );
@@ -37,6 +39,7 @@ Scalar<T> Scalar<T>::operator+(const Scalar<T> &rhs) const {
 
 template <typename T>
 Scalar<T> Scalar<T>::operator-(const Scalar<T> &rhs) const {
+    assert(!futuremap.exists());
     Legion::TaskLauncher launcher(
         SubtractScalarTask<T>::task_id, Legion::TaskArgument()
     );
@@ -49,6 +52,7 @@ Scalar<T> Scalar<T>::operator-(const Scalar<T> &rhs) const {
 
 template <typename T>
 Scalar<T> Scalar<T>::operator*(const Scalar<T> &rhs) const {
+    assert(!futuremap.exists());
     Legion::TaskLauncher launcher(
         MultiplyScalarTask<T>::task_id, Legion::TaskArgument()
     );
@@ -61,6 +65,7 @@ Scalar<T> Scalar<T>::operator*(const Scalar<T> &rhs) const {
 
 template <typename T>
 Scalar<T> Scalar<T>::operator/(const Scalar<T> &rhs) const {
+    assert(!futuremap.exists());
     Legion::TaskLauncher launcher(
         DivideScalarTask<T>::task_id, Legion::TaskArgument()
     );
@@ -73,6 +78,7 @@ Scalar<T> Scalar<T>::operator/(const Scalar<T> &rhs) const {
 
 template <typename T>
 Scalar<T> Scalar<T>::sqrt() const {
+    assert(!futuremap.exists());
     Legion::TaskLauncher launcher(
         SqrtScalarTask<T>::task_id, Legion::TaskArgument()
     );
@@ -84,6 +90,7 @@ Scalar<T> Scalar<T>::sqrt() const {
 
 template <typename T>
 Scalar<T> Scalar<T>::rsqrt() const {
+    assert(!futuremap.exists());
     Legion::TaskLauncher launcher(
         RSqrtScalarTask<T>::task_id, Legion::TaskArgument()
     );
@@ -99,7 +106,7 @@ Legion::Future Scalar<T>::print() const {
         PrintScalarTask<T>::task_id, Legion::TaskArgument()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-    launcher.add_future(future);
+    launcher.add_future(get_future());
     return rt->execute_task(ctx, launcher);
 }
 
@@ -110,7 +117,7 @@ Legion::Future Scalar<T>::print(Legion::Future dummy) const {
         PrintScalarTask<T>::task_id, Legion::TaskArgument()
     );
     launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
-    launcher.add_future(future);
+    launcher.add_future(get_future());
     launcher.add_future(dummy);
     return rt->execute_task(ctx, launcher);
 }
