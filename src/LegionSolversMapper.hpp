@@ -48,14 +48,12 @@ public:
         const Legion::RegionRequirement &req
     ) override;
 
-#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
     virtual void select_sharding_functor(
         const Legion::Mapping::MapperContext ctx,
         const Legion::Task &task,
         const SelectShardingFunctorInput &input,
         SelectShardingFunctorOutput &output
     ) override;
-#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION
 
     // Legion::Processor get_gpu(Legion::coord_t i);
 
@@ -71,8 +69,6 @@ void mapper_registration_callback(
 );
 
 
-#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
-
 struct BlockingShardingFunctor : public Legion::ShardingFunctor {
 
     virtual Legion::ShardID shard(
@@ -82,8 +78,6 @@ struct BlockingShardingFunctor : public Legion::ShardingFunctor {
     ) override;
 
 }; // struct BlockingShardingFunctor
-
-#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION
 
 
 } // namespace LegionSolvers
