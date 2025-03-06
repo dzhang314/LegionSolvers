@@ -53,7 +53,6 @@ LoadCUDALibsTask::return_type LoadCUDALibsTask::task_body(
     CHECK_NCCL(ncclGroupStart());
     CHECK_NCCL(ncclCommInitRank(&comm, num_ranks, id, rank_id));
     CHECK_NCCL(ncclGroupEnd());
-    std::cout << "COMM AFTER INITIALIZATION: " << comm << std::endl;
     set_nccl_comm(comm);
     get_nccl_comm();
 }
