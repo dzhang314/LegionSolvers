@@ -51,11 +51,13 @@ public:
 
     Scalar &operator=(const Scalar &rhs) {
         future = rhs.future;
+	futuremap = rhs.futuremap;
         return *this; // no need to overwrite ctx or rt
     }
 
     Scalar &operator=(Scalar &&rhs) {
         future = std::move(rhs.future);
+	futuremap = std::move(rhs.futuremap);
         return *this; // no need to overwrite ctx or rt
     }
 
