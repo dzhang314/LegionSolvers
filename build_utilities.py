@@ -47,7 +47,7 @@ def remove_directory(path: str, quiet: bool = False) -> None:
 
 @_contextmanager
 def change_directory(path: str, quiet: bool = False):
-    prev_path = _os.getcwd()
+    prev_path: str = _os.getcwd()
     _quiet_print(quiet, "[LegionSolversBuild] Changing directory to", path)
     _os.chdir(path)
     try:
@@ -67,7 +67,13 @@ def download(url: str, quiet: bool = False) -> None:
     run("wget", url)
 
 
-def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> None:
+def clone(
+    url: str,
+    branch: str = "",
+    path: str = "",
+    commit: str = "",
+    quiet: bool = False,
+) -> None:
     if branch:
         if path:
             _quiet_print(
@@ -80,6 +86,16 @@ def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> No
                 path,
             )
             run("git", "clone", "--branch", branch, url, path)
+            if commit:
+                with change_directory(path):
+                    _quiet_print(
+                        quiet,
+                        "[LegionSolversBuild] Checking out commit",
+                        commit,
+                        "in directory",
+                        path,
+                    )
+                    run("git", "checkout", commit)
         else:
             _quiet_print(
                 quiet,
@@ -89,6 +105,7 @@ def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> No
                 url,
             )
             run("git", "clone", "--branch", branch, url)
+            assert not commit
     else:
         if path:
             _quiet_print(
@@ -99,9 +116,20 @@ def clone(url: str, branch: str = "", path: str = "", quiet: bool = False) -> No
                 path,
             )
             run("git", "clone", url, path)
+            if commit:
+                with change_directory(path):
+                    _quiet_print(
+                        quiet,
+                        "[LegionSolversBuild] Checking out commit",
+                        commit,
+                        "in directory",
+                        path,
+                    )
+                    run("git", "checkout", commit)
         else:
             _quiet_print(quiet, "[LegionSolversBuild] Cloning repository", url)
             run("git", "clone", url)
+            assert not commit
 
 
 CMakeDefines = _Dict[str, _Union[bool, int, str]]
@@ -126,7 +154,16 @@ def cmake(
                 cmd.append("-D{0}={1}".format(key, value))
         run(*cmd)
         if build:
-            run("cmake", "--build", ".", "--parallel", check=True)
+            # CMake's automatic CPU core count detection is unreliable on
+            # some HPC clusters, launching an unreasonably large number of
+            # parallel build jobs. We use Python's os.cpu_count() instead.
+            cores = _os.cpu_count()
+            if cores is None:
+                print("[LegionSolversBuild] WARNING:",
+                      "Could not automatically determine CPU core count.")
+                cores = 8 # reasonably conservative guess
+            print("[LegionSolversBuild] Building with", cores, "cores.")
+            run("cmake", "--build", ".", "--parallel", str(cores), check=True)
         if test:
             run("ctest", check=False)
         if install:
@@ -156,11 +193,20 @@ MACHINE: Machines = {
     "PIZDAINT": Machines.PIZDAINT,
     "LASSEN": Machines.LASSEN,
     "SUMMIT": Machines.SUMMIT,
-}.get(_getenv("LEGION_SOLVERS_MACHINE"), Machines.UNKNOWN)
+}.get(_getenv("LEGION_SOLVERS_MACHINE").upper(), Machines.UNKNOWN)
 
 
 if MACHINE == Machines.UNKNOWN:
     print("[LegionSolversBuild] WARNING: Unknown machine")
+
+
+GASNET_CONDUITS: _Dict[Machines, str] = {
+    Machines.UNKNOWN: "mpi",
+    Machines.SAPLING: "ibv",
+    Machines.PIZDAINT: "mpi", # TODO: don't remember which network Piz Daint uses
+    Machines.LASSEN: "ibv",
+    Machines.SUMMIT: "ibv",
+}
 
 
 SCRATCH_DIR: str = _getenv("LEGION_SOLVERS_SCRATCH_DIR")

@@ -10,11 +10,8 @@
 #include "TaskBaseClasses.hpp" // for LEGION_SOLVERS_TASK_BLOCK_SIZE
 #include "TaskIDs.hpp"         // for NUM_META_TASK_IDS
 
-using LegionSolvers::LegionSolversMapper;
-
-#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
 using LegionSolvers::BlockingShardingFunctor;
-#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION
+using LegionSolvers::LegionSolversMapper;
 
 
 LegionSolversMapper::LegionSolversMapper(
@@ -96,21 +93,25 @@ void LegionSolversMapper::map_task(
 }
 
 void LegionSolversMapper::default_policy_select_constraints(
-	  Legion::Mapping::MapperContext ctx,
-          Legion::LayoutConstraintSet &constraints,
-          Legion::Memory target_memory,
-          const Legion::RegionRequirement &req) {
+    Legion::Mapping::MapperContext ctx,
+    Legion::LayoutConstraintSet &constraints,
+    Legion::Memory target_memory,
+    const Legion::RegionRequirement &req
+) {
     // GPUs require allocations to be 16-byte aligned.
     std::vector<Legion::FieldID> fields;
     default_policy_select_constraint_fields(ctx, req, fields);
     for (auto field : fields) {
-      constraints.add_constraint(Legion::AlignmentConstraint(field, LEGION_GE_EK, 16));
+        constraints.add_constraint(
+            Legion::AlignmentConstraint(field, LEGION_GE_EK, 16)
+        );
     }
-    DefaultMapper::default_policy_select_constraints(ctx, constraints, target_memory, req);
+    DefaultMapper::default_policy_select_constraints(
+        ctx, constraints, target_memory, req
+    );
 }
 
 
-#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
 void LegionSolversMapper::select_sharding_functor(
     const Legion::Mapping::MapperContext,
     const Legion::Task &,
@@ -119,7 +120,6 @@ void LegionSolversMapper::select_sharding_functor(
 ) {
     output.chosen_functor = LEGION_SOLVERS_SHARDING_FUNCTOR_ID;
 }
-#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION
 
 
 // Legion::Processor LegionSolversMapper::get_gpu(Legion::coord_t i) {
@@ -161,8 +161,6 @@ void LegionSolvers::mapper_registration_callback(
 }
 
 
-#ifdef LEGION_SOLVERS_USE_CONTROL_REPLICATION
-
 Legion::ShardID BlockingShardingFunctor::shard(
     const Legion::DomainPoint &point,
     const Legion::Domain &domain,
@@ -175,5 +173,3 @@ Legion::ShardID BlockingShardingFunctor::shard(
         (domain.get_volume() + total_shards - 1) / total_shards;
     return static_cast<Legion::ShardID>(point[0] / points_per_shard);
 }
-
-#endif // LEGION_SOLVERS_USE_CONTROL_REPLICATION

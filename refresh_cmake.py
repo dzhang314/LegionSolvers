@@ -33,12 +33,17 @@ def legion_solvers_build_path(
     )
 
 
-def main():
-    for branch_tag, _ in LEGION_BRANCHES:
+def main() -> None:
+    for branch_tag, _, _ in LEGION_BRANCHES:
         for build_tag, build_type in BUILD_TYPES:
             for use_cuda in [False, True]:
                 for use_kokkos in [False, True]:
-                    build_path = legion_solvers_build_path(
+                    legion_path: str = legion_library_path(
+                        branch_tag, use_cuda, use_kokkos, build_tag
+                    )
+                    if not _os.path.isdir(legion_path):
+                        continue
+                    build_path: str = legion_solvers_build_path(
                         branch_tag, use_cuda, use_kokkos, build_tag
                     )
                     remove_directory(build_path)
@@ -47,9 +52,7 @@ def main():
                         "CMAKE_CXX_FLAGS": "-Wall -Wextra -pedantic -Wfatal-errors",
                         "CMAKE_BUILD_TYPE": build_type,
                         "Legion_DIR": _os.path.join(
-                            legion_library_path(
-                                branch_tag, use_cuda, use_kokkos, build_tag
-                            ),
+                            legion_path,
                             "share",
                             "Legion",
                             "cmake",
@@ -60,12 +63,6 @@ def main():
                             defines["Kokkos_DIR"] = KOKKOS_CUDA_CMAKE_PATH
                         else:
                             defines["Kokkos_DIR"] = KOKKOS_NOCUDA_CMAKE_PATH
-                    if branch_tag == "cr":
-                        flags = defines["CMAKE_CXX_FLAGS"]
-                        assert isinstance(flags, str)
-                        defines["CMAKE_CXX_FLAGS"] = (
-                            flags + " -DLEGION_SOLVERS_USE_CONTROL_REPLICATION"
-                        )
                     cmake(
                         build_path,
                         defines,
