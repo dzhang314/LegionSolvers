@@ -116,11 +116,15 @@ void top_level_task(
         solver.last_res_norm.print();
     }
 
-    double start = ts_start.get_result<long long>();
-    double end = ts_end.get_result<long long>();
-    double seconds = (end - start) * 1e-6;
-    double throughput = (num_iterations - (2 * prune)) / seconds;
-    LEGION_PRINT_ONCE(rt, ctx, stdout, "Throughput: %f (it/s).\n", throughput);
+    if (prune > 0) {
+        double start = ts_start.get_result<long long>();
+        double end = ts_end.get_result<long long>();
+        double seconds = (end - start) * 1e-6;
+        double throughput = (num_iterations - (2 * prune)) / seconds;
+        LEGION_PRINT_ONCE(rt, ctx, stdout, "Throughput: %f (it/s).\n", throughput);
+    }
+
+    LegionSolvers::unloadCUDALibs(ctx, rt);
 
 #ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, disjoint_vector_partition);

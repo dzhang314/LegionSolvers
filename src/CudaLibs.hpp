@@ -60,9 +60,25 @@ public:
     static void preregister(bool verbose);
 };
 
+class UnloadCUDALibsTask {
+public:
+    static const int TASK_ID =
+        LEGION_SOLVERS_TASK_ID_ORIGIN + UNLOAD_CUDA_LIBS_META_TASK_ID;
+    static constexpr const char *task_name = "unload_cuda_libs";
+    using return_type = void;
+    static return_type task_body(
+        const Legion::Task *task,
+        const std::vector<Legion::PhysicalRegion> &regions,
+        Legion::Context ctx,
+        Legion::Runtime *rt
+    );
+    static void preregister(bool verbose);
+};
+
 // Function to actually perform initialization of CUDA modules
 // on each GPU. This should only be called once the Legion
 // runtime has started.
 void loadCUDALibs(Legion::Context ctx, Legion::Runtime *rt);
+void unloadCUDALibs(Legion::Context ctx, Legion::Runtime *rt);
 
 } // namespace LegionSolvers

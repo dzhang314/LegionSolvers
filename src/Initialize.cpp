@@ -502,6 +502,7 @@ void LegionSolvers::initialize(bool print_info, bool verbose) {
 #if defined(LEGION_USE_CUDA) && !defined(REALM_USE_KOKKOS)
     InitNCCLUniqueIDTask::preregister(verbose);
     LoadCUDALibsTask::preregister(verbose);
+    UnloadCUDALibsTask::preregister(verbose);
 #endif
 }
 // clang-format on
