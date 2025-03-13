@@ -93,11 +93,11 @@ void top_level_task(
     for (size_t io = 0; io < (num_iterations / batchsize); io++) {
       if (io * batchsize == prune) {
 	Legion::Future f = rt->issue_execution_fence(ctx);
-	ts_start = rt->get_current_time_in_microseconds(ctx);
+	ts_start = rt->get_current_time_in_microseconds(ctx, f);
       }
       if (io * batchsize == (num_iterations - prune)) {
 	Legion::Future f = rt->issue_execution_fence(ctx);
-	ts_end = rt->get_current_time_in_microseconds(ctx);
+	ts_end = rt->get_current_time_in_microseconds(ctx, f);
       }
       // TODO (rohany): Does this matter for argument invariance.
       rt->begin_trace(ctx, 15210);
