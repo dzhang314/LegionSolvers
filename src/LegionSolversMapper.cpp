@@ -103,7 +103,7 @@ void LegionSolversMapper::default_policy_select_constraints(
     default_policy_select_constraint_fields(ctx, req, fields);
     for (auto field : fields) {
         constraints.add_constraint(
-            Legion::AlignmentConstraint(field, LEGION_GE_EK, 16)
+            Legion::AlignmentConstraint(field, LEGION_EQ_EK, 16)
         );
     }
     DefaultMapper::default_policy_select_constraints(
