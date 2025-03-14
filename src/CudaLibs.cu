@@ -41,7 +41,7 @@ LoadCUDALibsTask::return_type LoadCUDALibsTask::task_body(
     Legion::Context ctx,
     Legion::Runtime *rt
 ) {
-    get_cuda_stream();
+    auto stream = get_cuda_stream();
     get_cublas_handle();
     get_cusparse_handle();
     assert(task->futures.size() == 1);
@@ -53,6 +53,19 @@ LoadCUDALibsTask::return_type LoadCUDALibsTask::task_body(
     CHECK_NCCL(ncclGroupStart());
     CHECK_NCCL(ncclCommInitRank(&comm, num_ranks, id, rank_id));
     CHECK_NCCL(ncclGroupEnd());
+
+    // Perform a warmup all2all and allreduce.
+    Legion::DeferredBuffer<double, 1> src_buf(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM);
+    Legion::DeferredBuffer<double, 1> tgt_buf(Legion::Rect<1>(0, 0), Legion::Memory::GPU_FB_MEM);
+    CHECK_NCCL(ncclGroupStart());
+    for (std::size_t idx = 0; idx < num_ranks; ++idx) {
+      CHECK_NCCL(ncclSend(src_buf.ptr(0), 1, ncclFloat64, idx, comm, stream));
+      CHECK_NCCL(ncclRecv(tgt_buf.ptr(0), 1, ncclFloat64, idx, comm, stream));
+    }
+    CHECK_NCCL(ncclGroupEnd());
+    CHECK_NCCL(ncclAllReduce(tgt_buf.ptr(0), tgt_buf.ptr(0), 1, ncclFloat64, ncclSum, comm, stream));
+    cudaStreamSynchronize(stream);
+
     set_nccl_comm(comm);
     get_nccl_comm();
 }
