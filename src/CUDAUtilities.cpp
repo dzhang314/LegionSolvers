@@ -112,7 +112,7 @@ CUDAStreamView::~CUDAStreamView() {
     //                at the end of each task
     if (valid) {
 #ifndef NDEBUG
-        CHECK_CUDA_STREAM(cuda_stream);
+        // CHECK_CUDA_STREAM(cuda_stream);
 // LegionSolvers does not currently use the Realm CUDA hijack,
 // so we can let Realm handle synchronization of the stream.
 // #else

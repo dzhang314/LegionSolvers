@@ -41,6 +41,20 @@ public:
         SliceTaskOutput &output
     ) override;
 
+    void premap_task(
+        const Legion::Mapping::MapperContext ctx,
+        const Legion::Task& task,
+        const PremapTaskInput& input,
+        PremapTaskOutput& output
+    ) override;
+
+    void map_task(
+        const Legion::Mapping::MapperContext ctx,
+        const Legion::Task& task,
+        const MapTaskInput& input,
+              MapTaskOutput& output
+    ) override;
+
     virtual void default_policy_select_constraints(
         Legion::Mapping::MapperContext ctx,
         Legion::LayoutConstraintSet &constraints,
