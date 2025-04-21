@@ -341,8 +341,9 @@ void DotTask<ENTRY_T, DIM, COORD_T>::cuda_task(const void* args, size_t arglen, 
 
     // Grab our stream and cuBLAS handle.
     auto stream = get_cuda_stream();
-    // auto handle = get_cublas_handle();
-    // CHECK_CUBLAS(cublasSetStream(handle, stream));
+    auto handle = get_cublas_handle();
+    CHECK_CUBLAS(cublasSetStream(handle, stream));
+    CHECK_CUBLAS(cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE));
 
     assert(regions.size() == 2);
     const auto &v = regions[0];
@@ -381,21 +382,23 @@ void DotTask<ENTRY_T, DIM, COORD_T>::cuda_task(const void* args, size_t arglen, 
     //  If we're getting some subslice of a larger region then this probably
     //  won't work.
     // Finally make the cuBLAS call.
-    // cublas_dot<ENTRY_T>(
-    //     handle,
-    //     v_domain.get_volume(),
-    //     v_reader.ptr(v_domain.lo()),
-    //     1,
-    //     w_reader.ptr(w_domain.lo()),
-    //     1,
-    //     result.ptr()
-    // );
-
     if (!v_domain.empty()) {
-      int64_t blockSize = THREADS_PER_BLOCK;
-      int64_t numBlocks = (v_domain.get_volume() + blockSize - 1) / blockSize;
-      dotProductKernel<ENTRY_T><<<numBlocks, blockSize, 0, stream>>>(v_reader.ptr(v_domain.lo()), w_reader.ptr(w_domain.lo()), result.ptr(), v_domain.get_volume());
+      cublas_dot<ENTRY_T>(
+          handle,
+          v_domain.get_volume(),
+          v_reader.ptr(v_domain.lo()),
+          1,
+          w_reader.ptr(w_domain.lo()),
+          1,
+          result.ptr()
+      );
     }
+
+    // if (!v_domain.empty()) {
+    //   int64_t blockSize = THREADS_PER_BLOCK;
+    //   int64_t numBlocks = (v_domain.get_volume() + blockSize - 1) / blockSize;
+    //   dotProductKernel<ENTRY_T><<<numBlocks, blockSize, 0, stream>>>(v_reader.ptr(v_domain.lo()), w_reader.ptr(w_domain.lo()), result.ptr(), v_domain.get_volume());
+    // }
 
     // Also do NCCL.
     if (task->index_domain.get_volume() > 1) {
