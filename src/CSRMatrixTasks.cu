@@ -10,6 +10,7 @@
 using LegionSolvers::CSRMatvecTask;
 using LegionSolvers::CSRRmatvecTask;
 
+static void* local_arrays[LEGION_MAX_NUM_PROCS] = {};
 
 LEGION_SOLVERS_KDR_TEMPLATE
 void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
@@ -85,23 +86,74 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
     auto handle = get_cusparse_handle();
     CHECK_CUSPARSE(cusparseSetStream(handle, stream));
 
-    auto cusparse_csr = makeCuSparseCSR<
-        ENTRY_T,
-        KERNEL_DIM,
-        DOMAIN_DIM,
-        RANGE_DIM,
-        KERNEL_COORD_T,
-        DOMAIN_COORD_T,
-        RANGE_COORD_T>(
-        stream,
-        rows,
-        cols,
-        rowptr_region.get_bounds<RANGE_DIM, RANGE_COORD_T>(),
-        rowptr_reader,
-        csr_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>(),
-        col_reader,
-        entry_reader
-    );
+    cusparseSpMatDescr_t cusparse_csr;
+
+    const Legion::Processor proc = Legion::Processor::get_executing_processor();
+    void* local_pos = local_arrays[proc.id & (LEGION_MAX_NUM_PROCS - 1)];
+    if (local_pos == nullptr) {
+      // This is the first iteration.
+      cusparse_csr = makeCuSparseCSR<
+          ENTRY_T,
+          KERNEL_DIM,
+          DOMAIN_DIM,
+          RANGE_DIM,
+          KERNEL_COORD_T,
+          DOMAIN_COORD_T,
+          RANGE_COORD_T>(
+          stream,
+          rows,
+          cols,
+          rowptr_region.get_bounds<RANGE_DIM, RANGE_COORD_T>(),
+          rowptr_reader,
+          csr_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>(),
+          col_reader,
+          entry_reader
+      );
+      // Extract the constructed pos ptr (along with other fields).
+      int64_t _rows, _cols, _nnz;
+      void* offs, *_col, *_val;
+      cusparseIndexType_t _rowt, _colt;
+      cusparseIndexBase_t _base;
+      cudaDataType _ty;
+      cusparseCsrGet(
+        cusparse_csr,
+	&_rows,
+	&_cols,
+	&_nnz,
+	&offs,
+	&_col,
+	&_val,
+	&_rowt,
+	&_colt,
+	&_base,
+	&_ty
+      );
+      // Malloc and save the locally constructed rowptr. We're going to
+      // leak this, and that's fine for the hacking we're going to do.
+      void* saved_offs = nullptr;
+      cudaMalloc(&saved_offs, (_rows + 1) * sizeof(KERNEL_COORD_T));
+      assert(saved_offs != nullptr);
+      cudaMemcpy(saved_offs, offs, (_rows + 1) * sizeof(KERNEL_COORD_T), cudaMemcpyDeviceToDevice);
+      local_arrays[proc.id & (LEGION_MAX_NUM_PROCS - 1)] = saved_offs;
+    } else {
+      CHECK_CUSPARSE(cusparseCreateCsr(
+          &cusparse_csr,
+          rows,
+          cols,
+          csr_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>().volume(),
+          local_pos,
+          const_cast<void *>(static_cast<const void *>(col_reader.ptr(csr_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>().bounds.lo
+          ))),
+          const_cast<void *>(
+              static_cast<const void *>(entry_reader.ptr(csr_matrix.get_bounds<KERNEL_DIM, KERNEL_COORD_T>().bounds.lo))
+          ),
+          CUSPARSE_INDEX_TYPE<KERNEL_COORD_T>,
+          CUSPARSE_INDEX_TYPE<DOMAIN_COORD_T>,
+          CUSPARSE_INDEX_BASE_ZERO,
+          CUDA_DATA_TYPE<ENTRY_T>
+      ));
+    }
+
     // There is an image relationship between col->input, so input should
     // be offset to the base of the image rather used directly.
     auto cusparse_input =
