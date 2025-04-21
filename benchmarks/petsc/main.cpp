@@ -299,9 +299,10 @@ int main(int argc, char **argv) {
     PetscCall(KSPGetIterationNumber(ksp, &num_iterations));
     PetscCall(PetscPrintf(
         PETSC_COMM_WORLD,
-        "Performed %d iterations.\nTook %f ms per iteration.\n",
+        "Performed %d iterations.\nTook %f ms per iteration.\nThroughput %f it/s.",
         num_iterations,
-        1000.0 * elapsed / num_iterations
+        1000.0 * elapsed / num_iterations,
+	num_iterations / elapsed
     ));
 
     // Finalize MPI and PETSc.
