@@ -277,6 +277,16 @@ int main(int argc, char **argv) {
     // Clear the solution vector.
     PetscCall(VecZeroEntries(x));
 
+    // Warmup set of matmult operations to pull all data onto the GPU.
+    {
+      for (int i = 0; i < 5; i++) {
+        MatMult(A, b, x);
+        VecPointwiseMult(x, x, x);
+        PetscReal dummy;
+        VecNorm(x, NORM_1, &dummy);
+      }
+    }
+
     // Set up Krylov solver data structures.
     KSP ksp;
     PetscCall(KSPCreate(PETSC_COMM_WORLD, &ksp));
