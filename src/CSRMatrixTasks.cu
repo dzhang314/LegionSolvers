@@ -11,6 +11,7 @@ using LegionSolvers::CSRMatvecTask;
 using LegionSolvers::CSRRmatvecTask;
 
 static void* local_arrays[LEGION_MAX_NUM_PROCS] = {};
+static void* local_workspaces[LEGION_MAX_NUM_PROCS] = {};
 
 LEGION_SOLVERS_KDR_TEMPLATE
 void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
@@ -168,25 +169,26 @@ void CSRMatvecTask<LEGION_SOLVERS_KDR_TEMPLATE_ARGS>::cuda_task_body(
 
     ENTRY_T alpha = static_cast<ENTRY_T>(1.0);
     ENTRY_T beta = static_cast<ENTRY_T>(0.0);
-    size_t bufSize = 0;
-    CHECK_CUSPARSE(cusparseSpMV_bufferSize(
-        handle,
-        CUSPARSE_OPERATION_NON_TRANSPOSE,
-        &alpha,
-        cusparse_csr,
-        cusparse_input,
-        &beta,
-        cusparse_output,
-        CUDA_DATA_TYPE<ENTRY_T>,
-        CUSPARSE_SPMV_ALG_DEFAULT,
-        &bufSize
-    ));
-    void *workspace = nullptr;
-    if (bufSize > 0) {
-        Legion::DeferredBuffer<char, 1> buf(
-            {0, bufSize - 1}, Legion::Memory::GPU_FB_MEM, nullptr /* initial value */, 16 /* alignment */
-        );
-        workspace = buf.ptr(0);
+    void* workspace = local_workspaces[proc.id & (LEGION_MAX_NUM_PROCS - 1)];
+    if (workspace == nullptr) {
+      size_t bufSize = 0;
+      CHECK_CUSPARSE(cusparseSpMV_bufferSize(
+          handle,
+          CUSPARSE_OPERATION_NON_TRANSPOSE,
+          &alpha,
+          cusparse_csr,
+          cusparse_input,
+          &beta,
+          cusparse_output,
+          CUDA_DATA_TYPE<ENTRY_T>,
+          CUSPARSE_SPMV_ALG_DEFAULT,
+          &bufSize
+      ));
+      if (bufSize > 0) {
+        // Also leak this ...
+        cudaMalloc(&workspace, bufSize);
+      }
+      local_workspaces[proc.id & (LEGION_MAX_NUM_PROCS - 1)] = workspace;
     }
     CHECK_CUSPARSE(cusparseSpMV(
         handle,
