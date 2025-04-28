@@ -95,6 +95,8 @@ def cmake_legion(
         # Disable rdtsc instruction on non-x86 machines.
         defines["CMAKE_CXX_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
         defines["CMAKE_CUDA_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
+    if MACHINE in [Machines.EOS]:
+        defines["Legion_EMBED_GASNet_CONFIGURE_ARGS"] = "--with-ibv-max-hcas=8"
     if use_kokkos:
         defines["Legion_USE_Kokkos"] = True
         if use_cuda:
