@@ -30,16 +30,11 @@ LEGION_GIT_URL: str = "https://gitlab.com/StanfordLegion/legion.git"
 
 
 LEGION_BRANCHES: _List[_Tuple[str, str, str]] = [
-    # ("aug22-3", "master", "ef074af5298f2259f1958918e1d9ba0e14bd7876"), # works
-    # ("aug22-4", "master", "4b7981f53b800e409f3753878c37fe75e4ed7449"), # /usr/bin/ld: cannot find -lrealm_gex_wrapper_objs
-    # ("sep12", "master", "c032dab254f423ccab36d05c47fed42b94f0b3f5"), # /usr/bin/ld: cannot find -lrealm_gex_wrapper_objs
-    ("master", "master", "master"),
-    ("r2412", "legion-24.12.0", "legion-24.12.0"),
+    ("subgraphs", "legion-trace-subgraphs", "legion-trace-subgraphs")
 ]
 
 
 BUILD_TYPES: _List[_Tuple[str, str]] = [
-    ("debug", "Debug"),
     ("release", "RelWithDebInfo"),
 ]
 
@@ -94,11 +89,14 @@ def cmake_legion(
         "Legion_NETWORKS": "gasnetex",
         "Legion_EMBED_GASNet": True,
         "GASNet_CONDUIT": GASNET_CONDUITS[MACHINE],
+        "Legion_HIJACK_CUDART" : False,
     }
     if MACHINE in [Machines.LASSEN, Machines.SUMMIT]:
         # Disable rdtsc instruction on non-x86 machines.
         defines["CMAKE_CXX_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
         defines["CMAKE_CUDA_FLAGS"] = "-DREALM_TIMERS_USE_RDTSC=0"
+    if MACHINE in [Machines.EOS]:
+        defines["Legion_EMBED_GASNet_CONFIGURE_ARGS"] = "--with-ibv-max-hcas=8"
     if use_kokkos:
         defines["Legion_USE_Kokkos"] = True
         if use_cuda:
@@ -123,7 +121,8 @@ def cmake_legion(
 
 def main() -> None:
     cuda_kokkos_configs: _List[_Tuple[bool, bool]] = [
-        (False, False), (False, True), (True, False), (True, True),
+        # (False, False), (False, True), (True, False), (True, True),
+        (True, False),
     ]
     if "--force-cuda" in _sys.argv:
         cuda_kokkos_configs = [c for c in cuda_kokkos_configs if c[0]]

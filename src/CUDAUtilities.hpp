@@ -6,6 +6,7 @@
 #include <cublas_v2.h>    // for cublas*
 #include <cuda_runtime.h> // for cuda*
 #include <cusparse.h>     // for cusparse*
+#include <nccl.h>
 
 namespace LegionSolvers {
 
@@ -15,6 +16,8 @@ void check_cuda(cudaError_t status, const char *file, int line);
 void check_cublas(cublasStatus_t status, const char *file, int line);
 
 void check_cusparse(cusparseStatus_t status, const char *file, int line);
+
+void check_nccl(ncclResult_t result, const char* file, int line);
 
 #define CHECK_CUDA(expr)                                                       \
     do {                                                                       \
@@ -40,19 +43,26 @@ void check_cusparse(cusparseStatus_t status, const char *file, int line);
         LegionSolvers::check_cusparse(status_, __FILE__, __LINE__);            \
     } while (false)
 
+#define CHECK_NCCL(...)               \
+  do {                                       \
+    const ncclResult_t status_ = __VA_ARGS__; \
+    LegionSolvers::check_nccl(status_, __FILE__, __LINE__);  \
+  } while (false)
 
 class CUDALibraryContext {
 
     cudaStream_t cuda_stream;
     cublasHandle_t cublas_handle;
     cusparseHandle_t cusparse_handle;
+    ncclComm_t nccl_comm;
 
 public:
 
     constexpr CUDALibraryContext() noexcept
         : cuda_stream(nullptr)
         , cublas_handle(nullptr)
-        , cusparse_handle(nullptr) {}
+        , cusparse_handle(nullptr)
+        , nccl_comm(nullptr) {}
 
     CUDALibraryContext(const CUDALibraryContext &) = delete;
     CUDALibraryContext(CUDALibraryContext &&) = delete;
@@ -62,6 +72,8 @@ public:
     cudaStream_t get_cuda_stream();
     cublasHandle_t get_cublas_handle();
     cusparseHandle_t get_cusparse_handle();
+    ncclComm_t get_nccl_comm();
+    void set_nccl_comm(ncclComm_t);
 
 }; // class CUDALibraryContext
 
@@ -95,6 +107,9 @@ CUDAStreamView get_cuda_stream();
 cusparseHandle_t get_cusparse_handle();
 
 cublasHandle_t get_cublas_handle();
+
+ncclComm_t get_nccl_comm();
+void set_nccl_comm(ncclComm_t);
 
 
 // clang-format off

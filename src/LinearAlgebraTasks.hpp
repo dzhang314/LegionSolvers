@@ -48,7 +48,25 @@ struct DotTask
     static constexpr const TaskFlags flags =
         TaskFlags::LEAF | TaskFlags::IDEMPOTENT | TaskFlags::REPLICABLE;
     LEGION_SOLVERS_DECLARE_TASK(ENTRY_T);
-    LEGION_SOLVERS_DECLARE_CUDA_TASK;
+#ifdef LEGION_USE_CUDA
+    static void preregister_fb_future_dot(bool verbose) {
+      if (verbose) {
+          std::cout << "[LegionSolvers] Registering task " << TaskTDI<DOT_TASK_BLOCK_ID, DotTask, ENTRY_T, DIM, COORD_T>::task_name()
+                    << " with ID " << TaskTDI<DOT_TASK_BLOCK_ID, DotTask, ENTRY_T, DIM, COORD_T>::task_id << "." << std::endl;
+      }
+      Legion::TaskVariantRegistrar registrar{TaskTDI<DOT_TASK_BLOCK_ID, DotTask, ENTRY_T, DIM, COORD_T>::task_id, TaskTDI<DOT_TASK_BLOCK_ID, DotTask, ENTRY_T, DIM, COORD_T>::task_name().c_str()};
+      registrar.add_constraint(Legion::ProcessorConstraint(Legion::Processor::TOC_PROC));
+      registrar.set_leaf(flags & TaskFlags::LEAF);
+      registrar.set_inner(flags & TaskFlags::INNER);
+      registrar.set_idempotent(flags & TaskFlags::IDEMPOTENT);
+      registrar.set_replicable(flags & TaskFlags::REPLICABLE);
+      Legion::Runtime::preregister_task_variant(registrar, Legion::CodeDescriptor(cuda_task));
+    }
+    static void cuda_task(const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor proc);
+#endif
+
+    // LEGION_SOLVERS_DECLARE_CUDA_TASK;
+    
 };
 
 

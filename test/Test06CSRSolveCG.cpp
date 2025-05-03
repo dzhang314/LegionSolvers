@@ -11,7 +11,7 @@
 #include "LibraryOptions.hpp"
 #include "PartitionedVector.hpp"
 #include "SquarePlanner.hpp"
-
+#include "CudaLibs.hpp"
 
 using ENTRY_T = double;
 constexpr int VECTOR_DIM = 1;
@@ -33,6 +33,8 @@ void top_level_task(
     VECTOR_COORD_T grid_size = 100;
     VECTOR_COLOR_COORD_T num_vector_pieces = 4;
     std::size_t num_iterations = 10;
+    std::size_t prune = 10;
+    std::size_t batchsize = 10;
     bool no_print_results = false;
 
     const Legion::InputArgs &args = Legion::Runtime::get_input_args();
@@ -41,9 +43,15 @@ void top_level_task(
             .add_option_int("-n", grid_size)
             .add_option_int("-vp", num_vector_pieces)
             .add_option_int("-it", num_iterations)
+	    .add_option_int("-prune", prune)
+	    .add_option_int("-b", batchsize)
             .add_option_bool("-np", no_print_results)
             .parse_command_line(args.argc, (const char **) args.argv);
     assert(ok);
+
+    num_iterations = num_iterations + 2 * prune;
+
+    LegionSolvers::loadCUDALibs(ctx, rt);
 
     const auto vector_color_space =
         rt->create_index_space(ctx, VectorColorRect{0, num_vector_pieces - 1});
@@ -74,16 +82,49 @@ void top_level_task(
     planner.add_rhs_vector(rhs);
     planner.add_row_partitioned_matrix(csr_matrix, 0, 0);
 
-    LegionSolvers::CGSolver<ENTRY_T> solver{planner};
+    LegionSolvers::CGSolver<ENTRY_T> solver{planner, !no_print_results};
 
-    for (std::size_t i = 0; i < num_iterations; ++i) { solver.step(); }
+
+    assert(num_iterations % batchsize == 0);
+
+    Legion::Future ts_start;
+    Legion::Future ts_end;
+
+    for (size_t io = 0; io < (num_iterations / batchsize); io++) {
+      if (io * batchsize == prune) {
+	Legion::Future f = rt->issue_execution_fence(ctx);
+	ts_start = rt->get_current_time_in_microseconds(ctx, f);
+      }
+      if (io * batchsize == (num_iterations - prune)) {
+	Legion::Future f = rt->issue_execution_fence(ctx);
+	ts_end = rt->get_current_time_in_microseconds(ctx, f);
+      }
+      // TODO (rohany): Does this matter for argument invariance.
+      rt->begin_trace(ctx, 15210);
+      for (size_t ii = 0; ii < batchsize; ii++) {
+        solver.step();
+      }
+      rt->end_trace(ctx, 15210);
+    }
 
     if (!no_print_results) {
         Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
         for (std::size_t i = 0; i <= num_iterations; ++i) {
             dummy = solver.residual_norm_squared[i].print(dummy);
         }
+    } else {
+        solver.last_res_norm.print();
     }
+
+    if (prune > 0) {
+        double start = ts_start.get_result<long long>();
+        double end = ts_end.get_result<long long>();
+        double seconds = (end - start) * 1e-6;
+        double throughput = (num_iterations - (2 * prune)) / seconds;
+        LEGION_PRINT_ONCE(rt, ctx, stdout, "Throughput: %f (it/s).\n", throughput);
+    }
+
+    LegionSolvers::unloadCUDALibs(ctx, rt);
 
 #ifndef LEGION_SOLVERS_DISABLE_CLEANUP
     rt->destroy_index_partition(ctx, disjoint_vector_partition);

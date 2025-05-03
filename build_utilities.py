@@ -179,6 +179,7 @@ class Machines(_Enum):
     PIZDAINT = 2
     LASSEN = 3
     SUMMIT = 4
+    EOS = 5
 
 
 def _getenv(name: str) -> str:
@@ -193,6 +194,7 @@ MACHINE: Machines = {
     "PIZDAINT": Machines.PIZDAINT,
     "LASSEN": Machines.LASSEN,
     "SUMMIT": Machines.SUMMIT,
+    "EOS": Machines.EOS,
 }.get(_getenv("LEGION_SOLVERS_MACHINE").upper(), Machines.UNKNOWN)
 
 
@@ -206,6 +208,7 @@ GASNET_CONDUITS: _Dict[Machines, str] = {
     Machines.PIZDAINT: "mpi", # TODO: don't remember which network Piz Daint uses
     Machines.LASSEN: "ibv",
     Machines.SUMMIT: "ibv",
+    Machines.EOS: "ibv",
 }
 
 
