@@ -37,8 +37,6 @@ public:
 
     COOMatrix(const COOMatrix &);
 
-    COOMatrix(COOMatrix &&) = delete;
-
     ~COOMatrix();
 
     COOMatrix &operator=(const COOMatrix &) = delete;

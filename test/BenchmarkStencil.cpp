@@ -32,7 +32,9 @@ LegionSolvers::CSRMatrix<ENTRY_T> get_laplacian_matrix(
 ) {
     switch (dim) {
     case 1: {
-        Legion::Rect<1, COORD_T> bounds = {{0}, {nx - 1}};
+        Legion::Rect<1, COORD_T> bounds = {
+            Legion::Point<1, COORD_T>{0}, Legion::Point<1, COORD_T>{nx - 1}
+        };
         std::vector<std::pair<Legion::Point<1, COORD_T>, ENTRY_T>> offsets;
         offsets.emplace_back(Legion::Point<1, COORD_T>{0}, +2.0);
         offsets.emplace_back(Legion::Point<1, COORD_T>{-1}, -1.0);

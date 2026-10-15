@@ -38,8 +38,6 @@ public:
 
     CSRMatrix(const CSRMatrix &);
 
-    CSRMatrix(CSRMatrix &&) = delete;
-
     ~CSRMatrix();
 
     CSRMatrix &operator=(const CSRMatrix &) = delete;

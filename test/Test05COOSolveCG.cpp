@@ -81,7 +81,7 @@ void top_level_task(
     for (std::size_t i = 0; i < num_iterations; ++i) { solver.step(); }
 
     if (!no_print_results) {
-        Legion::Future dummy = Legion::Future::from_value<int>(rt, 0);
+        Legion::Future dummy = Legion::Future::from_value<int>(0);
         for (std::size_t i = 0; i <= num_iterations; ++i) {
             dummy = solver.residual_norm_squared[i].print(dummy);
         }

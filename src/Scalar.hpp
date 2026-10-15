@@ -29,7 +29,7 @@ public:
     explicit Scalar(Legion::Context ctx, Legion::Runtime *rt, const T &value)
         : ctx(ctx)
         , rt(rt)
-        , future(Legion::Future::from_value(rt, value)) {}
+        , future(Legion::Future::from_value(value)) {}
 
     Scalar(const Scalar &) = default;
 

@@ -39,7 +39,7 @@ void LegionSolvers::print_index_partition(
     );
 
     Legion::FillLauncher fill_launcher(
-        dummy_region, dummy_region, Legion::Future::from_value<char>(rt, '\0')
+        dummy_region, dummy_region, Legion::Future::from_value<char>('\0')
     );
     fill_launcher.map_id = LEGION_SOLVERS_MAPPER_ID;
     fill_launcher.add_field(0);

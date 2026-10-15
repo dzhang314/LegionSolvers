@@ -54,14 +54,14 @@ enum TaskBlockID : Legion::TaskID {
 
 
 template <typename T>
-constexpr Legion::ReductionOpID LEGION_REDOP_SUM = -1;
+inline constexpr Legion::ReductionOpID LEGION_REDOP_SUM = -1;
 
 template <>
-constexpr Legion::ReductionOpID LEGION_REDOP_SUM<float> =
+inline constexpr Legion::ReductionOpID LEGION_REDOP_SUM<float> =
     LEGION_REDOP_SUM_FLOAT32;
 
 template <>
-constexpr Legion::ReductionOpID LEGION_REDOP_SUM<double> =
+inline constexpr Legion::ReductionOpID LEGION_REDOP_SUM<double> =
     LEGION_REDOP_SUM_FLOAT64;
 
 

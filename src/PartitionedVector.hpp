@@ -45,8 +45,6 @@ public:
 
     PartitionedVector(const PartitionedVector &v);
 
-    PartitionedVector(PartitionedVector &&) = delete;
-
     ~PartitionedVector();
 
     const std::string &get_name() const { return name; }
